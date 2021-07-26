@@ -1,0 +1,49 @@
+{
+  "framework": "django",
+  "tests": [{
+    "default": {
+      "plaintext_url" : "/plaintext",
+      "json_url": "/json",
+      "db_url": "/db",
+      "query_url": "/dbs?queries=",
+      "fortune_url": "/fortunes",
+      "update_url": "/update?queries=",
+      "port": 8080,
+      "approach": "Realistic",
+      "classification": "Fullstack",
+      "database": "MySQL",
+      "framework": "django",
+      "language": "Python",
+      "flavor": "Python3",
+      "orm": "Full",
+      "platform": "None",
+      "webserver": "Meinheld",
+      "os": "Linux",
+      "database_os": "Linux",
+      "display_name": "Django",
+      "notes": "CPython 3.6",
+      "versus": "wsgi"
+    },
+    "postgresql": {
+      "db_url": "/db",
+      "query_url": "/dbs?queries=",
+      "fortune_url": "/fortunes",
+      "update_url": "/update?queries=",
+      "port": 8080,
+      "approach": "Realistic",
+      "classification": "Fullstack",
+      "database": "Postgres",
+      "framework": "django",
+      "language": "Python",
+      "flavor": "Python3",
+      "orm": "Full",
+      "platform": "None",
+      "webserver": "Meinheld",
+      "os": "Linux",
+      "database_os": "Linux",
+      "display_name": "Django",
+      "notes": "CPython 3.6",
+      "versus": "wsgi"
+    }
+  }]
+}
