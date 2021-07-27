@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: django-postgresql.dockerfile
+    container_name: django
+    ports:
+    - 8080:8080
+  tfb-database:
+    build:
+      context: ../../../../tool/database/postgres
+      dockerfile: postgres.dockerfile
+    container_name: postgres
+    # ports:
+    # - 5432:5432
