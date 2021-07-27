@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: django-postgresql.dockerfile
+      dockerfile: django.dockerfile
     container_name: django
     ports:
     - 8080:8080
