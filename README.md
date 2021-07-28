@@ -8,18 +8,13 @@ The focus is on Performance Monitoring (tracing) of web servers.
 
 You will need `docker` and [`vegeta`](https://github.com/tsenart/vegeta) or another load generator.
 
-Start app and dependencies:
+Start apps and dependencies:
 
 ```
-(cd platform/python/django/baseline && docker compose up -d --build)
-(cd platform/javascript/express/baseline && docker compose up -d --build)
-```
-
-or
-
-```
-(cd platform/python/django/instrumented && docker compose up -d --build)
-(cd platform/javascript/express/instrumented && docker compose up -d --build)
+(cd platform/python/django/baseline && docker compose -p django-baseline up -d --build)
+(cd platform/javascript/express/baseline && docker compose -p express-baseline up -d --build)
+(cd platform/python/django/instrumented && docker compose -p django-instrumented up -d --build)
+(cd platform/javascript/express/instrumented && docker compose -p express-instrumented up -d --build)
 ```
 
 Run load generator:
@@ -51,3 +46,21 @@ Clean up:
 ```
 find platform -type f -name docker-compose.yml -print -execdir docker compose down \;
 ```
+
+---
+
+Future:
+
+```
+./bench platform/python/django
+```
+
+The above will:
+
+1. Start a stack of containers (avoiding clashing with any existing state / containers) for **baseline** benchmark
+2. Run load generator to warm up target web app
+3. Concurrently:
+    a. Run load generator to benchmark latencies
+    b. Collect CPU/memory usage every 1s and remember max
+4. Store hdr output from load generator and CPU/memory max usage
+5. Generate plot comparing baseline vs instrumented latencies

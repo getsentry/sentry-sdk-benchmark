@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  tfb-database:
+    container_name: "postgres-{{ .Suffix }}"
+    build:
+      context: "tool/database/postgres"
+      dockerfile: postgres.dockerfile
+  app:
+    container_name: "{{ .App.ContainerName }}-{{ .Suffix }}"
+    build:
+      context: "{{ .App.ContextPath }}"
+      dockerfile: "{{ .App.Dockerfile }}"
+    ports:
+    - {{ .App.HostPort }}:{{ .App.ContainerPort }}
+    depends_on:
+    - tfb-database
+{{- if .App.IsInstrumented }}
+    - fakerelay
+    environment:
+      SENTRY_DSN: "http://sentry@fakerelay-{{ .Suffix }}:5000/1"
+  fakerelay:
+    container_name: "fakerelay-{{ .Suffix }}"
+    build:
+      context: "tool/fakerelay"
+{{- end -}}
