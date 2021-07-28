@@ -63,12 +63,31 @@ if (cluster.isMaster) {
 } else {
   const app = module.exports = express();
 
+  // class Transport {
+  //   sendEvent(event) {
+  //     console.log(event);
+  //     return Promise.resolve({
+  //       status: 'success',
+  //     });
+  //   }
+  //   sendSession(session) {
+  //     console.log(session);
+  //     return Promise.resolve({
+  //       status: 'success',
+  //     });
+  //   }
+  //   close(timeout) {
+  //     return Promise.resolve(true);
+  //   }
+  // }
+
   Sentry.init({
     integrations: [
       new Sentry.Integrations.Http({ tracing: true }),
       new Tracing.Integrations.Express({ app }),
     ],
     tracesSampleRate: 1.0,
+    // transport: Transport,
   });
 
   app.use(Sentry.Handlers.requestHandler());
