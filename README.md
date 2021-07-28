@@ -49,6 +49,5 @@ https://hdrhistogram.github.io/HdrHistogram/plotFiles.html
 Clean up:
 
 ```
-(cd platform/python/django/baseline && docker compose down)
-(cd platform/python/django/instrumented && docker compose down)
+find platform -type f -name docker-compose.yml -print -execdir docker compose down \;
 ```
