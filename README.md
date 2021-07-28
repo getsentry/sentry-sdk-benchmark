@@ -12,22 +12,33 @@ Start app and dependencies:
 
 ```
 (cd platform/python/django/baseline && docker compose up -d --build)
+(cd platform/javascript/express/baseline && docker compose up -d --build)
 ```
 
 or
 
 ```
 (cd platform/python/django/instrumented && docker compose up -d --build)
+(cd platform/javascript/express/instrumented && docker compose up -d --build)
 ```
 
 Run load generator:
+
+**Django**
 
 ```
 # warmup step
 <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
 
-<<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee django10
 <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee django100
+```
+
+**Express**
+
+```
+<<<'GET http://localhost:8080/updates?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
+
+<<<'GET http://localhost:8080/updates?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee express100
 ```
 
 Plot graphs with [`plotFiles.html`](plotFiles.html).
