@@ -11,7 +11,7 @@ You will need `docker` and [`vegeta`](https://github.com/tsenart/vegeta) or anot
 Start app and dependencies:
 
 ```
-(cd platform/python/django/baseline && docker compose up -d --build)
+bash scripts/run.sh
 ```
 
 Run load generator:
@@ -28,3 +28,9 @@ Plot graphs with [`plotFiles.html`](plotFiles.html).
 <!--
 https://hdrhistogram.github.io/HdrHistogram/plotFiles.html
 -->
+
+To clean up the docker images:
+
+```
+docker image rm --force sentry_sdk_benchmark_app sentry_sdk_benchmark_tfb-database sentry_sdk_benchmark_echo
+```
