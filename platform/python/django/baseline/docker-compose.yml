@@ -7,6 +7,8 @@ services:
     container_name: django
     ports:
     - 8080:8080
+    depends_on:
+    - tfb-database
   tfb-database:
     build:
       context: ../../../../tool/database/postgres

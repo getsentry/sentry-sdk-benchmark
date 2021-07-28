@@ -7,6 +7,9 @@ services:
     container_name: django
     ports:
     - 8080:8080
+    depends_on:
+    - tfb-database
+    - fakerelay
     environment:
       SENTRY_DSN: "http://sentry@fakerelay:5000/1"
   tfb-database:
