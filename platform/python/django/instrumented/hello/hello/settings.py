@@ -4,10 +4,9 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 sentry_sdk.init(
     # debug=True,
-    dsn="http://363cb47fc0b74130a94f14aaaf400041@echo:1337/5338414",
     integrations=[DjangoIntegration()],
     traces_sample_rate=1.0,
-    send_default_pii=True,
+    # send_default_pii=True,
 )
 
 DEBUG = False
@@ -60,20 +59,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'world',
 )
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#         },
-#     },
-#     'root': {
-#         'handlers': ['console'],
-#         'level': 'WARNING',
-#     },
-# }
 
 LOGGING = {
     'version': 1,

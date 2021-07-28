@@ -11,14 +11,20 @@ You will need `docker` and [`vegeta`](https://github.com/tsenart/vegeta) or anot
 Start app and dependencies:
 
 ```
-bash scripts/run.sh
+(cd platform/python/django/baseline && docker compose up -d --build)
+```
+
+or
+
+```
+(cd platform/python/django/instrumented && docker compose up -d --build)
 ```
 
 Run load generator:
 
 ```
 # warmup step
-<<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s > /dev/null
+<<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
 
 <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee django10
 <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee django100
@@ -29,8 +35,9 @@ Plot graphs with [`plotFiles.html`](plotFiles.html).
 https://hdrhistogram.github.io/HdrHistogram/plotFiles.html
 -->
 
-To clean up the docker images:
+Clean up:
 
 ```
-docker image rm --force sentry_sdk_benchmark_app sentry_sdk_benchmark_tfb-database sentry_sdk_benchmark_echo
+(cd platform/python/django/baseline && docker compose down)
+(cd platform/python/django/instrumented && docker compose down)
 ```

@@ -3,7 +3,20 @@ services:
   app:
     build:
       context: .
-      dockerfile: django.dockerfile
+      dockerfile: django-postgresql.dockerfile
     container_name: django
     ports:
     - 8080:8080
+    environment:
+      SENTRY_DSN: "http://sentry@fakerelay:5000/1"
+  tfb-database:
+    build:
+      context: ../../../../tool/database/postgres
+      dockerfile: postgres.dockerfile
+    container_name: postgres
+    # ports:
+    # - 5432:5432
+  fakerelay:
+    build:
+      context: ../../../../tool/fakerelay
+    container_name: fakerelay
