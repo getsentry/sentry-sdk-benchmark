@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  loadgen:
+    container_name: "loadgen-{{ .RunID }}"
+    build:
+      context: "tool/loadgen"
+    volumes:
+    - ./result:/result:rw
+    environment:
+      RESULT_PATH: "/result/{{ .ResultPath }}"
+    depends_on:
+    - "app"
+  tfb-database:
+    container_name: "postgres-{{ .RunID }}"
+    build:
+      context: "tool/database/postgres"
+      dockerfile: "postgres.dockerfile"
+  app:
+    container_name: "{{ .App.ContainerName }}-{{ .RunID }}"
+    build:
+      context: "{{ .App.ContextPath }}"
+      dockerfile: "{{ .App.Dockerfile }}"
+    depends_on:
+    - "tfb-database"
+{{- if .App.IsInstrumented }}
+    - "relay"
+    environment:
+      SENTRY_DSN: "http://sentry@relay:5000/1"
+  relay:
+    container_name: "fakerelay-{{ .RunID }}"
+    build:
+      context: "tool/fakerelay"
+{{- end -}}
