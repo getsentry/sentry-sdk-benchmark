@@ -4,12 +4,12 @@ services:
     container_name: "postgres-{{ .Suffix }}"
     build:
       context: "tool/database/postgres"
-      dockerfile: postgres.dockerfile
-  app:
+      dockerfile: "postgres.dockerfile"
+  {{ .App.ContainerName }}:
     container_name: "{{ .App.ContainerName }}-{{ .Suffix }}"
     build:
       context: "{{ .App.ContextPath }}"
-      dockerfile: "{{ .App.Dockerfile }}"
+      dockerfile: "./{{ .App.Dockerfile }}"
     ports:
     - {{ .App.HostPort }}:{{ .App.ContainerPort }}
     depends_on:

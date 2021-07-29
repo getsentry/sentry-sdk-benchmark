@@ -57,8 +57,8 @@ Future:
 
 The above will:
 
-- [ ] 1. Start a stack of containers (avoiding clashing with any existing state / containers) for **baseline** benchmark
-- [x] 2. Run load generator to warm up target web app
+- [x] 1. Start a stack of containers (avoiding clashing with any existing state / containers) for **baseline** benchmark
+- [ ] 2. Run load generator to warm up target web app
 - [ ] 3. Concurrently:
     a. Run load generator to benchmark latencies
     b. Collect CPU/memory usage every 1s and remember max
