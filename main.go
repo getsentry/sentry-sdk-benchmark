@@ -18,6 +18,7 @@ import (
 
 	"github.com/compose-spec/compose-go/loader"
 	"github.com/compose-spec/compose-go/schema"
+	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
 type Benchmark struct {
@@ -82,6 +83,40 @@ func getPlatformPath() (string, error) {
 	return platformPath, nil
 }
 
+// TODO: This should be configurable
+func warmUpAttack() {
+	rate := vegeta.Rate{Freq: 500, Per: time.Second}
+	duration := 10 * time.Second
+	targeter := vegeta.NewStaticTargeter(vegeta.Target{
+		Method: "GET",
+		URL:    "http://localhost:8080/update?query=10",
+	})
+	attacker := vegeta.NewAttacker()
+
+	for range attacker.Attack(targeter, rate, duration, "") {
+	}
+}
+
+// TODO: This should be configurable as well, probably should just be 1 func
+// TODO: Generate URL programatically
+func finalAttack() vegeta.Reporter {
+	rate := vegeta.Rate{Freq: 500, Per: time.Second}
+	duration := 10 * time.Second
+	targeter := vegeta.NewStaticTargeter(vegeta.Target{
+		Method: "GET",
+		URL:    "http://localhost:8080/update?query=10",
+	})
+	attacker := vegeta.NewAttacker()
+
+	var m vegeta.Metrics
+	for res := range attacker.Attack(targeter, rate, duration, "") {
+		m.Add(res)
+	}
+	m.Close()
+
+	return vegeta.NewHDRHistogramPlotReporter(&m)
+}
+
 type benchmarkConfig struct {
 	Framework string `json:"framework"`
 	Tests     []struct {
@@ -136,9 +171,9 @@ func main() {
 		log.Println(err)
 	}
 
-	// currentFolder := path.Base(currentDir)
+	port := int(config["port"].(float64))
 
-	for _, instrumented := range []bool{false} {
+	for _, instrumented := range []bool{true, false} {
 		name := path.Base(platformPath)
 		contextPath := platformPath
 
@@ -158,8 +193,8 @@ func main() {
 				ContainerName:  name,
 				ContextPath:    contextPath,
 				Dockerfile:     "django-postgresql.dockerfile",
-				HostPort:       int(config["port"].(float64)),
-				ContainerPort:  int(config["port"].(float64)),
+				HostPort:       port,
+				ContainerPort:  port,
 				IsInstrumented: instrumented,
 			},
 		})
@@ -190,15 +225,30 @@ func main() {
 			panic(err)
 		}
 
+		// TODO: have a better way to wait until docker compose has started
 		time.Sleep(5000 * time.Millisecond)
 
-		// cmd := exec.Command("docker", "compose", "down")
-		// if err := cmd.Run(); err != nil {
-		// 	panic(err)
-		// }
+		fmt.Println("Starting Warm up runs")
+		for i := 0; i < 3; i++ {
+			warmUpAttack()
+		}
 
+		fmt.Println("Start final attack")
+		reporter := finalAttack()
+
+		// Todo(abhi): Better file naming structure
+		reportFile, err := os.OpenFile(name+"100", os.O_WRONLY|os.O_CREATE, 0777)
+		if err != nil {
+			panic(err)
+		}
+
+		defer reportFile.Close()
+		reporter.Report(reportFile)
+
+		// TODO: Figure out how to get this to work!!
 		dockerComposeDownCmd := exec.Command("docker", "compose", "down")
-		o, _ := dockerComposeDownCmd.Output()
-		println(string(o))
+		if err := dockerComposeDownCmd.Run(); err != nil {
+			panic(err)
+		}
 	}
 }

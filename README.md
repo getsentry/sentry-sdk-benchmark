@@ -58,9 +58,9 @@ Future:
 The above will:
 
 - [x] 1. Start a stack of containers (avoiding clashing with any existing state / containers) for **baseline** benchmark
-- [ ] 2. Run load generator to warm up target web app
-- [ ] 3. Concurrently:
-    a. Run load generator to benchmark latencies
-    b. Collect CPU/memory usage every 1s and remember max
-- [ ] 4. Store hdr output from load generator and CPU/memory max usage
+- [x] 2. Run load generator to warm up target web app
+- [x] 3. Concurrently:
+    a. Run load generator to benchmark latencies (:check:)
+    b. Collect CPU/memory usage every 1s and remember max (TBH)
+- [x] 4. Store hdr output from load generator and CPU/memory max usage (only load generator)
 - [ ] 5. Generate plot comparing baseline vs instrumented latencies
