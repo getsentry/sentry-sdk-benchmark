@@ -38,7 +38,7 @@ func waitUntilReady() {
 	log.Print("Waiting until web app is ready")
 	ready := false
 	for i := 0; i < 5; i++ {
-		ready = fetch(target+"/update?query=1", 8, 5*time.Second).Success == 1
+		ready = fetch(target+"/update?query=1", 5*time.Second).Success == 1
 		if ready {
 			break
 		}
@@ -55,27 +55,25 @@ func waitUntilReady() {
 // taken place, etc.
 func warmUp() {
 	log.Print("Warming up web app")
-	fetch(target+"/update?query=100", 256, 15*time.Second)
+	fetch(target+"/update?query=100", 15*time.Second)
 }
 
 // test sends the actual test traffic to the target web app and returns the
 // collected results.
 func test() *vegeta.Metrics {
 	log.Print("Testing web app")
-	return fetch(target+"/update?query=100", 512, 20*time.Second)
+	return fetch(target+"/update?query=100", 20*time.Second)
 }
 
 // fetch requests the given URL several times for the given duration and with
 // the given concurrency level.
-func fetch(url string, concurrency uint64, duration time.Duration) *vegeta.Metrics {
+func fetch(url string, duration time.Duration) *vegeta.Metrics {
 	target := vegeta.NewStaticTargeter(vegeta.Target{
 		Method: "GET",
 		URL:    url,
 	})
-	rate := vegeta.Rate{Freq: int(10 * concurrency), Per: time.Second}
-	attacker := vegeta.NewAttacker(
-		vegeta.MaxWorkers(concurrency),
-	)
+	rate := vegeta.Rate{Freq: 100, Per: time.Second}
+	attacker := vegeta.NewAttacker()
 	ch := attacker.Attack(target, rate, duration, "")
 
 	var m vegeta.Metrics
