@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base32"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
@@ -61,22 +59,21 @@ func (r RunID) String() string {
 	return base32Encoding.EncodeToString(r[:])
 }
 
-type Result interface{}
-
 func bench(platform string) {
 	id := NewRunID()
+
 	log.Printf("START %s %s", id, platform)
 	defer log.Printf("END   %s %s", id, platform)
 
-	baselineResult := doRun(id, platform, false)
-	instrumentedResult := doRun(id, platform, true)
+	baselineResultPath := doRun(id, platform, false)
+	instrumentedResultPath := doRun(id, platform, true)
 
-	compare(baselineResult, instrumentedResult)
+	compare(baselineResultPath, instrumentedResultPath)
 }
 
-func doRun(id RunID, platform string, instrumented bool) Result {
+func doRun(id RunID, platform string, instrumented bool) (resultPath string) {
 	containerName := filepath.Base(platform)
-	var projectName, contextPath, resultPath string
+	var projectName, contextPath string
 	if instrumented {
 		projectName = fmt.Sprintf("%s-%s-%s", containerName, "instrumented", id)
 		contextPath = path.Join(platform, "instrumented")
@@ -140,9 +137,9 @@ func doRun(id RunID, platform string, instrumented bool) Result {
 	setUp()
 	defer tearDown()
 
-	waitUntilResultOrInterrupt(filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)))
+	waitUntilExit("loadgen-" + id.String())
 
-	return nil
+	return filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...))
 }
 
 func findDockerfile(path string) string {
@@ -158,32 +155,18 @@ func findDockerfile(path string) string {
 	panic(fmt.Errorf("No Dockerfile in %s", path))
 }
 
-func waitUntilResultOrInterrupt(path string) {
-	done := make(chan bool)
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
+func waitUntilExit(containerName string) {
+	log.Printf("Waiting for container %s to stop", containerName)
+	b, err := exec.Command("docker", "wait", containerName).CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
 
-	log.Printf("Waiting for result at %s, Ctrl-C to stop waiting", path)
-
-	go func() {
-		for {
-			_, err := os.Stat(path)
-			if errors.Is(err, os.ErrNotExist) {
-				time.Sleep(time.Second)
-				continue
-			}
-			if err == nil {
-				close(done)
-				return
-			}
-			panic(err)
-		}
-	}()
-
-	select {
-	case <-done:
-	case <-ch:
+	if status := string(bytes.TrimSpace(b)); status != "0" {
+		panic("Container exited with status " + status)
 	}
 }
 
-func compare(baseline, instrumented Result) {}
+func compare(baselinePath, instrumentedPath string) {
+	// TODO
+}

@@ -1,48 +1,44 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/sanity-io/litter"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
-func x(url string, concurrency int, duration time.Duration) (ok bool) {
-	rate := vegeta.Rate{Freq: 500, Per: time.Second}
-	targeter := vegeta.NewStaticTargeter(vegeta.Target{
-		Method: "GET",
-		URL:    url,
-	})
-	attacker := vegeta.NewAttacker()
-	ch := attacker.Attack(targeter, rate, duration, "")
-
-	var m vegeta.Metrics
-	for res := range ch {
-		m.Add(res)
-	}
-	m.Close()
-
-	litter.Dump(m)
-	return m.Success == 1.0
-}
+const target = "http://app:8080"
 
 func main() {
-	log.Print("loadgen")
+	log.Print("Load Generator")
 	defer log.Print("Bye!")
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
-	resultPath := os.Getenv("RESULT_PATH")
-	if resultPath == "" {
-		log.Print("Missing RESULT_PATH env!")
-		return
+	path := os.Getenv("RESULT_PATH")
+	if path == "" {
+		panic("Missing RESULT_PATH env var, aborting!")
 	}
 
-	// wait until ready
-	log.Print("Checking web app readiness")
+	waitUntilReady()
+	warmUp()
+	metrics := test()
+	save(metrics, path)
+}
+
+// waitUntilReady waits until the target web app is ready to receive traffic.
+func waitUntilReady() {
+	log.Print("Waiting until web app is ready")
 	ready := false
 	for i := 0; i < 5; i++ {
-		ready = x("http://app:8080/update?query=1", 8, 5*time.Second)
+		ready = fetch(target+"/update?query=1", 8, 5*time.Second).Success == 1
 		if ready {
 			break
 		}
@@ -52,16 +48,79 @@ func main() {
 	if !ready {
 		panic("Web app not ready")
 	}
+}
 
-	// warmup
+// warmUp sends some traffic to warm up the target web app, ensuring
+// connectivity with the database is established, caches are warm, any JIT has
+// taken place, etc.
+func warmUp() {
 	log.Print("Warming up web app")
-	x("http://app:8080/update?query=100", 256, 15*time.Second)
+	fetch(target+"/update?query=100", 256, 15*time.Second)
+}
 
-	// captured test
+// test sends the actual test traffic to the target web app and returns the
+// collected results.
+func test() *vegeta.Metrics {
 	log.Print("Testing web app")
-	x("http://app:8080/update?query=100", 512, 15*time.Second)
+	return fetch(target+"/update?query=100", 512, 20*time.Second)
+}
 
-	if err := os.MkdirAll(resultPath, 0777); err != nil {
+// fetch requests the given URL several times for the given duration and with
+// the given concurrency level.
+func fetch(url string, concurrency uint64, duration time.Duration) *vegeta.Metrics {
+	target := vegeta.NewStaticTargeter(vegeta.Target{
+		Method: "GET",
+		URL:    url,
+	})
+	rate := vegeta.Rate{Freq: int(10 * concurrency), Per: time.Second}
+	attacker := vegeta.NewAttacker(
+		vegeta.MaxWorkers(concurrency),
+	)
+	ch := attacker.Attack(target, rate, duration, "")
+
+	var m vegeta.Metrics
+	for res := range ch {
+		m.Add(res)
+	}
+	m.Close()
+	return &m
+}
+
+// save writes reports computed from metrics to the output path.
+func save(m *vegeta.Metrics, path string) {
+	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 		panic(err)
+	}
+	for _, r := range []struct {
+		name string
+		fn   func(*vegeta.Metrics) vegeta.Reporter
+	}{
+		{"txt", vegeta.NewTextReporter},
+		{"json", NewJSONReporter},
+		// {"hist", vegeta.NewHistogramReporter},
+		{"hdr", vegeta.NewHDRHistogramPlotReporter},
+	} {
+		writeReport(r.fn(m), path+"."+r.name)
+	}
+}
+
+// writeReport writes the output of the reporter to the output path.
+func writeReport(r vegeta.Reporter, path string) {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := r.Report(f); err != nil {
+		panic(err)
+	}
+}
+
+// NewJSONReporter returns a Reporter that writes out Metrics as pretty JSON.
+func NewJSONReporter(m *vegeta.Metrics) vegeta.Reporter {
+	return func(w io.Writer) error {
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		return enc.Encode(m)
 	}
 }
