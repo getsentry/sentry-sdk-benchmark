@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -22,6 +23,11 @@ func main() {
 		fmt.Fprintln(os.Stderr)
 		os.Exit(2)
 	}
+	defer func() {
+		if err := recover(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	for _, platform := range flag.Args() {
 		bench(platform)
 	}
