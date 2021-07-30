@@ -78,7 +78,7 @@ func doRun(id RunID, platform string, instrumented bool) (resultPath string) {
 		projectName = fmt.Sprintf("%s-%s-%s", containerName, "instrumented", id)
 		contextPath = path.Join(platform, "instrumented")
 		resultPath = path.Join(append(
-			filepath.SplitList(platform)[1:],
+			strings.Split(platform, string(os.PathSeparator))[1:],
 			fmt.Sprintf("%s-%s", startTime.Format("20060102-150405"), id),
 			"instrumented",
 		)...)
@@ -86,7 +86,7 @@ func doRun(id RunID, platform string, instrumented bool) (resultPath string) {
 		projectName = fmt.Sprintf("%s-%s-%s", containerName, "baseline", id)
 		contextPath = path.Join(platform, "baseline")
 		resultPath = path.Join(append(
-			filepath.SplitList(platform)[1:],
+			strings.Split(platform, string(os.PathSeparator))[1:],
 			fmt.Sprintf("%s-%s", startTime.Format("20060102-150405"), id),
 			"baseline",
 		)...)
