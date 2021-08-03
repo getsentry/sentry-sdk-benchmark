@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/json"
 	"fmt"
+	htmltemplate "html/template"
 	"log"
 	"os"
 	"os/exec"
@@ -15,7 +17,10 @@ import (
 	"time"
 )
 
-var dockerComposeTemplate = template.Must(template.ParseFiles(filepath.Join("template", "docker-compose.yml.tmpl")))
+var (
+	dockerComposeTemplate = template.Must(template.ParseFiles(filepath.Join("template", "docker-compose.yml.tmpl")))
+	summaryTemplate       = htmltemplate.Must(htmltemplate.ParseFiles(filepath.Join("template", "summary.html.tmpl")))
+)
 
 type BenchmarkConfig struct {
 	ID        BenchmarkID
@@ -45,6 +50,14 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 type RunConfig struct {
 	Name       string
 	NeedsRelay bool
+}
+
+type SummaryFile struct {
+	Title            string
+	BaselineHDR      string
+	InstrumentedHDR  string
+	BaselineJSON     interface{}
+	InstrumentedJSON interface{}
 }
 
 type DockerComposeData struct {
@@ -196,6 +209,53 @@ func waitUntilExit(containerName string) {
 	}
 }
 
+func read(path string) string {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(file)
+}
+
+func generateSummary(path string) {
+	folderPath := filepath.Dir(path)
+
+	var b bytes.Buffer
+	err := summaryTemplate.Execute(&b, SummaryFile{
+		Title:            folderPath,
+		BaselineHDR:      read(filepath.Join(folderPath, "baseline.hdr")),
+		InstrumentedHDR:  read(filepath.Join(folderPath, "instrumented.hdr")),
+		BaselineJSON:     mustJSONUnmarshal(filepath.Join(folderPath, "baseline.json")),
+		InstrumentedJSON: mustJSONUnmarshal(filepath.Join(folderPath, "instrumented.json")),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	summaryPath := filepath.Join(folderPath, "summary.html")
+	fmt.Printf("Generating benchmark summary at %s", summaryPath)
+	if err := os.WriteFile(summaryPath, b.Bytes(), 0666); err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Command(
+		"open",
+		summaryPath,
+	)
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func mustJSONUnmarshal(path string) (out interface{}) {
+	if err := json.Unmarshal([]byte(read(path)), &out); err != nil {
+		panic(err)
+	}
+	return out
+}
+
 func compare(results []*RunResult) {
 	// TODO
+	generateSummary(results[0].Path)
 }
