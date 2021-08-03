@@ -69,12 +69,23 @@ func warmUp() {
 
 type TestResult struct {
 	*vegeta.Metrics
-	Stats
+	Stats map[string]Stats `json:"container_stats"`
 }
 
 type Stats struct {
+	Before     ContainerStats           `json:"before"`
+	After      ContainerStats           `json:"after"`
+	Difference ContainerStatsDifference `json:"difference"`
+}
+
+type ContainerStats struct {
 	MemoryMaxUsageBytes uint64 `json:"memory_max_usage_bytes"`
 	CPUUsageUser        uint64 `json:"cpu_usage_user"`
+}
+
+type ContainerStatsDifference struct {
+	MemoryMaxUsageBytes int64 `json:"memory_max_usage_bytes"`
+	CPUUsageUser        int64 `json:"cpu_usage_user"`
 }
 
 // test sends the actual test traffic to the target web app and returns the
@@ -82,12 +93,19 @@ type Stats struct {
 func test(containerName string) TestResult {
 	log.Print("Testing web app")
 
+	stats := Stats{}
+	stats.Before = containerStats(containerName)
+
 	metrics := fetch(target+"/update?query=100", 20*time.Second)
-	stats := containerStats(containerName)
+
+	stats.After = containerStats(containerName)
+	// Note: potential overflow ignored for simplicity
+	stats.Difference.MemoryMaxUsageBytes = int64(stats.After.MemoryMaxUsageBytes - stats.Before.MemoryMaxUsageBytes)
+	stats.Difference.CPUUsageUser = int64(stats.After.CPUUsageUser - stats.Before.CPUUsageUser)
 
 	return TestResult{
 		Metrics: metrics,
-		Stats:   stats,
+		Stats:   map[string]Stats{"app": stats},
 	}
 }
 
@@ -110,7 +128,7 @@ func fetch(url string, duration time.Duration) *vegeta.Metrics {
 	return &m
 }
 
-func containerStats(containerName string) Stats {
+func containerStats(containerName string) ContainerStats {
 	client, err := cadvisor.NewClient("http://cadvisor:8080/")
 	if err != nil {
 		panic(err)
@@ -124,7 +142,7 @@ func containerStats(containerName string) Stats {
 		panic(err)
 	}
 	for _, v := range m {
-		return Stats{
+		return ContainerStats{
 			MemoryMaxUsageBytes: v.Stats[0].Memory.MaxUsage,
 			CPUUsageUser:        v.Stats[0].Cpu.Usage.User,
 		}
