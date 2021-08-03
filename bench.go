@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -108,34 +109,9 @@ func doRun(id RunID, platform string, instrumented bool) (resultPath string) {
 		panic(err)
 	}
 
-	setUp := func() {
-		cmd := exec.Command(
-			"docker", "compose",
-			"--project-name", projectName,
-			"--file", "-",
-			"up", "--detach",
-		)
-		cmd.Stdin = bytes.NewReader(b.Bytes())
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			panic(err)
-		}
-	}
-	tearDown := func() {
-		cmd := exec.Command(
-			"docker", "compose",
-			"--project-name", projectName,
-			"down", "--remove-orphans")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			panic(err)
-		}
-	}
 
-	setUp()
-	defer tearDown()
+	setUp(projectName, bytes.NewReader(b.Bytes()))
+	defer tearDown(projectName)
 
 	waitUntilExit("loadgen-" + id.String())
 
@@ -153,6 +129,33 @@ func findDockerfile(path string) string {
 		}
 	}
 	panic(fmt.Errorf("No Dockerfile in %s", path))
+}
+
+func setUp(projectName string, composeFile io.Reader) {
+	cmd := exec.Command(
+		"docker", "compose",
+		"--project-name", projectName,
+		"--file", "-",
+		"up", "--detach",
+	)
+	cmd.Stdin = composeFile
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func tearDown(projectName string) {
+	cmd := exec.Command(
+		"docker", "compose",
+		"--project-name", projectName,
+		"down", "--remove-orphans")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func waitUntilExit(containerName string) {
