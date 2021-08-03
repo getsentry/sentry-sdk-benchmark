@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	cadvisor "github.com/google/cadvisor/client/v2"
+	cadvisor_info "github.com/google/cadvisor/info/v2"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
@@ -27,10 +29,17 @@ func main() {
 		panic("Missing RESULT_PATH env var, aborting!")
 	}
 
+	containerName := os.Getenv("TARGET_CONTAINER_NAME")
+	if containerName == "" {
+		panic("Missing TARGET_CONTAINER_NAME env var, aborting!")
+	}
+
 	waitUntilReady()
 	warmUp()
-	metrics := test()
-	save(metrics, path)
+
+	result := test(containerName)
+
+	save(result, path)
 }
 
 // waitUntilReady waits until the target web app is ready to receive traffic.
@@ -58,11 +67,28 @@ func warmUp() {
 	fetch(target+"/update?query=100", 15*time.Second)
 }
 
+type TestResult struct {
+	*vegeta.Metrics
+	Stats
+}
+
+type Stats struct {
+	MemoryMaxUsageBytes uint64 `json:"memory_max_usage_bytes"`
+	CPUUsageUser        uint64 `json:"cpu_usage_user"`
+}
+
 // test sends the actual test traffic to the target web app and returns the
 // collected results.
-func test() *vegeta.Metrics {
+func test(containerName string) TestResult {
 	log.Print("Testing web app")
-	return fetch(target+"/update?query=100", 20*time.Second)
+
+	metrics := fetch(target+"/update?query=100", 20*time.Second)
+	stats := containerStats(containerName)
+
+	return TestResult{
+		Metrics: metrics,
+		Stats:   stats,
+	}
 }
 
 // fetch requests the given URL several times for the given duration and with
@@ -84,22 +110,36 @@ func fetch(url string, duration time.Duration) *vegeta.Metrics {
 	return &m
 }
 
+func containerStats(containerName string) Stats {
+	client, err := cadvisor.NewClient("http://cadvisor:8080/")
+	if err != nil {
+		panic(err)
+	}
+	opts := &cadvisor_info.RequestOptions{
+		IdType: cadvisor_info.TypeDocker,
+		Count:  1,
+	}
+	m, err := client.Stats(containerName, opts)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range m {
+		return Stats{
+			MemoryMaxUsageBytes: v.Stats[0].Memory.MaxUsage,
+			CPUUsageUser:        v.Stats[0].Cpu.Usage.User,
+		}
+	}
+	panic("missing cAdvisor stats")
+}
+
 // save writes reports computed from metrics to the output path.
-func save(m *vegeta.Metrics, path string) {
+func save(r TestResult, path string) {
 	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 		panic(err)
 	}
-	for _, r := range []struct {
-		name string
-		fn   func(*vegeta.Metrics) vegeta.Reporter
-	}{
-		{"txt", vegeta.NewTextReporter},
-		{"json", NewJSONReporter},
-		// {"hist", vegeta.NewHistogramReporter},
-		{"hdr", vegeta.NewHDRHistogramPlotReporter},
-	} {
-		writeReport(r.fn(m), path+"."+r.name)
-	}
+	writeReport(vegeta.NewTextReporter(r.Metrics), path+".txt")
+	writeReport(NewJSONReporter(r), path+".json")
+	writeReport(vegeta.NewHDRHistogramPlotReporter(r.Metrics), path+".hdr")
 }
 
 // writeReport writes the output of the reporter to the output path.
@@ -114,8 +154,8 @@ func writeReport(r vegeta.Reporter, path string) {
 	}
 }
 
-// NewJSONReporter returns a Reporter that writes out Metrics as pretty JSON.
-func NewJSONReporter(m *vegeta.Metrics) vegeta.Reporter {
+// NewJSONReporter returns a vegeta.Reporter that writes out pretty JSON.
+func NewJSONReporter(m interface{}) vegeta.Reporter {
 	return func(w io.Writer) error {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")

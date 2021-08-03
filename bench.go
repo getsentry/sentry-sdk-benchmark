@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -29,18 +28,18 @@ func init() {
 }
 
 type Benchmark struct {
-	RunID      RunID
-	App        App
-	ResultPath string
+	RunID       RunID
+	App         App
+	ResultPath  string
+	DeployRelay bool
 }
 
 type App struct {
-	ContainerName  string
-	ContextPath    string
-	Dockerfile     string
-	HostPort       int
-	ContainerPort  int
-	IsInstrumented bool
+	ContainerName string
+	ContextPath   string
+	Dockerfile    string
+	HostPort      int
+	ContainerPort int
 }
 
 type RunID [4]byte
@@ -66,56 +65,61 @@ func bench(platform string) {
 	log.Printf("START %s %s", id, platform)
 	defer log.Printf("END   %s %s", id, platform)
 
-	baselineResultPath := doRun(id, platform, false)
-	instrumentedResultPath := doRun(id, platform, true)
+	baseline := doRun(id, platform, "baseline", false)
+	instrumented := doRun(id, platform, "instrumented", true)
 
-	compare(baselineResultPath, instrumentedResultPath)
+	compare(baseline, instrumented)
 }
 
-func doRun(id RunID, platform string, instrumented bool) (resultPath string) {
+type RunResult struct {
+	ComposeFile []byte
+	Path        string
+}
+
+func doRun(id RunID, platform, label string, deployRelay bool) *RunResult {
 	containerName := filepath.Base(platform)
-	var projectName, contextPath string
-	if instrumented {
-		projectName = fmt.Sprintf("%s-%s-%s", containerName, "instrumented", id)
-		contextPath = path.Join(platform, "instrumented")
-		resultPath = path.Join(append(
-			strings.Split(platform, string(os.PathSeparator))[1:],
-			fmt.Sprintf("%s-%s", startTime.Format("20060102-150405"), id),
-			"instrumented",
-		)...)
-	} else {
-		projectName = fmt.Sprintf("%s-%s-%s", containerName, "baseline", id)
-		contextPath = path.Join(platform, "baseline")
-		resultPath = path.Join(append(
-			strings.Split(platform, string(os.PathSeparator))[1:],
-			fmt.Sprintf("%s-%s", startTime.Format("20060102-150405"), id),
-			"baseline",
-		)...)
-	}
+	projectName := fmt.Sprintf("%s-%s-%s", containerName, label, id)
+	contextPath := path.Join(platform, label)
+	resultPath := path.Join(append(
+		strings.Split(platform, string(os.PathSeparator))[1:],
+		fmt.Sprintf("%s-%s", startTime.Format("20060102-150405"), id),
+		label,
+	)...)
 	dockerfile := findDockerfile(contextPath)
 
 	var b bytes.Buffer
 	err := dockerComposeTemplate.Execute(&b, Benchmark{
 		RunID: id,
 		App: App{
-			ContainerName:  containerName,
-			ContextPath:    contextPath,
-			Dockerfile:     dockerfile,
-			IsInstrumented: instrumented,
+			ContainerName: containerName,
+			ContextPath:   contextPath,
+			Dockerfile:    dockerfile,
 		},
-		ResultPath: resultPath,
+		ResultPath:  resultPath,
+		DeployRelay: deployRelay,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-
-	setUp(projectName, bytes.NewReader(b.Bytes()))
+	setUp(projectName, b.Bytes())
 	defer tearDown(projectName)
 
 	waitUntilExit("loadgen-" + id.String())
 
-	return filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...))
+	result := &RunResult{
+		ComposeFile: b.Bytes(),
+		Path:        filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)),
+	}
+
+	if err := os.MkdirAll(result.Path, 0777); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), result.ComposeFile, 0666); err != nil {
+		panic(err)
+	}
+
+	return result
 }
 
 func findDockerfile(path string) string {
@@ -131,14 +135,14 @@ func findDockerfile(path string) string {
 	panic(fmt.Errorf("No Dockerfile in %s", path))
 }
 
-func setUp(projectName string, composeFile io.Reader) {
+func setUp(projectName string, composeFile []byte) {
 	cmd := exec.Command(
 		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",
 		"up", "--detach",
 	)
-	cmd.Stdin = composeFile
+	cmd.Stdin = bytes.NewReader(composeFile)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -170,6 +174,6 @@ func waitUntilExit(containerName string) {
 	}
 }
 
-func compare(baselinePath, instrumentedPath string) {
+func compare(before, after *RunResult) {
 	// TODO
 }
