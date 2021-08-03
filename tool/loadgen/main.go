@@ -81,11 +81,15 @@ type Stats struct {
 type ContainerStats struct {
 	MemoryMaxUsageBytes uint64 `json:"memory_max_usage_bytes"`
 	CPUUsageUser        uint64 `json:"cpu_usage_user"`
+	CPUUsageSystem      uint64 `json:"cpu_usage_system"`
+	CPUUsageTotal       uint64 `json:"cpu_usage_total"`
 }
 
 type ContainerStatsDifference struct {
 	MemoryMaxUsageBytes int64 `json:"memory_max_usage_bytes"`
 	CPUUsageUser        int64 `json:"cpu_usage_user"`
+	CPUUsageSystem      int64 `json:"cpu_usage_system"`
+	CPUUsageTotal       int64 `json:"cpu_usage_total"`
 }
 
 // test sends the actual test traffic to the target web app and returns the
@@ -102,6 +106,8 @@ func test(containerName string) TestResult {
 	// Note: potential overflow ignored for simplicity
 	stats.Difference.MemoryMaxUsageBytes = int64(stats.After.MemoryMaxUsageBytes - stats.Before.MemoryMaxUsageBytes)
 	stats.Difference.CPUUsageUser = int64(stats.After.CPUUsageUser - stats.Before.CPUUsageUser)
+	stats.Difference.CPUUsageSystem = int64(stats.After.CPUUsageSystem - stats.Before.CPUUsageSystem)
+	stats.Difference.CPUUsageTotal = int64(stats.After.CPUUsageTotal - stats.Before.CPUUsageTotal)
 
 	return TestResult{
 		Metrics: metrics,
@@ -145,6 +151,8 @@ func containerStats(containerName string) ContainerStats {
 		return ContainerStats{
 			MemoryMaxUsageBytes: v.Stats[0].Memory.MaxUsage,
 			CPUUsageUser:        v.Stats[0].Cpu.Usage.User,
+			CPUUsageSystem:      v.Stats[0].Cpu.Usage.System,
+			CPUUsageTotal:       v.Stats[0].Cpu.Usage.Total,
 		}
 	}
 	panic("missing cAdvisor stats")
