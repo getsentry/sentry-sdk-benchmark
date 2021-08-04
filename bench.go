@@ -84,7 +84,7 @@ type RunResult struct {
 
 func doRun(id RunID, platform, label string, deployRelay bool) *RunResult {
 	containerName := filepath.Base(platform)
-	// projectName := fmt.Sprintf("%s-%s-%s", containerName, label, id)
+	projectName := fmt.Sprintf("%s-%s-%s", containerName, label, id)
 	contextPath := path.Join(platform, label)
 	resultPath := path.Join(append(
 		strings.Split(platform, string(os.PathSeparator))[1:],
@@ -108,22 +108,22 @@ func doRun(id RunID, platform, label string, deployRelay bool) *RunResult {
 		panic(err)
 	}
 
-	// setUp(projectName, b.Bytes())
-	// defer tearDown(projectName)
+	setUp(projectName, b.Bytes())
+	defer tearDown(projectName)
 
-	// waitUntilExit("loadgen-" + id.String())
+	waitUntilExit("loadgen-" + id.String())
 
 	result := &RunResult{
 		ComposeFile: b.Bytes(),
 		Path:        filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)),
 	}
 
-	// if err := os.MkdirAll(result.Path, 0777); err != nil {
-	// 	panic(err)
-	// }
-	// if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), result.ComposeFile, 0666); err != nil {
-	// 	panic(err)
-	// }
+	if err := os.MkdirAll(result.Path, 0777); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), result.ComposeFile, 0666); err != nil {
+		panic(err)
+	}
 
 	return result
 }
@@ -138,7 +138,7 @@ func findDockerfile(path string) string {
 			return entry.Name()
 		}
 	}
-	panic(fmt.Errorf("No Dockerfile in %s", path))
+	panic(fmt.Errorf("no Dockerfile in %s", path))
 }
 
 func setUp(projectName string, composeFile []byte) {
@@ -190,31 +190,28 @@ func read(path string) string {
 }
 
 func generateSummary(path string) {
-	folderName := filepath.Dir(path)
-	// summaryPath = filepath.Join(folderPath, "summary.html")
-	betterPath := "result/python/django/20210803-190205-ujefeaq"
+	folderPath := filepath.Dir(path)
+
 	var b bytes.Buffer
 	err := plotFilesTemplate.Execute(&b, SummaryFile{
-		Title:            folderName,
-		BaselineHDR:      read(filepath.Join(betterPath, "baseline.hdr")),
-		InstrumentedHDR:  read(filepath.Join(betterPath, "instrumented.hdr")),
-		BaselineJSON:     read(filepath.Join(betterPath, "baseline.json")),
-		InstrumentedJSON: read(filepath.Join(betterPath, "instrumented.json")),
+		Title:            folderPath,
+		BaselineHDR:      read(filepath.Join(folderPath, "baseline.hdr")),
+		InstrumentedHDR:  read(filepath.Join(folderPath, "instrumented.hdr")),
+		BaselineJSON:     read(filepath.Join(folderPath, "baseline.json")),
+		InstrumentedJSON: read(filepath.Join(folderPath, "instrumented.json")),
 	})
 	if err != nil {
 		panic(err)
 	}
-	if err := os.WriteFile(filepath.Join(betterPath, "summary.html"), b.Bytes(), 0666); err != nil {
+
+	summaryPath := filepath.Join(folderPath, "summary.html")
+	fmt.Printf("Generating benchmark summary at %s", summaryPath)
+	if err := os.WriteFile(summaryPath, b.Bytes(), 0666); err != nil {
 		panic(err)
 	}
-	// baseline.hdr
-	// instrumented.json
-	// instrumented.hdr
-	// instrumented.hdr
 }
 
 func compare(before, after *RunResult) {
 	// TODO
-	fmt.Println(before.Path)
 	generateSummary(before.Path)
 }

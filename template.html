@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ .Title }}}</title>
+    <title>{{ .Title }}</title>
     <meta name="description" content="Summary of load testing results" />
     <meta name="author" content="Sentry" />
 
@@ -66,9 +66,6 @@
         drawChart();
       }
 
-      /**
-       * Draw
-       */
       function drawChart() {
         var unitSelection = document.getElementById("timeUnitSelection");
         var unitSelIndex = unitSelection.selectedIndex;
