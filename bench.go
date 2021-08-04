@@ -209,6 +209,14 @@ func generateSummary(path string) {
 	if err := os.WriteFile(summaryPath, b.Bytes(), 0666); err != nil {
 		panic(err)
 	}
+
+	cmd := exec.Command(
+		"open",
+		summaryPath,
+	)
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func compare(before, after *RunResult) {
