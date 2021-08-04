@@ -31,8 +31,9 @@
       // Template variables
       const baselineHDR = `{{ .BaselineHDR }}`;
       const instrumentedHDR = `{{ .InstrumentedHDR }}`;
-      // const baseline = {{ .BaselineJSON }}
-      // const instrumented = {{ .InstrumentedJSON }}
+
+      const baseline = {{ .BaselineJSON }}
+      const instrumented = {{ .InstrumentedJSON }}
 
       // Declare mutable globals
       let maxPercentile = DEFAULT_TICK.v;
@@ -67,10 +68,6 @@
       }
 
       function drawChart() {
-        var unitSelection = document.getElementById("timeUnitSelection");
-        var unitSelIndex = unitSelection.selectedIndex;
-        var unitText = unitSelection.options[unitSelIndex].innerHTML;
-
         var options = {
           title: "Latency by Percentile Distribution",
           height: 480,
@@ -85,7 +82,7 @@
               min: 1,
             },
           },
-          vAxis: { title: "Latency (" + unitText + ")", minValue: 0 },
+          vAxis: { title: "Latency (ms)", minValue: 0 },
           legend: { position: "bottom" },
         };
 
@@ -107,8 +104,7 @@
                   percentile.toPrecision(7) +
                   "\%'ile = " +
                   dt.getValue(row, j) +
-                  " " +
-                  unitText
+                  " ms"
                 );
               };
             })(i),
@@ -186,32 +182,12 @@
         drawChart();
         return { typed: "" };
       }
-
-      // Reacts to Latency Time Units
-      function timeUnitsSelected(evt) {
-        drawChart();
-        return {typed: ''};
-      }
     </script>
   </head>
   <body>
     <h1>{{ .Title }}</h1>
     <!--Div that will hold the chart-->
     <div id="chart_div">Loading...</div>
-
-    Latency time units:
-    <select
-      name="units"
-      size="1"
-      id="timeUnitSelection"
-      onChange="timeUnitsSelected()"
-    >
-      <option value="Latency (seconds)">seconds</option>
-      <option selected value="Latency (milliseconds)">milliseconds</option>
-      <option value="Latency (µs)">microseconds</option>
-      <option value="Latency (nanoseconds)">nanoseconds</option>
-    </select>
-
     <p>
       Percentile range:
       <input
