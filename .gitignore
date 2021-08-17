@@ -2,7 +2,7 @@
 /.*
 !/.gitignore
 
-/results/*
-!/results/.gitkeep
+/result/*
+!/result/.gitkeep
 
 /sentry-sdk-benchmark
