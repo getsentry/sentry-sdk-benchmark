@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,8 @@ import (
 )
 
 const target = "http://app:8080"
+
+var hasRelay = os.Getenv("HAS_RELAY") == "true"
 
 func main() {
 	log.Print("Load Generator")
@@ -69,7 +72,8 @@ func warmUp() {
 
 type TestResult struct {
 	*vegeta.Metrics
-	Stats map[string]Stats `json:"container_stats"`
+	Stats        map[string]Stats       `json:"container_stats"`
+	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
 }
 
 type Stats struct {
@@ -112,10 +116,14 @@ func test(containerName string) TestResult {
 	stats.Difference.CPUUsageSystem = int64(stats.After.CPUUsageSystem - stats.Before.CPUUsageSystem)
 	stats.Difference.CPUUsageTotal = int64(stats.After.CPUUsageTotal - stats.Before.CPUUsageTotal)
 
-	return TestResult{
+	tr := TestResult{
 		Metrics: metrics,
 		Stats:   map[string]Stats{"app": stats},
 	}
+	if hasRelay {
+		tr.RelayMetrics = relayMetrics()
+	}
+	return tr
 }
 
 // fetch requests the given URL several times for the given duration and with
@@ -160,6 +168,23 @@ func containerStats(containerName string) ContainerStats {
 		}
 	}
 	panic("missing cAdvisor stats")
+}
+
+// relayMetrics returns /debug/vars exposed variables from the Fake Relay
+// instance.
+func relayMetrics() map[string]interface{} {
+	resp, err := http.Get("http://relay:5000/debug/vars")
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	dec := json.NewDecoder(resp.Body)
+	var m map[string]interface{}
+	err = dec.Decode(&m)
+	if err != nil {
+		panic(err)
+	}
+	return m
 }
 
 // save writes reports computed from metrics to the output path.

@@ -17,6 +17,7 @@ services:
     environment:
       RESULT_PATH: "/result/{{ .ResultPath }}"
       TARGET_CONTAINER_NAME: "{{ .App.ContainerName }}-{{ .RunName }}-{{ .ID }}"
+      HAS_RELAY: "{{ .NeedsRelay }}"
     depends_on:
     - "app"
   tfb-database:
