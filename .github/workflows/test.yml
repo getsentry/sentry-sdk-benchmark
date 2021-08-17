@@ -26,6 +26,7 @@ jobs:
           echo $GO_MODULES
           echo "::set-output name=modules::$GO_MODULES"
   test:
+    needs: find-modules
     name: Test ${{ matrix.module }}
     runs-on: ${{ matrix.os }}-latest
     steps:
