@@ -19,9 +19,12 @@ jobs:
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
     steps:
-    - run: find . -type f -name go.mod -execdir pwd \; | jq -R -s -c 'split("\n")[:-1]'
-    - id: set-modules
-      run: echo "::set-output name=modules::$(find . -type f -name go.mod -execdir pwd \; | jq -R -s -c 'split("\n")[:-1]')"
+      - uses: actions/checkout@v2
+      - id: set-modules
+        run: |
+          GO_MODULES=$(find . -type f -name go.mod -execdir pwd \; | jq -R -s -c 'split("\n")[:-1]')
+          echo $GO_MODULES
+          echo "::set-output name=modules::$GO_MODULES"
   test:
     name: Test ${{ matrix.module }}
     runs-on: ${{ matrix.os }}-latest
