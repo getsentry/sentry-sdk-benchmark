@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
       - id: set-modules
         run: |
-          GO_MODULES=$(find . -type f -name go.mod -execdir pwd \; | jq -R -s -c 'split("\n")[:-1]')
+          GO_MODULES=$(find . -type f -name go.mod -exec dirname \; | jq -R -s -c 'split("\n")[:-1]')
           echo $GO_MODULES
           echo "::set-output name=modules::$GO_MODULES"
   test:
@@ -50,6 +50,9 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
+      - name: List Packages
+        run: go list ./... # sanity check that we're building/testing what we expect
+        working-directory: ${{ matrix.module }}
       - name: Build
         run: go build ./...
         working-directory: ${{ matrix.module }}
