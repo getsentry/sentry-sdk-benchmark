@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base32"
-	"encoding/json"
 	"fmt"
 	htmltemplate "html/template"
 	"log"
@@ -52,12 +51,15 @@ type RunConfig struct {
 	NeedsRelay bool
 }
 
+type SummaryFileData struct {
+	Name string
+	HDR  string
+	JSON interface{}
+}
+
 type SummaryFile struct {
-	Title            string
-	BaselineHDR      string
-	InstrumentedHDR  string
-	BaselineJSON     interface{}
-	InstrumentedJSON interface{}
+	Title string
+	Data  []SummaryFileData
 }
 
 type DockerComposeData struct {
@@ -106,6 +108,7 @@ func Benchmark(cfg BenchmarkConfig) {
 }
 
 type RunResult struct {
+	Name        string
 	ComposeFile []byte
 	Path        string
 }
@@ -143,6 +146,7 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	waitUntilExit("loadgen-" + runCfg.Name + "-" + benchmarkCfg.ID.String())
 
 	result := &RunResult{
+		Name:        runCfg.Name,
 		ComposeFile: b.Bytes(),
 		Path:        filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)),
 	}
@@ -218,22 +222,30 @@ func read(path string) string {
 	return string(file)
 }
 
-func generateSummary(path string) {
-	folderPath := filepath.Dir(path)
+func compare(results []*RunResult) {
+	summaryFile := SummaryFile{
+		Data: make([]SummaryFileData, 2),
+	}
+
+	for i, res := range results {
+		folderPath := filepath.Dir(res.Path)
+		name := res.Name
+
+		if i == 0 {
+			summaryFile.Title = folderPath
+		}
+		summaryFile.Data[i].Name = name
+		summaryFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
+		summaryFile.Data[i].JSON = read(filepath.Join(folderPath, name+".json"))
+	}
 
 	var b bytes.Buffer
-	err := summaryTemplate.Execute(&b, SummaryFile{
-		Title:            folderPath,
-		BaselineHDR:      read(filepath.Join(folderPath, "baseline.hdr")),
-		InstrumentedHDR:  read(filepath.Join(folderPath, "instrumented.hdr")),
-		BaselineJSON:     mustJSONUnmarshal(filepath.Join(folderPath, "baseline.json")),
-		InstrumentedJSON: mustJSONUnmarshal(filepath.Join(folderPath, "instrumented.json")),
-	})
+	err := summaryTemplate.Execute(&b, summaryFile)
 	if err != nil {
 		panic(err)
 	}
 
-	summaryPath := filepath.Join(folderPath, "summary.html")
+	summaryPath := filepath.Join(summaryFile.Title, "summary.html")
 	fmt.Printf("Generating benchmark summary at %s", summaryPath)
 	if err := os.WriteFile(summaryPath, b.Bytes(), 0666); err != nil {
 		panic(err)
@@ -246,16 +258,4 @@ func generateSummary(path string) {
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
-}
-
-func mustJSONUnmarshal(path string) (out interface{}) {
-	if err := json.Unmarshal([]byte(read(path)), &out); err != nil {
-		panic(err)
-	}
-	return out
-}
-
-func compare(results []*RunResult) {
-	// TODO
-	generateSummary(results[0].Path)
 }

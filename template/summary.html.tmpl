@@ -8,7 +8,11 @@
     <meta name="description" content="Summary of load testing results" />
     <meta name="author" content="Sentry" />
 
-    <style type="text/css"></style>
+    <style type="text/css">
+      .hidden {
+          visibility: hidden
+      }
+    </style>
 
     <!--Load the AJAX API-->
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -25,15 +29,7 @@
         { v: 100000, f: "99.999%" },
         { v: 1000000, f: "99.9999%" },
         { v: 10000000, f: "99.99999%" },
-        { v: 100000000, f: "99.999999%" },
       ];
-
-      // Template variables
-      const baselineHDR = {{ .BaselineHDR }};
-      const instrumentedHDR = {{ .InstrumentedHDR }};
-
-      const baseline = {{ .BaselineJSON }};
-      const instrumented = {{ .InstrumentedJSON }};
 
       // Declare mutable globals
       let maxPercentile = DEFAULT_TICK.v;
@@ -60,8 +56,8 @@
       }
 
       function drawInitialChart() {
-        const histos = [baselineHDR, instrumentedHDR];
-        const names = ["Baseline", "Instrumented"];
+        const histos = [];
+        const names = [];
 
         setChartData(names, histos);
         drawChart();
@@ -202,5 +198,15 @@
       />
       <span id="percentileRange">99.99999%</span>
     </p>
+
+    <!-- HDR and JSON data -->
+    {{ range $dat := .Data }}
+      <div class="hidden hdr" data-name="{{ $dat.Name }}">
+        {{ $dat.HDR }}
+      </div>
+      <div class="hidden json" data-name="{{ $dat.Name }}">
+        {{ $dat.JSON }}
+      </div>
+    {{ end }}
   </body>
 </html>
