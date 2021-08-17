@@ -6,7 +6,19 @@ The focus is on Performance Monitoring (tracing) of web servers.
 
 ## Usage
 
-You will need `docker` and [`vegeta`](https://github.com/tsenart/vegeta) or another load generator.
+You will need `docker` and `go`.
+
+```
+go install .
+```
+
+```
+sentry-sdk-benchmark platform/python/django
+```
+
+## How It Works
+
+The `sentry-sdk-benchmark` command automates the following steps:
 
 1. Start `baseline` app:
 

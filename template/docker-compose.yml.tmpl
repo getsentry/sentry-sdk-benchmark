@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  cadvisor:
+    image: "gcr.io/cadvisor/cadvisor:v0.37.5"
+    container_name: "cadvisor-{{ .RunName }}-{{ .ID }}"
+    volumes:
+    - "/:/rootfs:ro"
+    - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    - "/sys:/sys:ro"
+    - "/var/lib/docker/:/var/lib/docker:ro"
+  loadgen:
+    container_name: "loadgen-{{ .RunName }}-{{ .ID }}"
+    build:
+      context: "tool/loadgen"
+    volumes:
+    - "./result:/result:rw"
+    environment:
+      RESULT_PATH: "/result/{{ .ResultPath }}"
+      TARGET_CONTAINER_NAME: "{{ .App.ContainerName }}-{{ .RunName }}-{{ .ID }}"
+    depends_on:
+    - "app"
+  tfb-database:
+    container_name: "postgres-{{ .RunName }}-{{ .ID }}"
+    build:
+      context: "tool/database/postgres"
+      dockerfile: "postgres.dockerfile"
+  app:
+    container_name: "{{ .App.ContainerName }}-{{ .RunName }}-{{ .ID }}"
+    build:
+      context: "{{ .App.ContextPath }}"
+      dockerfile: "{{ .App.Dockerfile }}"
+    depends_on:
+    - "cadvisor"
+    - "tfb-database"
+{{- if .NeedsRelay }}
+    - "relay"
+    environment:
+      SENTRY_DSN: "http://sentry@relay:5000/1"
+  relay:
+    container_name: "fakerelay-{{ .RunName }}-{{ .ID }}"
+    build:
+      context: "tool/fakerelay"
+{{- end -}}
