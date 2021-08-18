@@ -337,13 +337,16 @@
       {{ end }}
     </table>
 
+    <hr>
     {{ range $dat := .Data }}
-      <div class="hidden hdr" data-name="{{ $dat.Name }}">
-        {{ $dat.HDR }}
-      </div>
-      <div class="hidden json" data-name="{{ $dat.Name }}">
-        {{ $dat.JSON }}
-      </div>
+      <details class="hdr" data-name="{{ $dat.Name }}">
+        <summary>Percentile Table: {{ $dat.Name }}</summary>
+        <pre>{{ $dat.HDR }}</pre>
+      </details>
+      <details class="json" data-name="{{ $dat.Name }}">
+        <summary>Raw JSON: {{ $dat.Name }}</summary>
+        <pre>{{ $dat.JSON }}</pre>
+      </details>
     {{ end }}
   </body>
 </html>
