@@ -239,7 +239,7 @@ func waitUntilExit(containerName string) {
 	}
 
 	if status := string(bytes.TrimSpace(b)); status != "0" {
-		panic("Container exited with status " + status)
+		panic(fmt.Errorf("Container %s exited with status %s", containerName, status))
 	}
 }
 

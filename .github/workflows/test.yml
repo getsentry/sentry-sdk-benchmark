@@ -1,0 +1,77 @@
+name: Test
+on:
+  push:
+    branches:
+      - master
+      - release/**
+  pull_request:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  find-modules:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-modules
+        run: |
+          GO_MODULES=$(find . -type f -name go.mod -exec dirname {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo $GO_MODULES
+          echo "::set-output name=modules::$GO_MODULES"
+  test:
+    needs: find-modules
+    name: Test ${{ matrix.module }}
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go }}-
+            ${{ runner.os }}-go-
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: List Packages
+        run: go list ./... # sanity check that we're building/testing what we expect
+        working-directory: ${{ matrix.module }}
+      - name: Build
+        run: go build ./...
+        working-directory: ${{ matrix.module }}
+      - name: Vet
+        run: go vet ./...
+        working-directory: ${{ matrix.module }}
+      - name: Check go.mod Tidiness
+        run: go mod tidy && git diff --exit-code
+        working-directory: ${{ matrix.module }}
+      - name: Test
+        run: go test -count=1 ./...
+        working-directory: ${{ matrix.module }}
+      - name: Test (race)
+        run: go test -count=1 -race ./...
+        working-directory: ${{ matrix.module }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        module: ${{fromJson(needs.find-modules.outputs.modules)}}
+        go: ["1.17"]
+        os: [ubuntu] # windows, macos
+      fail-fast: false
