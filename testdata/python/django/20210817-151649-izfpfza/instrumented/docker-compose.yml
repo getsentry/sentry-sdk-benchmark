@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  cadvisor:
+    image: "gcr.io/cadvisor/cadvisor:v0.37.5"
+    container_name: "cadvisor-instrumented-izfpfza"
+    volumes:
+    - "/:/rootfs:ro"
+    - "/var/run/docker.sock:/var/run/docker.sock:rw"
+    - "/sys:/sys:ro"
+    - "/var/lib/docker/:/var/lib/docker:ro"
+  loadgen:
+    container_name: "loadgen-instrumented-izfpfza"
+    build:
+      context: "tool/loadgen"
+    volumes:
+    - "./result:/result:rw"
+    environment:
+      RESULT_PATH: "/result/python/django/20210817-151649-izfpfza/instrumented"
+      TARGET_CONTAINER_NAME: "django-instrumented-izfpfza"
+    depends_on:
+    - "app"
+  tfb-database:
+    container_name: "postgres-instrumented-izfpfza"
+    build:
+      context: "tool/database/postgres"
+      dockerfile: "postgres.dockerfile"
+  app:
+    container_name: "django-instrumented-izfpfza"
+    build:
+      context: "platform/python/django/instrumented"
+      dockerfile: "django-postgresql.dockerfile"
+    depends_on:
+    - "cadvisor"
+    - "tfb-database"
+    - "relay"
+    environment:
+      SENTRY_DSN: "http://sentry@relay:5000/1"
+  relay:
+    container_name: "fakerelay-instrumented-izfpfza"
+    build:
+      context: "tool/fakerelay"

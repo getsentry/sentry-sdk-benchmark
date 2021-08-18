@@ -1,0 +1,58 @@
+{
+  "latencies": {
+    "total": 11188220900,
+    "mean": 5594110,
+    "50th": 5305711,
+    "90th": 7122292,
+    "95th": 8042311,
+    "99th": 10622389,
+    "max": 26758600,
+    "min": 3526100
+  },
+  "bytes_in": {
+    "total": 65576,
+    "mean": 32.788
+  },
+  "bytes_out": {
+    "total": 0,
+    "mean": 0
+  },
+  "earliest": "2021-08-17T15:18:36.140654Z",
+  "latest": "2021-08-17T15:18:56.1305422Z",
+  "end": "2021-08-17T15:18:56.1355781Z",
+  "duration": 19989888200,
+  "wait": 5035900,
+  "requests": 2000,
+  "rate": 100.05058457505531,
+  "throughput": 100.02538594282537,
+  "success": 1,
+  "status_codes": {
+    "200": 2000
+  },
+  "errors": [],
+  "container_stats": {
+    "app": {
+      "before": {
+        "timestamp": "2021-08-17T15:18:34.4832057Z",
+        "memory_max_usage_bytes": 395485184,
+        "cpu_usage_user": 10430000000,
+        "cpu_usage_system": 2380000000,
+        "cpu_usage_total": 13101172035
+      },
+      "after": {
+        "timestamp": "2021-08-17T15:18:55.274193Z",
+        "memory_max_usage_bytes": 395702272,
+        "cpu_usage_user": 17190000000,
+        "cpu_usage_system": 3920000000,
+        "cpu_usage_total": 21955128185
+      },
+      "difference": {
+        "duration": 20790987300,
+        "memory_max_usage_bytes": 217088,
+        "cpu_usage_user": 6760000000,
+        "cpu_usage_system": 1540000000,
+        "cpu_usage_total": 8853956150
+      }
+    }
+  }
+}

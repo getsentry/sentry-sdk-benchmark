@@ -58,6 +58,22 @@
       function drawInitialChart() {
         const histos = [];
         const names = [];
+        const hdrNodes = document.querySelectorAll(".hdr");
+        hdrNodes.forEach((node) => {
+          // name
+          names.push(node.getAttribute("data-name"))
+          // actual data
+          histos.push(node.innerHTML)
+        });
+
+        const jsonNodes = document.querySelectorAll(".json");
+        const jsonData = Array.from(jsonNodes).map((node) => {
+          const json = JSON.parse(node.innerHTML)
+          json.name = node.getAttribute("data-name");
+          return json;
+        });
+
+        drawTable(jsonData);
 
         setChartData(names, histos);
         drawChart();
