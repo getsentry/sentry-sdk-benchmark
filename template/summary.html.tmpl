@@ -97,14 +97,6 @@
           histos.push(node.innerHTML)
         });
 
-        // TODO: use JSON data
-        const jsonNodes = document.querySelectorAll(".json");
-        const jsonData = Array.from(jsonNodes).map((node) => {
-          const json = JSON.parse(node.innerHTML)
-          json.name = node.getAttribute("data-name");
-          return json;
-        });
-
         setChartData(names, histos);
         drawChart();
       }
@@ -317,8 +309,8 @@
     <table>
       <tr>
         <th>   </th>
-        <th>{{ Total }}</th>
-        <th>{{ Mean }}</th>
+        <th>Total</th>
+        <th>Mean</th>
       </tr>
       {{ range $dat := .Data }}
       <tr>
@@ -333,8 +325,8 @@
     <table>
       <tr>
         <th>   </th>
-        <th>{{ Total }}</th>
-        <th>{{ Mean }}</th>
+        <th>Total</th>
+        <th>Mean</th>
       </tr>
       {{ range $dat := .Data }}
       <tr>
