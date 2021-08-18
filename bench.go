@@ -89,10 +89,11 @@ func Benchmark(cfg BenchmarkConfig) {
 		results = append(results, run(cfg, runCfg))
 	}
 
-	compare(results)
+	report(results)
 }
 
 type RunResult struct {
+	Name        string
 	ComposeFile []byte
 	Path        string
 }
@@ -130,6 +131,7 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	waitUntilExit("loadgen-" + runCfg.Name + "-" + benchmarkCfg.ID.String())
 
 	result := &RunResult{
+		Name:        runCfg.Name,
 		ComposeFile: b.Bytes(),
 		Path:        filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)),
 	}
@@ -194,8 +196,4 @@ func waitUntilExit(containerName string) {
 	if status := string(bytes.TrimSpace(b)); status != "0" {
 		panic(fmt.Errorf("Container %s exited with status %s", containerName, status))
 	}
-}
-
-func compare(results []*RunResult) {
-	// TODO
 }
