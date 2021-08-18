@@ -274,8 +274,6 @@ func compare(results []*RunResult) {
 		summaryFile.Data[i].Name = name
 		summaryFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
 		summaryFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
-
-		summaryFile.Data[i].JSON.Earliest
 	}
 
 	var b bytes.Buffer
