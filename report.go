@@ -15,6 +15,22 @@ import (
 
 var summaryTemplate = template.Must(template.ParseFiles(filepath.Join("template", "summary.html.tmpl")))
 
+func Report(s []string) {
+	if len(s) != 1 {
+		panic("Reporting on multiple results is not supported yet")
+	}
+	report([]*RunResult{
+		{
+			Name: "baseline",
+			Path: filepath.Join(s[0], "baseline"),
+		},
+		{
+			Name: "instrumented",
+			Path: filepath.Join(s[0], "instrumented"),
+		},
+	})
+}
+
 func report(results []*RunResult) {
 	summaryFile := SummaryFile{
 		Data: make([]SummaryFileData, 2),
