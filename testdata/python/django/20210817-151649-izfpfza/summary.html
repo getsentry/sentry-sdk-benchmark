@@ -26,6 +26,25 @@
       tr:nth-child(even) {
         background-color: #dddddd;
       }
+
+      dl {
+        border: 3px double #ccc;
+        padding: 0.5em;
+      }
+      dt {
+        float: left;
+        clear: left;
+        width: 100px;
+        text-align: right;
+        font-weight: bold;
+      }
+      dt::after {
+        content: ":";
+      }
+      dd {
+        margin: 0 0 0 110px;
+        padding: 0 0 0.5em 0;
+      }
     </style>
 
     
@@ -87,19 +106,20 @@
           return json;
         });
 
-        drawTable(jsonData);
-
         console.log(jsonData);
 
         setChartData(names, histos);
         drawChart();
       }
 
-      function drawTable(jsonData) {
-        // const tableContainer = document.findElementByID("tableContainer")
-        // const latencyTable = document.createElement('table');
+      // function drawTable(jsonData) {
+      //   const tableContainer = document.getElementById("tableContainer")
+      //   const latencyTable = document.createElement('table');
 
-      }
+      //   const 
+
+      //   tableContainer.appendChild(latencyTable);
+      // }
 
       function drawChart() {
         var options = {
@@ -237,9 +257,43 @@
       <span id="percentileRange">99.99999%</span>
     </p>
 
+    <details>
+      <summary>{{ $dat.Name }} Run Details</summary>
+      <h4>Errors</h4>
+      <ul>
+      {{ range $err := $dat.JSON.Errors }}
+        <li>{{ $err }}</li>
+      {{ else }}
+        <li>No Errors</li>
+      {{ end }}
+      </ul>
+
+      <dl>
+        <dt>Earliest</dt>
+        <dd>{{ $dat.JSON.Earliest }}</dd>
+        <dt>Latest</dt>
+        <dd>{{ $dat.JSON.Latest }}</dd>
+        <dt>End</dt>
+        <dd>{{ $dat.JSON.End }}</dd>
+        <dt>Duration</dt>
+        <dd>{{ $dat.JSON.Duration }}</dd>
+        <dt>Wait</dt>
+        <dd>{{ $dat.JSON.Wait }}</dd>
+        <dt>Requests</dt>
+        <dd>{{ $dat.JSON.Requests }}</dd>
+        <dt>Throughput</dt>
+        <dd>{{ $dat.JSON.Throughput }}</dd>
+        <dt>Success</dt>
+        <dd>{{ $dat.JSON.Success }}</dd>
+        {{ range $key, $value := $dat.JSON.StatusCodes }}
+        <dt>Status Code {{ $key }}</dt>
+        <dd>{{ $value }}</dd>
+        {{ end }}
+      </dl>
+    </details>
+
     <!-- Table that contains JSON Results -->
-    <div id="tableContainer">Loading...</div>
-    Latencies
+    <h3>Latencies</h3>
     <table>
       <tr>
         <th>   </th>

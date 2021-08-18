@@ -12,6 +12,37 @@
       .hidden {
           visibility: hidden
       }
+
+      table {
+        border-collapse: collapse;
+      }
+
+      td, th {
+        border: 1px solid black;
+        text-align: left;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #dddddd;
+      }
+
+      dt {
+        float: left;
+        clear: left;
+        width: 100px;
+        text-align: right;
+        font-weight: bold;
+      }
+
+      dt::after {
+        content: ":";
+      }
+
+      dd {
+        margin: 0 0 0 110px;
+        padding: 0 0 0.5em 0;
+      }
     </style>
 
     <!--Load the AJAX API-->
@@ -66,14 +97,13 @@
           histos.push(node.innerHTML)
         });
 
+        // TODO: use JSON data
         const jsonNodes = document.querySelectorAll(".json");
         const jsonData = Array.from(jsonNodes).map((node) => {
           const json = JSON.parse(node.innerHTML)
           json.name = node.getAttribute("data-name");
           return json;
         });
-
-        drawTable(jsonData);
 
         setChartData(names, histos);
         drawChart();
@@ -215,7 +245,106 @@
       <span id="percentileRange">99.99999%</span>
     </p>
 
-    <!-- HDR and JSON data -->
+    <!-- Information about the run -->
+    {{ range $dat := .Data }}
+    <details>
+      <summary>{{ $dat.Name }} Run Details</summary>
+      <h4>Errors</h4>
+      <ul>
+      {{ range $err := $dat.JSON.Errors }}
+        <li>{{ $err }}</li>
+      {{ else }}
+        <li>No Errors</li>
+      {{ end }}
+      </ul>
+
+      <dl>
+        <dt>Earliest</dt>
+        <dd>{{ $dat.JSON.Earliest }}</dd>
+        <dt>Latest</dt>
+        <dd>{{ $dat.JSON.Latest }}</dd>
+        <dt>End</dt>
+        <dd>{{ $dat.JSON.End }}</dd>
+        <dt>Duration</dt>
+        <dd>{{ $dat.JSON.Duration }}</dd>
+        <dt>Wait</dt>
+        <dd>{{ $dat.JSON.Wait }}</dd>
+        <dt>Requests</dt>
+        <dd>{{ $dat.JSON.Requests }}</dd>
+        <dt>Throughput</dt>
+        <dd>{{ $dat.JSON.Throughput }}</dd>
+        <dt>Success</dt>
+        <dd>{{ $dat.JSON.Success }}</dd>
+        {{ range $key, $value := $dat.JSON.StatusCodes }}
+        <dt>Status Code {{ $key }}</dt>
+        <dd>{{ $value }}</dd>
+        {{ end }}
+      </dl>
+    </details>
+    {{ end }}
+
+    <!-- Table that contains JSON Results -->
+    <h3>Latencies</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>Total</th>
+        <th>Mean</th>
+        <th>50th</th>
+        <th>90th</th>
+        <th>95th</th>
+        <th>99th</th>
+        <th>Max</th>
+        <th>Min</th>
+      </tr>
+
+      {{ range $dat := .Data }}
+      <tr>
+        <th>{{ $dat.Name }}</th>
+        <td>{{ $dat.JSON.Latencies.Total }}</td>
+        <td>{{ $dat.JSON.Latencies.Mean }}</td>
+        <td>{{ $dat.JSON.Latencies.P50 }}</td>
+        <td>{{ $dat.JSON.Latencies.P90 }}</td>
+        <td>{{ $dat.JSON.Latencies.P95 }}</td>
+        <td>{{ $dat.JSON.Latencies.P99 }}</td>
+        <td>{{ $dat.JSON.Latencies.Max }}</td>
+        <td>{{ $dat.JSON.Latencies.Min }}</td>
+      </tr>
+      {{ end }}
+    </table>
+
+    <h3>Bytes In</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>{{ Total }}</th>
+        <th>{{ Mean }}</th>
+      </tr>
+      {{ range $dat := .Data }}
+      <tr>
+        <th>{{ $dat.Name }}</th>
+        <td>{{ $dat.JSON.BytesIn.Total }}</td>
+        <td>{{ $dat.JSON.BytesIn.Mean }}</td>
+      </tr>
+      {{ end }}
+    </table>
+
+    <h3>Bytes Out</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>{{ Total }}</th>
+        <th>{{ Mean }}</th>
+      </tr>
+      {{ range $dat := .Data }}
+      <tr>
+        <th>{{ $dat.Name }}</th>
+        <td>{{ $dat.JSON.BytesOut.Total }}</td>
+        <td>{{ $dat.JSON.BytesOut.Mean }}</td>
+      </tr>
+      {{ end }}
+    </table>
+
     {{ range $dat := .Data }}
       <div class="hidden hdr" data-name="{{ $dat.Name }}">
         {{ $dat.HDR }}

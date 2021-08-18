@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/json"
 	"fmt"
 	htmltemplate "html/template"
 	"log"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
 var (
@@ -54,7 +57,7 @@ type RunConfig struct {
 type SummaryFileData struct {
 	Name string
 	HDR  string
-	JSON interface{}
+	JSON TestResult
 }
 
 type SummaryFile struct {
@@ -79,6 +82,33 @@ type App struct {
 }
 
 type BenchmarkID [4]byte
+
+type TestResult struct {
+	*vegeta.Metrics
+	Stats map[string]Stats `json:"container_stats"`
+}
+
+type Stats struct {
+	Before     ContainerStats           `json:"before"`
+	After      ContainerStats           `json:"after"`
+	Difference ContainerStatsDifference `json:"difference"`
+}
+
+type ContainerStats struct {
+	Timestamp           time.Time `json:"timestamp"`
+	MemoryMaxUsageBytes uint64    `json:"memory_max_usage_bytes"`
+	CPUUsageUser        uint64    `json:"cpu_usage_user"`
+	CPUUsageSystem      uint64    `json:"cpu_usage_system"`
+	CPUUsageTotal       uint64    `json:"cpu_usage_total"`
+}
+
+type ContainerStatsDifference struct {
+	Duration            time.Duration `json:"duration"`
+	MemoryMaxUsageBytes int64         `json:"memory_max_usage_bytes"`
+	CPUUsageUser        int64         `json:"cpu_usage_user"`
+	CPUUsageSystem      int64         `json:"cpu_usage_system"`
+	CPUUsageTotal       int64         `json:"cpu_usage_total"`
+}
 
 func NewBenchmarkID() BenchmarkID {
 	var id BenchmarkID
@@ -222,6 +252,13 @@ func read(path string) string {
 	return string(file)
 }
 
+func mustJSONUnmarshal(path string) (out TestResult) {
+	if err := json.Unmarshal([]byte(read(path)), &out); err != nil {
+		panic(err)
+	}
+	return out
+}
+
 func compare(results []*RunResult) {
 	summaryFile := SummaryFile{
 		Data: make([]SummaryFileData, 2),
@@ -236,7 +273,9 @@ func compare(results []*RunResult) {
 		}
 		summaryFile.Data[i].Name = name
 		summaryFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
-		summaryFile.Data[i].JSON = read(filepath.Join(folderPath, name+".json"))
+		summaryFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
+
+		summaryFile.Data[i].JSON.Earliest
 	}
 
 	var b bytes.Buffer
