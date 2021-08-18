@@ -17,7 +17,14 @@ var (
 
 	firstRequestOnce sync.Once
 	firstRequest     = expvar.NewString("first_request")
+	sdkInfo          SDKInfo
 )
+
+func init() {
+	expvar.Publish("sdk", expvar.Func(func() interface{} {
+		return sdkInfo
+	}))
+}
 
 func main() {
 	log.Print("Fake Relay")
@@ -42,6 +49,7 @@ func main() {
 		os.Stdout.Write(b)
 		firstRequestOnce.Do(func() {
 			firstRequest.Set(string(b))
+			sdkInfo = ParseSDKInfo(b)
 		})
 		w.Header().Add("Content-Type", "application/json")
 		time.Sleep(80*time.Millisecond - time.Since(start))
