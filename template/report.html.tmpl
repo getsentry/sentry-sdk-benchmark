@@ -220,6 +220,7 @@
   </head>
   <body>
     <h1>{{ .Title }}</h1>
+    <h3>{{ .RelayMetrics.sdk.name }} {{ .RelayMetrics.sdk.version }}</h3>
     <!--Div that will hold the chart-->
     <div id="chart_div">Loading...</div>
     <p>
@@ -348,5 +349,9 @@
         <pre>{{ $dat.JSON }}</pre>
       </details>
     {{ end }}
+
+    <hr>
+    <h3>First Request to Relay</h3>
+    <pre>{{ .RelayMetrics.first_request }}</pre>
   </body>
 </html>

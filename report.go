@@ -43,9 +43,16 @@ func report(results []*RunResult) {
 		if i == 0 {
 			reportFile.Title = folderPath
 		}
+
 		reportFile.Data[i].Name = name
 		reportFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
-		reportFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
+		json := mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
+
+		if json.RelayMetrics != nil {
+			reportFile.RelayMetrics = json.RelayMetrics
+		}
+
+		reportFile.Data[i].JSON = json
 	}
 
 	reportPath := filepath.Join(reportFile.Title, "report.html")
@@ -63,8 +70,9 @@ func report(results []*RunResult) {
 }
 
 type ReportFile struct {
-	Title string
-	Data  []ReportFileData
+	Title        string
+	Data         []ReportFileData
+	RelayMetrics map[string]interface{}
 }
 
 type ReportFileData struct {
