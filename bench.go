@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
+
+	exec "github.com/getsentry/sentry-sdk-benchmark/internal/std/execabs"
 )
 
 var dockerComposeTemplate = template.Must(template.ParseFiles(filepath.Join("template", "docker-compose.yml.tmpl")))
