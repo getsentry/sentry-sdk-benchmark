@@ -45,14 +45,14 @@ func report(results []*RunResult) {
 		}
 
 		reportFile.Data[i].Name = name
-		reportFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
-		json := mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
+		reportFile.Data[i].HDR = string(readBytes(filepath.Join(folderPath, name+".hdr")))
+		tr := readTestResult(filepath.Join(folderPath, name+".json"))
 
-		if json.RelayMetrics != nil {
-			reportFile.RelayMetrics = json.RelayMetrics
+		if tr.RelayMetrics != nil {
+			reportFile.RelayMetrics = tr.RelayMetrics
 		}
 
-		reportFile.Data[i].JSON = json
+		reportFile.Data[i].TestResult = tr
 	}
 
 	reportPath := filepath.Join(reportFile.Title, "report.html")
@@ -76,9 +76,9 @@ type ReportFile struct {
 }
 
 type ReportFileData struct {
-	Name string
-	HDR  string
-	JSON TestResult
+	Name       string
+	HDR        string
+	TestResult TestResult
 }
 
 // START copied from ./tool/loadgen
@@ -113,18 +113,17 @@ type ContainerStatsDifference struct {
 
 // END copied from ./tool/loadgen
 
-func read(path string) string {
-	file, err := os.ReadFile(path)
+func readBytes(path string) []byte {
+	b, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-
-	return string(file)
+	return b
 }
 
-func mustJSONUnmarshal(path string) (out TestResult) {
-	if err := json.Unmarshal([]byte(read(path)), &out); err != nil {
+func readTestResult(path string) (tr TestResult) {
+	if err := json.Unmarshal(readBytes(path), &tr); err != nil {
 		panic(err)
 	}
-	return out
+	return tr
 }

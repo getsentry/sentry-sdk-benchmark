@@ -244,7 +244,7 @@
       <summary>{{ $dat.Name }} Run Details</summary>
       <h4>Errors</h4>
       <ul>
-      {{ range $err := $dat.JSON.Errors }}
+      {{ range $err := $dat.TestResult.Errors }}
         <li>{{ $err }}</li>
       {{ else }}
         <li>No Errors</li>
@@ -253,22 +253,22 @@
 
       <dl>
         <dt>Earliest</dt>
-        <dd>{{ $dat.JSON.Earliest }}</dd>
+        <dd>{{ $dat.TestResult.Earliest }}</dd>
         <dt>Latest</dt>
-        <dd>{{ $dat.JSON.Latest }}</dd>
+        <dd>{{ $dat.TestResult.Latest }}</dd>
         <dt>End</dt>
-        <dd>{{ $dat.JSON.End }}</dd>
+        <dd>{{ $dat.TestResult.End }}</dd>
         <dt>Duration</dt>
-        <dd>{{ $dat.JSON.Duration }}</dd>
+        <dd>{{ $dat.TestResult.Duration }}</dd>
         <dt>Wait</dt>
-        <dd>{{ $dat.JSON.Wait }}</dd>
+        <dd>{{ $dat.TestResult.Wait }}</dd>
         <dt>Requests</dt>
-        <dd>{{ $dat.JSON.Requests }}</dd>
+        <dd>{{ $dat.TestResult.Requests }}</dd>
         <dt>Throughput</dt>
-        <dd>{{ $dat.JSON.Throughput }}</dd>
+        <dd>{{ $dat.TestResult.Throughput }}</dd>
         <dt>Success</dt>
-        <dd>{{ $dat.JSON.Success }}</dd>
-        {{ range $key, $value := $dat.JSON.StatusCodes }}
+        <dd>{{ $dat.TestResult.Success }}</dd>
+        {{ range $key, $value := $dat.TestResult.StatusCodes }}
         <dt>Status Code {{ $key }}</dt>
         <dd>{{ $value }}</dd>
         {{ end }}
@@ -294,14 +294,14 @@
       {{ range $dat := .Data }}
       <tr>
         <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.JSON.Latencies.Total }}</td>
-        <td>{{ $dat.JSON.Latencies.Mean }}</td>
-        <td>{{ $dat.JSON.Latencies.P50 }}</td>
-        <td>{{ $dat.JSON.Latencies.P90 }}</td>
-        <td>{{ $dat.JSON.Latencies.P95 }}</td>
-        <td>{{ $dat.JSON.Latencies.P99 }}</td>
-        <td>{{ $dat.JSON.Latencies.Max }}</td>
-        <td>{{ $dat.JSON.Latencies.Min }}</td>
+        <td>{{ $dat.TestResult.Latencies.Total }}</td>
+        <td>{{ $dat.TestResult.Latencies.Mean }}</td>
+        <td>{{ $dat.TestResult.Latencies.P50 }}</td>
+        <td>{{ $dat.TestResult.Latencies.P90 }}</td>
+        <td>{{ $dat.TestResult.Latencies.P95 }}</td>
+        <td>{{ $dat.TestResult.Latencies.P99 }}</td>
+        <td>{{ $dat.TestResult.Latencies.Max }}</td>
+        <td>{{ $dat.TestResult.Latencies.Min }}</td>
       </tr>
       {{ end }}
     </table>
@@ -316,8 +316,8 @@
       {{ range $dat := .Data }}
       <tr>
         <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.JSON.BytesIn.Total }}</td>
-        <td>{{ $dat.JSON.BytesIn.Mean }}</td>
+        <td>{{ $dat.TestResult.BytesIn.Total }}</td>
+        <td>{{ $dat.TestResult.BytesIn.Mean }}</td>
       </tr>
       {{ end }}
     </table>
@@ -332,8 +332,8 @@
       {{ range $dat := .Data }}
       <tr>
         <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.JSON.BytesOut.Total }}</td>
-        <td>{{ $dat.JSON.BytesOut.Mean }}</td>
+        <td>{{ $dat.TestResult.BytesOut.Total }}</td>
+        <td>{{ $dat.TestResult.BytesOut.Mean }}</td>
       </tr>
       {{ end }}
     </table>
@@ -346,7 +346,7 @@
       </details>
       <details class="json" data-name="{{ $dat.Name }}">
         <summary>Raw JSON: {{ $dat.Name }}</summary>
-        <pre>{{ $dat.JSON }}</pre>
+        <pre>{{ $dat.TestResult }}</pre>
       </details>
     {{ end }}
 
