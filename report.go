@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -49,15 +48,14 @@ func report(results []*RunResult) {
 		summaryFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
 	}
 
-	var b bytes.Buffer
-	err := summaryTemplate.Execute(&b, summaryFile)
+	summaryPath := filepath.Join(summaryFile.Title, "summary.html")
+	f, err := os.Create(summaryPath)
 	if err != nil {
 		panic(err)
 	}
 
-	summaryPath := filepath.Join(summaryFile.Title, "summary.html")
 	fmt.Printf("Generating benchmark summary at %s", summaryPath)
-	if err := os.WriteFile(summaryPath, b.Bytes(), 0666); err != nil {
+	if err := summaryTemplate.Execute(f, summaryFile); err != nil {
 		panic(err)
 	}
 
