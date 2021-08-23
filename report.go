@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -54,7 +54,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	fmt.Printf("Generating benchmark summary at %s", summaryPath)
+	log.Printf("Generating benchmark summary at %s", summaryPath)
 	if err := summaryTemplate.Execute(f, summaryFile); err != nil {
 		panic(err)
 	}
