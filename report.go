@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
+
+	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 )
 
 var summaryTemplate = template.Must(template.ParseFiles(filepath.Join("template", "summary.html.tmpl")))
@@ -60,13 +61,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	cmd := exec.Command(
-		"open",
-		summaryPath,
-	)
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
+	browser.Open(summaryPath)
 }
 
 type SummaryFile struct {
