@@ -87,6 +87,7 @@ type TestResult struct {
 	*vegeta.Metrics
 	Stats        map[string]Stats       `json:"container_stats"`
 	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
+	Options      LoadGenOptions         `json:"options"`
 }
 
 type Stats struct {
@@ -109,6 +110,20 @@ type ContainerStatsDifference struct {
 	CPUUsageUser        int64         `json:"cpu_usage_user"`
 	CPUUsageSystem      int64         `json:"cpu_usage_system"`
 	CPUUsageTotal       int64         `json:"cpu_usage_total"`
+}
+
+type LoadGenOptions struct {
+	Path          string    `json:"path"`
+	ContainerName string    `json:"container_name"`
+	WaitGen       Generator `json:"wait_generator"`
+	WarmupGen     Generator `json:"warmup_generator"`
+	TestGen       Generator `json:"test_generator"`
+}
+
+type Generator struct {
+	Url      string        `json:"url"`
+	Duration time.Duration `json:"duration"`
+	Rate     vegeta.Rate   `json:"rate"`
 }
 
 // END copied from ./tool/loadgen
