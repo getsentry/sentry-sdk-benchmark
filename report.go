@@ -13,7 +13,7 @@ import (
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 )
 
-var summaryTemplate = template.Must(template.ParseFiles(filepath.Join("template", "report.html.tmpl")))
+var reportTemplate = template.Must(template.ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 func Report(s []string) {
 	if len(s) != 1 {
@@ -32,8 +32,8 @@ func Report(s []string) {
 }
 
 func report(results []*RunResult) {
-	summaryFile := SummaryFile{
-		Data: make([]SummaryFileData, 2),
+	reportFile := ReportFile{
+		Data: make([]ReportFileData, 2),
 	}
 
 	for i, res := range results {
@@ -41,33 +41,33 @@ func report(results []*RunResult) {
 		name := res.Name
 
 		if i == 0 {
-			summaryFile.Title = folderPath
+			reportFile.Title = folderPath
 		}
-		summaryFile.Data[i].Name = name
-		summaryFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
-		summaryFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
+		reportFile.Data[i].Name = name
+		reportFile.Data[i].HDR = read(filepath.Join(folderPath, name+".hdr"))
+		reportFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
 	}
 
-	summaryPath := filepath.Join(summaryFile.Title, "report.html")
-	f, err := os.Create(summaryPath)
+	reportPath := filepath.Join(reportFile.Title, "report.html")
+	f, err := os.Create(reportPath)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Printf("Generating benchmark summary at %s", summaryPath)
-	if err := summaryTemplate.Execute(f, summaryFile); err != nil {
+	log.Printf("Generating benchmark report at %s", reportPath)
+	if err := reportTemplate.Execute(f, reportFile); err != nil {
 		panic(err)
 	}
 
-	browser.Open(summaryPath)
+	browser.Open(reportPath)
 }
 
-type SummaryFile struct {
+type ReportFile struct {
 	Title string
-	Data  []SummaryFileData
+	Data  []ReportFileData
 }
 
-type SummaryFileData struct {
+type ReportFileData struct {
 	Name string
 	HDR  string
 	JSON TestResult
