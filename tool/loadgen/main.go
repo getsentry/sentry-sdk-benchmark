@@ -21,9 +21,9 @@ var hasRelay = os.Getenv("HAS_RELAY") == "true"
 type LoadGenOptions struct {
 	Path          string
 	ContainerName string
-	Wait          FetchConfig
-	Warmup        FetchConfig
-	Test          FetchConfig
+	WaitGen       Generator
+	WarmupGen     Generator
+	TestGen       Generator
 }
 
 func main() {
@@ -48,29 +48,30 @@ func main() {
 	options := LoadGenOptions{
 		Path:          path,
 		ContainerName: containerName,
-		Wait:          NewFetchConfig(target+"/update?query=1", 5*time.Second),
-		Warmup:        NewFetchConfig(target+"/update?query=100", 15*time.Second),
-		Test:          NewFetchConfig(target+"/update?query=100", 20*time.Second),
+		WaitGen:       NewGenerator(target+"/update?query=1", 5*time.Second),
+		WarmupGen:     NewGenerator(target+"/update?query=100", 15*time.Second),
+		TestGen:       NewGenerator(target+"/update?query=100", 20*time.Second),
 	}
 
-	writeReport(NewJSONReporter(options), filepath.Join(path, "config.json"))
-	run(options)
+	result := run(options)
+	save(result, path)
 }
 
-func run(options LoadGenOptions) {
-	waitUntilReady(options.Wait)
-	warmUp(options.Warmup)
+func run(options LoadGenOptions) TestResult {
+	waitUntilReady(options.WaitGen)
+	warmUp(options.WarmupGen)
+	result := test(options.ContainerName, options.TestGen)
+	result.Options = options
 
-	result := test(options.ContainerName, options.Test)
-	save(result, options.Path)
+	return result
 }
 
 // waitUntilReady waits until the target web app is ready to receive traffic.
-func waitUntilReady(config FetchConfig) {
+func waitUntilReady(gen Generator) {
 	log.Print("Waiting until web app is ready")
 	ready := false
 	for i := 0; i < 5; i++ {
-		ready = config.fetch().Success == 1
+		ready = gen.fetch().Success == 1
 		if ready {
 			break
 		}
@@ -85,15 +86,16 @@ func waitUntilReady(config FetchConfig) {
 // warmUp sends some traffic to warm up the target web app, ensuring
 // connectivity with the database is established, caches are warm, any JIT has
 // taken place, etc.
-func warmUp(config FetchConfig) {
+func warmUp(gen Generator) {
 	log.Print("Warming up web app")
-	config.fetch()
+	gen.fetch()
 }
 
 type TestResult struct {
 	*vegeta.Metrics
 	Stats        map[string]Stats       `json:"container_stats"`
 	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
+	Options      LoadGenOptions         `json:"options"`
 }
 
 type Stats struct {
@@ -120,13 +122,13 @@ type ContainerStatsDifference struct {
 
 // test sends the actual test traffic to the target web app and returns the
 // collected results.
-func test(containerName string, config FetchConfig) TestResult {
+func test(containerName string, gen Generator) TestResult {
 	log.Print("Testing web app")
 
 	stats := Stats{}
 	stats.Before = containerStats(containerName)
 
-	metrics := config.fetch()
+	metrics := gen.fetch()
 
 	stats.After = containerStats(containerName)
 	// Note: potential overflow ignored for simplicity
@@ -146,14 +148,14 @@ func test(containerName string, config FetchConfig) TestResult {
 	return tr
 }
 
-type FetchConfig struct {
+type Generator struct {
 	Url      string
 	Duration time.Duration
 	Rate     vegeta.Rate
 }
 
-func NewFetchConfig(url string, duration time.Duration) FetchConfig {
-	return FetchConfig{
+func NewGenerator(url string, duration time.Duration) Generator {
+	return Generator{
 		Url:      url,
 		Duration: duration,
 		Rate: vegeta.Rate{
@@ -165,13 +167,13 @@ func NewFetchConfig(url string, duration time.Duration) FetchConfig {
 
 // fetch requests the given URL several times for the given duration and with
 // the given concurrency level.
-func (f *FetchConfig) fetch() *vegeta.Metrics {
+func (g *Generator) fetch() *vegeta.Metrics {
 	target := vegeta.NewStaticTargeter(vegeta.Target{
 		Method: "GET",
-		URL:    f.Url,
+		URL:    g.Url,
 	})
 	attacker := vegeta.NewAttacker()
-	ch := attacker.Attack(target, f.Rate, f.Duration, "")
+	ch := attacker.Attack(target, g.Rate, g.Duration, "")
 
 	var m vegeta.Metrics
 	for res := range ch {
