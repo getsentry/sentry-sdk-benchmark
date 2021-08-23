@@ -19,11 +19,11 @@ const target = "http://app:8080"
 var hasRelay = os.Getenv("HAS_RELAY") == "true"
 
 type LoadGenOptions struct {
-	Path          string
-	ContainerName string
-	WaitGen       Generator
-	WarmupGen     Generator
-	TestGen       Generator
+	Path          string    `json:"path"`
+	ContainerName string    `json:"container_name"`
+	WaitGen       Generator `json:"wait_generator"`
+	WarmupGen     Generator `json:"warmup_generator"`
+	TestGen       Generator `json:"test_generator"`
 }
 
 func main() {
@@ -149,9 +149,9 @@ func test(containerName string, gen Generator) TestResult {
 }
 
 type Generator struct {
-	Url      string
-	Duration time.Duration
-	Rate     vegeta.Rate
+	Url      string        `json:"url"`
+	Duration time.Duration `json:"duration"`
+	Rate     vegeta.Rate   `json:"rate"`
 }
 
 func NewGenerator(url string, duration time.Duration) Generator {
