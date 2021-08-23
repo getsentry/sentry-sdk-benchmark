@@ -13,7 +13,7 @@ import (
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 )
 
-var summaryTemplate = template.Must(template.ParseFiles(filepath.Join("template", "summary.html.tmpl")))
+var summaryTemplate = template.Must(template.ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 func Report(s []string) {
 	if len(s) != 1 {
@@ -48,7 +48,7 @@ func report(results []*RunResult) {
 		summaryFile.Data[i].JSON = mustJSONUnmarshal(filepath.Join(folderPath, name+".json"))
 	}
 
-	summaryPath := filepath.Join(summaryFile.Title, "summary.html")
+	summaryPath := filepath.Join(summaryFile.Title, "report.html")
 	f, err := os.Create(summaryPath)
 	if err != nil {
 		panic(err)
