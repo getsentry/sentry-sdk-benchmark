@@ -100,7 +100,7 @@ if (cluster.isMaster) {
     res.render('fortunes/index', { fortunes: fortunes });
   });
 
-  app.get('/updates', async (req, res) => {
+  app.get('/update', async (req, res) => {
     const queries = Math.min(parseInt(req.query.queries) || 1, 500);
     const worldPromises = [];
 
