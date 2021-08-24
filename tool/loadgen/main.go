@@ -20,7 +20,6 @@ var hasRelay = os.Getenv("HAS_RELAY") == "true"
 
 type LoadGenOptions struct {
 	Path      string    `json:"path"`
-	WaitGen   Generator `json:"wait_generator"`
 	WarmupGen Generator `json:"warmup_generator"`
 	TestGen   Generator `json:"test_generator"`
 }
