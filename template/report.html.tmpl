@@ -27,10 +27,14 @@
         background-color: #dddddd;
       }
 
+      dl {
+        margin-top: 0;
+      }
+
       dt {
         float: left;
         clear: left;
-        width: 100px;
+        width: 120px;
         text-align: right;
         font-weight: bold;
       }
@@ -40,8 +44,21 @@
       }
 
       dd {
-        margin: 0 0 0 110px;
+        margin: 0 0 0 130px;
         padding: 0 0 0.5em 0;
+      }
+
+      h4 {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin-top: 0;
+      }
+
+      .runDetails {
+        border: 1px solid black;
+        padding: 10px;
       }
     </style>
 
@@ -242,37 +259,39 @@
     {{ range $dat := .Data }}
     <details>
       <summary>{{ $dat.Name }} Run Details</summary>
-      <h4>Errors</h4>
-      <ul>
-      {{ range $err := $dat.TestResult.Errors }}
-        <li>{{ $err }}</li>
-      {{ else }}
-        <li>No Errors</li>
-      {{ end }}
-      </ul>
-
-      <dl>
-        <dt>Earliest</dt>
-        <dd>{{ $dat.TestResult.Earliest }}</dd>
-        <dt>Latest</dt>
-        <dd>{{ $dat.TestResult.Latest }}</dd>
-        <dt>End</dt>
-        <dd>{{ $dat.TestResult.End }}</dd>
-        <dt>Duration</dt>
-        <dd>{{ $dat.TestResult.Duration }}</dd>
-        <dt>Wait</dt>
-        <dd>{{ $dat.TestResult.Wait }}</dd>
-        <dt>Requests</dt>
-        <dd>{{ $dat.TestResult.Requests }}</dd>
-        <dt>Throughput</dt>
-        <dd>{{ $dat.TestResult.Throughput }}</dd>
-        <dt>Success</dt>
-        <dd>{{ $dat.TestResult.Success }}</dd>
-        {{ range $key, $value := $dat.TestResult.StatusCodes }}
-        <dt>Status Code {{ $key }}</dt>
-        <dd>{{ $value }}</dd>
+      <div class="runDetails">
+        <h4>Errors</h4>
+        <ul>
+        {{ range $err := $dat.TestResult.Errors }}
+          <li>{{ $err }}</li>
+        {{ else }}
+          <li>No Errors</li>
         {{ end }}
-      </dl>
+        </ul>
+
+        <dl>
+          <dt>Earliest</dt>
+          <dd>{{ $dat.TestResult.Earliest }}</dd>
+          <dt>Latest</dt>
+          <dd>{{ $dat.TestResult.Latest }}</dd>
+          <dt>End</dt>
+          <dd>{{ $dat.TestResult.End }}</dd>
+          <dt>Duration</dt>
+          <dd>{{ $dat.TestResult.Duration }}</dd>
+          <dt>Wait</dt>
+          <dd>{{ $dat.TestResult.Wait }}</dd>
+          <dt>Requests</dt>
+          <dd>{{ $dat.TestResult.Requests }}</dd>
+          <dt>Throughput</dt>
+          <dd>{{ $dat.TestResult.Throughput }}</dd>
+          <dt>Success</dt>
+          <dd>{{ $dat.TestResult.Success }}</dd>
+          {{ range $key, $value := $dat.TestResult.StatusCodes }}
+          <dt>Status Code {{ $key }}</dt>
+          <dd>{{ $value }}</dd>
+          {{ end }}
+        </dl>
+      </div>
     </details>
     {{ end }}
 
