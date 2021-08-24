@@ -7,6 +7,7 @@ const cluster = require('cluster'),
   helper = require('./helper');
 
 const Sentry = require('@sentry/node');
+const Tracing = require("@sentry/tracing");
 
 // Middleware
 const bodyParser = require('body-parser');
@@ -67,7 +68,7 @@ if (cluster.isMaster) {
       // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
       // enable Express.js middleware tracing
-      new SentryTracing.Integrations.Express({ app }),
+      new Tracing.Integrations.Express({ app }),
     ],
   
     // We recommend adjusting this value in production, or using tracesSampler
