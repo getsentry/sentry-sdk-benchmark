@@ -50,6 +50,7 @@
 
       h4 {
         margin-bottom: 0;
+        margin-top: 0;
       }
 
       ul {
@@ -269,6 +270,7 @@
         {{ end }}
         </ul>
 
+        <h4>Result</h4>
         <dl>
           <dt>Earliest</dt>
           <dd>{{ $dat.TestResult.Earliest }}</dd>
@@ -295,7 +297,6 @@
     </details>
     {{ end }}
 
-    <!-- Table that contains JSON Results -->
     <h3>Latencies</h3>
     <table>
       <tr>
@@ -322,6 +323,78 @@
         <td>{{ $dat.TestResult.Latencies.Max }}</td>
         <td>{{ $dat.TestResult.Latencies.Min }}</td>
       </tr>
+      {{ end }}
+    </table>
+
+    <h3>Container Stats - Memory</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+      </tr>
+      {{ range $dat := .Data }}
+        <tr>
+          <th>{{ $dat.Name }}</th>
+          <td>{{ $dat.TestResult.Stats.app.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ $dat.TestResult.Stats.app.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ $dat.TestResult.Stats.app.Difference.MemoryMaxUsageBytes }}</td>
+        </tr>
+      {{ end }}
+    </table>
+
+    <h3>Container Stats - CPU Total</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+      </tr>
+      {{ range $dat := .Data }}
+        <tr>
+          <th>{{ $dat.Name }}</th>
+          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageTotal }}</td>
+          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageTotal }}</td>
+          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageTotal }}</td>
+        </tr>
+      {{ end }}
+    </table>
+
+    <h3>Container Stats - CPU User</h3>
+    <table>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+      </tr>
+      {{ range $dat := .Data }}
+        <tr>
+          <th>{{ $dat.Name }}</th>
+          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageUser }}</td>
+          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageUser }}</td>
+          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageUser }}</td>
+        </tr>
+      {{ end }}
+    </table>
+
+    <table>
+      <h3>Container Stats - CPU System</h3>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+      </tr>
+      {{ range $dat := .Data }}
+        <tr>
+          <th>{{ $dat.Name }}</th>
+          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageTotal }}</td>
+          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageTotal }}</td>
+          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageTotal }}</td>
+        </tr>
       {{ end }}
     </table>
 
