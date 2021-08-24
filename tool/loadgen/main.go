@@ -19,11 +19,10 @@ const target = "http://app:8080"
 var hasRelay = os.Getenv("HAS_RELAY") == "true"
 
 type LoadGenOptions struct {
-	Path          string    `json:"path"`
-	ContainerName string    `json:"container_name"`
-	WaitGen       Generator `json:"wait_generator"`
-	WarmupGen     Generator `json:"warmup_generator"`
-	TestGen       Generator `json:"test_generator"`
+	Path      string    `json:"path"`
+	WaitGen   Generator `json:"wait_generator"`
+	WarmupGen Generator `json:"warmup_generator"`
+	TestGen   Generator `json:"test_generator"`
 }
 
 func main() {
@@ -45,24 +44,39 @@ func main() {
 		panic("Missing TARGET_CONTAINER_NAME env var, aborting!")
 	}
 
+	rate := vegeta.Rate{
+		Freq: 100,
+		Per:  time.Second,
+	}
+	url := target + "/update?query=100"
+
 	options := LoadGenOptions{
-		Path:          path,
-		ContainerName: containerName,
-		WaitGen:       NewGenerator(target+"/update?query=1", 5*time.Second),
-		WarmupGen:     NewGenerator(target+"/update?query=100", 15*time.Second),
-		TestGen:       NewGenerator(target+"/update?query=100", 20*time.Second),
+		Path: path,
+		WarmupGen: Generator{
+			Url:      url,
+			Duration: 15 * time.Second,
+			Rate:     rate,
+		},
+		TestGen: Generator{
+			Url:      url,
+			Duration: 20 * time.Second,
+			Rate:     rate,
+		},
 	}
 
-	result := run(options)
+	waitUntilReady(Generator{
+		Url:      target + "/update?query=1",
+		Duration: 5 * time.Second,
+		Rate:     rate,
+	})
+	result := run(containerName, options)
 	save(result, path)
 }
 
-func run(options LoadGenOptions) TestResult {
-	waitUntilReady(options.WaitGen)
+func run(containerName string, options LoadGenOptions) TestResult {
 	warmUp(options.WarmupGen)
-	result := test(options.ContainerName, options.TestGen)
+	result := test(containerName, options.TestGen)
 	result.Options = options
-
 	return result
 }
 
@@ -152,17 +166,6 @@ type Generator struct {
 	Url      string        `json:"url"`
 	Duration time.Duration `json:"duration"`
 	Rate     vegeta.Rate   `json:"rate"`
-}
-
-func NewGenerator(url string, duration time.Duration) Generator {
-	return Generator{
-		Url:      url,
-		Duration: duration,
-		Rate: vegeta.Rate{
-			Freq: 100,
-			Per:  time.Second,
-		},
-	}
 }
 
 // fetch requests the given URL several times for the given duration and with
