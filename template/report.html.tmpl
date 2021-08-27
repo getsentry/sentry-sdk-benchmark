@@ -314,14 +314,14 @@
       {{ range $dat := .Data }}
       <tr>
         <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.TestResult.Latencies.Total }}</td>
-        <td>{{ $dat.TestResult.Latencies.Mean }}</td>
-        <td>{{ $dat.TestResult.Latencies.P50 }}</td>
-        <td>{{ $dat.TestResult.Latencies.P90 }}</td>
-        <td>{{ $dat.TestResult.Latencies.P95 }}</td>
-        <td>{{ $dat.TestResult.Latencies.P99 }}</td>
-        <td>{{ $dat.TestResult.Latencies.Max }}</td>
-        <td>{{ $dat.TestResult.Latencies.Min }}</td>
+        <td>{{ round $dat.TestResult.Latencies.Total }}</td>
+        <td>{{ round $dat.TestResult.Latencies.Mean }}</td>
+        <td>{{ round $dat.TestResult.Latencies.P50 }}</td>
+        <td>{{ round $dat.TestResult.Latencies.P90 }}</td>
+        <td>{{ round $dat.TestResult.Latencies.P95 }}</td>
+        <td>{{ round $dat.TestResult.Latencies.P99 }}</td>
+        <td>{{ round $dat.TestResult.Latencies.Max }}</td>
+        <td>{{ round $dat.TestResult.Latencies.Min }}</td>
       </tr>
       {{ end }}
     </table>

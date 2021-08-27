@@ -13,7 +13,15 @@ import (
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 )
 
-var reportTemplate = template.Must(template.ParseFiles(filepath.Join("template", "report.html.tmpl")))
+var funcMap = template.FuncMap{
+	"round": func(t time.Duration) time.Duration {
+		if t.Round(time.Second) > 0 {
+			return t.Truncate(10 * time.Millisecond)
+		}
+		return t.Truncate(10 * time.Microsecond)
+	},
+}
+var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 func Report(s []string) {
 	if len(s) != 1 {
