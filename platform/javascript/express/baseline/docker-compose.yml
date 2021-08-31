@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  tfb-database:
+    container_name: "db"
+    build:
+      context: "../../../../tool/database/postgres"
+      dockerfile: "postgres.dockerfile"
+  app:
+    container_name: "express"
+    build:
+      context: "."
+      dockerfile: "express-postgres.dockerfile"
+    ports:
+    - "8080:8080"
+    depends_on:
+    - "tfb-database"

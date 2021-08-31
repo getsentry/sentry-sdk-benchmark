@@ -129,8 +129,6 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	setUp(projectName, b.Bytes())
 	defer tearDown(projectName)
 
-	waitUntilExit("loadgen-" + runCfg.Name + "-" + benchmarkCfg.ID.String())
-
 	result := &RunResult{
 		Name:        runCfg.Name,
 		ComposeFile: b.Bytes(),
@@ -143,6 +141,8 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), result.ComposeFile, 0666); err != nil {
 		panic(err)
 	}
+
+	waitUntilExit("loadgen-" + runCfg.Name + "-" + benchmarkCfg.ID.String())
 
 	return result
 }
