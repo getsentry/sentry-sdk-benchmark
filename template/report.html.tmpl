@@ -117,6 +117,20 @@
 
         setChartData(names, histos);
         drawChart();
+        formatJSON();
+      }
+
+      function formatJSON() {
+        const node = document.getElementById("requestEnv");
+        const items = node.innerHTML.split("\n").filter(i => i !== "");
+
+        const formatNode = document.getElementById("formatEnv");
+        formatNode.innerHTML = "";
+        for (i in items) {
+          const preEle = document.createElement("pre");
+          preEle.innerHTML = JSON.stringify(JSON.parse(items[i]), null, 4);
+          formatNode.appendChild(preEle);
+        }
       }
 
       function drawChart() {
@@ -444,6 +458,8 @@
 
     <hr>
     <h3>First Request to Relay</h3>
-    <pre>{{ .RelayMetrics.first_request }}</pre>
+    <pre>{{ .FirstRequestHeaders }}</pre>
+    <div id="formatEnv">Loading...</div>
+    <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
   </body>
 </html>
