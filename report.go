@@ -83,6 +83,13 @@ func report(results []*RunResult) {
 		}
 
 		reportFile.Data[i].TestResult = tr
+
+		resJSON, err := json.Marshal(tr)
+		if err != nil {
+			panic(err)
+		}
+
+		reportFile.Data[i].TestResultJSON = string(resJSON)
 	}
 
 	reportPath := filepath.Join(reportFile.Title, "report.html")
@@ -108,9 +115,10 @@ type ReportFile struct {
 }
 
 type ReportFileData struct {
-	Name       string
-	HDR        string
-	TestResult TestResult
+	Name           string
+	HDR            string
+	TestResult     TestResult
+	TestResultJSON string
 }
 
 // START copied from ./tool/loadgen
