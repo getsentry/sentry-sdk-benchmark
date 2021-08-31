@@ -469,16 +469,14 @@
 
     <hr>
     <h3>First Request to Relay</h3>
-
+    <details>
+      <summary>Request Headers</summary>
+      <pre>{{ .FirstRequestHeaders }}</pre>
+    </details>
     <details>
       <summary>Envelope</summary>
       <div id="formatEnv">Loading...</div>
       <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
     </details>
-
-    <details>
-      <summary>Envelope Headers</summary>
-      <pre>{{ .FirstRequestHeaders }}</pre>
-    </details>    
   </body>
 </html>
