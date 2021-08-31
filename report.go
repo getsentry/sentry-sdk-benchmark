@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	vegeta "github.com/tsenart/vegeta/v12/lib"
-
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
+	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
 var funcMap = template.FuncMap{
@@ -58,9 +58,38 @@ func report(results []*RunResult) {
 
 		if tr.RelayMetrics != nil {
 			reportFile.RelayMetrics = tr.RelayMetrics
+
+			reqArr := strings.Split(reportFile.RelayMetrics["first_request"].(string), "\n")
+
+			var h strings.Builder
+			var e strings.Builder
+
+			for _, r := range reqArr {
+				if r == "" || r == "\r" {
+					continue
+				}
+
+				// hack to check if it's an envelope item
+				if r[0] == '{' {
+					e.WriteString(r)
+					e.WriteRune('\n')
+				} else {
+					h.WriteString(r)
+				}
+			}
+
+			reportFile.FirstRequestHeaders = h.String()
+			reportFile.FirstRequestEnv = e.String()
 		}
 
 		reportFile.Data[i].TestResult = tr
+
+		resJSON, err := json.Marshal(tr)
+		if err != nil {
+			panic(err)
+		}
+
+		reportFile.Data[i].TestResultJSON = string(resJSON)
 	}
 
 	reportPath := filepath.Join(reportFile.Title, "report.html")
@@ -78,15 +107,18 @@ func report(results []*RunResult) {
 }
 
 type ReportFile struct {
-	Title        string
-	Data         []ReportFileData
-	RelayMetrics map[string]interface{}
+	Title               string
+	Data                []ReportFileData
+	RelayMetrics        map[string]interface{}
+	FirstRequestHeaders string
+	FirstRequestEnv     string
 }
 
 type ReportFileData struct {
-	Name       string
-	HDR        string
-	TestResult TestResult
+	Name           string
+	HDR            string
+	TestResult     TestResult
+	TestResultJSON string
 }
 
 // START copied from ./tool/loadgen

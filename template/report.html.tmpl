@@ -117,6 +117,31 @@
 
         setChartData(names, histos);
         drawChart();
+        createEnvDetails();
+
+        formatJSON();
+      }
+
+      function createEnvDetails() {
+        const node = document.getElementById("requestEnv");
+        const items = node.innerHTML.split("\n").filter(i => i !== "");
+
+        const formatNode = document.getElementById("formatEnv");
+        formatNode.innerHTML = "";
+
+        items.forEach(item => {
+          const preEle = document.createElement("pre");
+          preEle.className = "jsonFormat"
+          preEle.innerHTML = item;
+          formatNode.appendChild(preEle);
+        });
+      }
+
+      function formatJSON() {
+        const nodes = document.querySelectorAll(".jsonFormat");
+        nodes.forEach(node => {
+          node.innerHTML = JSON.stringify(JSON.parse(node.innerHTML), null, 4);
+        });
       }
 
       function drawChart() {
@@ -438,12 +463,22 @@
       </details>
       <details class="json" data-name="{{ $dat.Name }}">
         <summary>Raw JSON: {{ $dat.Name }}</summary>
-        <pre>{{ $dat.TestResult }}</pre>
+        <pre class="jsonFormat">{{ $dat.TestResultJSON }}</pre>
       </details>
     {{ end }}
 
     <hr>
     <h3>First Request to Relay</h3>
-    <pre>{{ .RelayMetrics.first_request }}</pre>
+
+    <details>
+      <summary>Envelope</summary>
+      <div id="formatEnv">Loading...</div>
+      <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
+    </details>
+
+    <details>
+      <summary>Envelope Headers</summary>
+      <pre>{{ .FirstRequestHeaders }}</pre>
+    </details>    
   </body>
 </html>
