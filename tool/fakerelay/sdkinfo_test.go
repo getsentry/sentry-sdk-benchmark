@@ -23,6 +23,13 @@ func TestParseSDKInfo(t *testing.T) {
 				Version: "1.0",
 			},
 		},
+		{
+			in: "sentry_client=sentry.javascript.node/6.11.0,",
+			want: SDKInfo{
+				Name:    "sentry.javascript.node",
+				Version: "6.11.0",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.want.Name, func(t *testing.T) {

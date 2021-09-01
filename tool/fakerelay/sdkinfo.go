@@ -21,7 +21,7 @@ func ParseSDKInfo(request []byte) SDKInfo {
 	s := bytes.SplitN(match[1], []byte("/"), 2)
 	sdkInfo.Name = string(bytes.ReplaceAll(s[0], []byte("-"), []byte(".")))
 	if len(s) > 1 {
-		sdkInfo.Version = string(s[1])
+		sdkInfo.Version = string(bytes.ReplaceAll(s[1], []byte(","), []byte("")))
 	}
 	return sdkInfo
 }
