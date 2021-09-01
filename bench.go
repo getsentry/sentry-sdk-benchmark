@@ -99,7 +99,8 @@ type RunResult struct {
 }
 
 func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
-	projectName := fmt.Sprintf("%s-%s-%s",
+	projectName := fmt.Sprintf("%s-%s-%s-%s",
+		filepath.Base(filepath.Dir(benchmarkCfg.Platform)),
 		filepath.Base(benchmarkCfg.Platform),
 		runCfg.Name,
 		benchmarkCfg.ID)
