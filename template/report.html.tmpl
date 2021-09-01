@@ -484,7 +484,7 @@
       <details>
         <summary>Raw JSON: <b>{{ $dat.Name }}</b></summary>
         <div style="display: flex;">
-          <pre class="json jsonFormat" data-name="{{ $dat.Name }}">{{ $dat.TestResultJSON }}</pre>
+          <pre style="width: 400px;" class="json jsonFormat" data-name="{{ $dat.Name }}">{{ $dat.TestResultJSON }}</pre>
           <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', {{ $dat.Name }})">Copy {{ $dat.Name }} JSON</button>
         </div>
       </details>
