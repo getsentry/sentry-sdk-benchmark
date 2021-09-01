@@ -148,51 +148,30 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 	log.Print("START")
 	defer log.Print("END")
 
+	composeFile, data := Compose(benchmarkCfg, runCfg)
+
 	projectName := fmt.Sprintf("%s-%s-%s-%s",
 		filepath.Base(filepath.Dir(benchmarkCfg.Platform)),
 		filepath.Base(benchmarkCfg.Platform),
 		runCfg.Name,
 		benchmarkCfg.ID)
-	contextPath := path.Join(benchmarkCfg.Platform, runCfg.Name)
-	resultPath := path.Join(append(
-		strings.Split(benchmarkCfg.Platform, string(os.PathSeparator))[1:],
-		fmt.Sprintf("%s-%s", benchmarkCfg.StartTime.Format("20060102-150405"), benchmarkCfg.ID),
-		runCfg.Name,
-	)...)
-	dockerfile := findDockerfile(contextPath)
-
-	var b bytes.Buffer
-	err := dockerComposeTemplate.Execute(&b, DockerComposeData{
-		ID:             benchmarkCfg.ID,
-		RunName:        runCfg.Name,
-		PlatformConfig: benchmarkCfg.PlatformConfig,
-		App: App{
-			ContextPath: contextPath,
-			Dockerfile:  dockerfile,
-		},
-		ResultPath: resultPath,
-		NeedsRelay: runCfg.NeedsRelay,
-	})
-	if err != nil {
-		panic(err)
-	}
 
 	result := &RunResult{
 		Name:        runCfg.Name,
-		ComposeFile: b.Bytes(),
-		Path:        filepath.Join("result", filepath.Join(strings.Split(resultPath, "/")...)),
+		ComposeFile: composeFile,
+		Path:        filepath.Join("result", filepath.Join(strings.Split(data.ResultPath, "/")...)),
 	}
 
 	if err := os.MkdirAll(result.Path, 0777); err != nil {
 		panic(err)
 	}
-	if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), result.ComposeFile, 0666); err != nil {
+	if err := os.WriteFile(filepath.Join(result.Path, "docker-compose.yml"), composeFile, 0666); err != nil {
 		panic(err)
 	}
 
 	defer composeDown(projectName)
-	composeBuild(ctx, projectName, result.ComposeFile)
-	composeUp(ctx, projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"))
+	composeBuild(ctx, projectName, composeFile)
+	composeUp(ctx, projectName, composeFile, filepath.Join(result.Path, "docker-compose-up.log"))
 
 	return result
 }

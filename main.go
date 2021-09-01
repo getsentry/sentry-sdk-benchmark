@@ -13,23 +13,32 @@ import (
 )
 
 var usage = `
-Usage:	%[1]s [run] PLATFORM [PLATFORM ...]
+Usage:
+%[1]s [run] PLATFORM [PLATFORM ...]
 
-Benchmark one or more platforms.
+	Benchmark one or more platforms.
 
-Examples:
-%[1]s platform/python/django
-%[1]s run platform/javascript/express
+	Examples:
+	%[1]s platform/python/django
+	%[1]s run platform/javascript/express
 
-Usage:	%[1]s report RESULT [RESULT ...]
+%[1]s report RESULT [RESULT ...]
 
-Print an HTML report summarizing the results of one or more benchmark runs.
-Reports are automatically created after a successful benchmark run.
-This subcommand allows re-generating a report from benchmark result data on demand.
+	Print an HTML report summarizing the results of one or more benchmark runs.
+	Reports are automatically created after a successful benchmark run.
+	This subcommand allows re-generating a report from benchmark result data on demand.
 
-Examples:
-%[1]s report result/python/django/20210818-082527-tbnfsga
-%[1]s report result/python/django/20210818-*
+	Examples:
+	%[1]s report result/python/django/20210818-082527-tbnfsga
+	%[1]s report result/python/django/20210818-*
+
+%[1]s compose APP
+
+	Print a Docker Compose YAML configuration file to run APP and its dependencies.
+
+	Examples:
+	%[1]s compose platform/python/django/baseline
+	%[1]s compose platform/python/django/instrumented
 `
 
 func printUsage() {
@@ -76,6 +85,18 @@ func main() {
 			openBrowser = false
 		}
 		Report(args)
+	case "compose":
+		args = args[1:]
+		if len(args) != 1 {
+			printUsage()
+			os.Exit(2)
+		}
+		cfg := BenchmarkConfigFromPlatform(filepath.Dir(args[0]))
+		composeFile, _ := Compose(cfg, cfg.Runs[0])
+		os.Stdout.Write(composeFile)
+		if composeFile[len(composeFile)-1] != '\n' {
+			os.Stdout.WriteString("\n")
+		}
 	case "run":
 		args = args[1:]
 		fallthrough
