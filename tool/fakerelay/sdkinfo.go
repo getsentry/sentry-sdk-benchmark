@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-var t = regexp.MustCompile(`sentry_client=(\S+)`)
+var t = regexp.MustCompile(`sentry_client=([^ ,]+)`)
 
 type SDKInfo struct {
 	Name    string `json:"name"`
@@ -21,7 +21,7 @@ func ParseSDKInfo(request []byte) SDKInfo {
 	s := bytes.SplitN(match[1], []byte("/"), 2)
 	sdkInfo.Name = string(bytes.ReplaceAll(s[0], []byte("-"), []byte(".")))
 	if len(s) > 1 {
-		sdkInfo.Version = string(bytes.ReplaceAll(s[1], []byte(","), []byte("")))
+		sdkInfo.Version = string(s[1])
 	}
 	return sdkInfo
 }
