@@ -16,7 +16,7 @@ services:
     - "./result:/result:rw"
     environment:
       RESULT_PATH: "/result/{{ .ResultPath }}"
-      TARGET_CONTAINER_NAME: "{{ .App.ContainerName }}-{{ .RunName }}-{{ .ID }}"
+      TARGET_CONTAINER_NAME: "app-{{ .RunName }}-{{ .ID }}"
       HAS_RELAY: "{{ .NeedsRelay }}"
     depends_on:
     - "app"
@@ -26,7 +26,7 @@ services:
       context: "tool/database/postgres"
       dockerfile: "postgres.dockerfile"
   app:
-    container_name: "{{ .App.ContainerName }}-{{ .RunName }}-{{ .ID }}"
+    container_name: "app-{{ .RunName }}-{{ .ID }}"
     build:
       context: "{{ .App.ContextPath }}"
       dockerfile: "{{ .App.Dockerfile }}"

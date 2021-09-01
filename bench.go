@@ -57,7 +57,6 @@ type DockerComposeData struct {
 }
 
 type App struct {
-	ContainerName string
 	ContextPath   string
 	Dockerfile    string
 	HostPort      int
@@ -100,8 +99,10 @@ type RunResult struct {
 }
 
 func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
-	containerName := filepath.Base(benchmarkCfg.Platform)
-	projectName := fmt.Sprintf("%s-%s-%s", containerName, runCfg.Name, benchmarkCfg.ID)
+	projectName := fmt.Sprintf("%s-%s-%s",
+		filepath.Base(benchmarkCfg.Platform),
+		runCfg.Name,
+		benchmarkCfg.ID)
 	contextPath := path.Join(benchmarkCfg.Platform, runCfg.Name)
 	resultPath := path.Join(append(
 		strings.Split(benchmarkCfg.Platform, string(os.PathSeparator))[1:],
@@ -115,9 +116,8 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 		ID:      benchmarkCfg.ID,
 		RunName: runCfg.Name,
 		App: App{
-			ContainerName: containerName,
-			ContextPath:   contextPath,
-			Dockerfile:    dockerfile,
+			ContextPath: contextPath,
+			Dockerfile:  dockerfile,
 		},
 		ResultPath: resultPath,
 		NeedsRelay: runCfg.NeedsRelay,
