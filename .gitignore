@@ -7,3 +7,5 @@
 !/result/.gitkeep
 
 /sentry-sdk-benchmark
+
+/FrameworkBenchmarks/
