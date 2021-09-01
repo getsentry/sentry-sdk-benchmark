@@ -101,3 +101,7 @@ Remove all dangling (untagged) images:
 ```shell
 docker rmi $(docker images -f "dangling=true" -q)
 ```
+
+## How To Add More Platforms
+
+See [platform/README.md](platform/README.md).
