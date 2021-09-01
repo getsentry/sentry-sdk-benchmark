@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -27,16 +29,29 @@ func Report(s []string) {
 	if len(s) != 1 {
 		panic("Reporting on multiple results is not supported yet")
 	}
-	report([]*RunResult{
-		{
-			Name: "baseline",
-			Path: filepath.Join(s[0], "baseline"),
-		},
-		{
-			Name: "instrumented",
-			Path: filepath.Join(s[0], "instrumented"),
-		},
-	})
+
+	files, err := ioutil.ReadDir(s[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Generate run results from folder names
+	var runResults []*RunResult
+	for _, f := range files {
+		if f.IsDir() {
+			name := f.Name()
+			runResults = append(runResults, &RunResult{
+				Name: name,
+				Path: filepath.Join(s[0], name),
+			})
+		}
+	}
+
+	if len(runResults) == 0 {
+		panic(fmt.Errorf("no valid results in directory %s", s[0]))
+	}
+
+	report(runResults)
 }
 
 func report(results []*RunResult) {
