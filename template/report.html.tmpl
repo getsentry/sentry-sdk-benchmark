@@ -259,6 +259,23 @@
         drawChart();
         return { typed: "" };
       }
+
+      function copy(className, runName) {
+        const hdrNodes = document.querySelectorAll(`.${className}`);
+        hdrNodes.forEach(node => {
+          if (node.getAttribute("data-name") === runName) {
+            navigator.clipboard.writeText(node.innerHTML);
+            const snack = document.getElementById("snackbar");
+            snackbar.innerHTML = `Copied ${className} for ${runName}`
+            // Add the "show" class to DIV
+            snackbar.className = "show";
+            setTimeout(() => {
+              snackbar.className = snackbar.className.replace("show", "");
+              snackbar.innerHTML = "";
+            }, 1000);
+          }
+        })
+      }
     </script>
   </head>
   <body>
@@ -457,13 +474,19 @@
 
     <hr>
     {{ range $dat := .Data }}
-      <details class="hdr" data-name="{{ $dat.Name }}">
-        <summary>Percentile Table: {{ $dat.Name }}</summary>
-        <pre>{{ $dat.HDR }}</pre>
+      <details >
+        <summary>Percentile Table: <b>{{ $dat.Name }}</b></summary>
+        <div style="display: flex;">
+          <pre class="hdr" data-name="{{ $dat.Name }}">{{ $dat.HDR }}</pre>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', {{ $dat.Name }})">Copy {{ $dat.Name }} HDR</button>
+        </div>
       </details>
-      <details class="json" data-name="{{ $dat.Name }}">
-        <summary>Raw JSON: {{ $dat.Name }}</summary>
-        <pre class="jsonFormat">{{ $dat.TestResultJSON }}</pre>
+      <details>
+        <summary>Raw JSON: <b>{{ $dat.Name }}</b></summary>
+        <div style="display: flex;">
+          <pre class="json jsonFormat" data-name="{{ $dat.Name }}">{{ $dat.TestResultJSON }}</pre>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', {{ $dat.Name }})">Copy {{ $dat.Name }} JSON</button>
+        </div>
       </details>
     {{ end }}
 
@@ -478,5 +501,55 @@
       <div id="formatEnv">Loading...</div>
       <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
     </details>
+
+    <!-- The actual snackbar -->
+    <div id="snackbar"></div>
+
+    <!-- Misc Styles -->
+    <style>
+      /* The snackbar - position it at the bottom and in the middle of the screen */
+      #snackbar {
+        visibility: hidden;
+        min-width: 200px;
+        margin-left: -125px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 100px;
+        padding: 8px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+      }
+
+      /* Show the snackbar when clicking on a button (class added with JavaScript) */
+      #snackbar.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      }
+
+      /* Animations to fade the snackbar in and out */
+      @-webkit-keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+      }
+
+      @keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+      }
+
+      @-webkit-keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+      }
+
+      @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+      }
+    </style>
   </body>
 </html>
