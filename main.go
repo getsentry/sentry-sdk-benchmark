@@ -25,8 +25,8 @@ Reports are automatically created after a successful benchmark run.
 This subcommand allows re-generating a report from benchmark result data on demand.
 
 Examples:
-%[1]s result/python/django/20210818-082527-tbnfsga
-%[1]s result/python/django/20210818-*
+%[1]s report result/python/django/20210818-082527-tbnfsga
+%[1]s report result/python/django/20210818-*
 `
 
 func printUsage() {
