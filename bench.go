@@ -36,7 +36,7 @@ type PlatformConfig struct {
 	RPS uint16
 }
 
-func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
+func BenchmarkConfigFromPlatform(platform string, keep bool) BenchmarkConfig {
 	cfg := BenchmarkConfig{
 		ID:        NewBenchmarkID(),
 		StartTime: time.Now().UTC(),
@@ -48,6 +48,7 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			{
 				Name:       "baseline",
 				NeedsRelay: false,
+				Keep:       keep,
 			},
 		}
 	case "instrumented":
@@ -56,6 +57,7 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			{
 				Name:       "instrumented",
 				NeedsRelay: true,
+				Keep:       keep,
 			},
 		}
 	default:
@@ -64,10 +66,12 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			{
 				Name:       "baseline",
 				NeedsRelay: false,
+				Keep:       keep,
 			},
 			{
 				Name:       "instrumented",
 				NeedsRelay: true,
+				Keep:       keep,
 			},
 		}
 	}
@@ -86,6 +90,7 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 type RunConfig struct {
 	Name       string
 	NeedsRelay bool
+	Keep       bool
 }
 
 type DockerComposeData struct {
@@ -192,7 +197,7 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 
 	defer composeDown(projectName)
 	composeBuild(ctx, projectName, result.ComposeFile)
-	composeUp(ctx, projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"))
+	composeUp(ctx, projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"), runCfg.Keep)
 
 	return result
 }
@@ -227,7 +232,7 @@ func composeBuild(ctx context.Context, projectName string, composeFile []byte) {
 	}
 }
 
-func composeUp(ctx context.Context, projectName string, composeFile []byte, outpath string) {
+func composeUp(ctx context.Context, projectName string, composeFile []byte, outpath string, keep bool) {
 	log.Printf("Running 'docker compose up', streaming logs to %q...", outpath)
 
 	out, err := os.Create(outpath)
@@ -236,12 +241,16 @@ func composeUp(ctx context.Context, projectName string, composeFile []byte, outp
 	}
 	defer out.Close()
 
+	var args []string
+	if !keep {
+		args = []string{"--exit-code-from", "loadgen"}
+	}
 	cmd := exec.CommandContext(
 		ctx,
-		"docker", "compose",
-		"--project-name", projectName,
-		"--file", "-",
-		"up", "--exit-code-from", "loadgen",
+		"docker", append([]string{"compose",
+			"--project-name", projectName,
+			"--file", "-",
+			"up"}, args...)...,
 	)
 	cmd.Stdin = bytes.NewReader(composeFile)
 	cmd.Stdout = io.MultiWriter(out, os.Stdout)

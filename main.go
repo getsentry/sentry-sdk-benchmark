@@ -59,7 +59,10 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	var keep bool
+	flag.BoolVar(&keep, "keep", false, "keeping containers running (for debugging)")
 	flag.Parse()
+
 	if len(flag.Args()) < 1 {
 		printUsage()
 		os.Exit(2)
@@ -88,7 +91,7 @@ func main() {
 			openBrowser = false
 		}
 		for _, platform := range args {
-			Benchmark(ctx, BenchmarkConfigFromPlatform(platform))
+			Benchmark(ctx, BenchmarkConfigFromPlatform(platform, keep))
 		}
 	}
 }
