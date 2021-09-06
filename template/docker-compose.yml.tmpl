@@ -12,6 +12,8 @@ services:
     container_name: "loadgen-{{ .RunName }}-{{ .ID }}"
     build:
       context: "tool/loadgen"
+      labels:
+      - "io.sentry.sentry-sdk-benchmark"
     volumes:
     - "./result:/result:rw"
     environment:
@@ -25,11 +27,15 @@ services:
     build:
       context: "tool/database/postgres"
       dockerfile: "postgres.dockerfile"
+      labels:
+      - "io.sentry.sentry-sdk-benchmark"
   app:
     container_name: "app-{{ .RunName }}-{{ .ID }}"
     build:
       context: "{{ .App.ContextPath }}"
       dockerfile: "{{ .App.Dockerfile }}"
+      labels:
+      - "io.sentry.sentry-sdk-benchmark"
     depends_on:
     - "cadvisor"
     - "tfb-database"
@@ -41,4 +47,6 @@ services:
     container_name: "fakerelay-{{ .RunName }}-{{ .ID }}"
     build:
       context: "tool/fakerelay"
+      labels:
+      - "io.sentry.sentry-sdk-benchmark"
 {{- end }}

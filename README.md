@@ -79,3 +79,11 @@ docker rm -f $(docker ps -a -q)
 ```shell
 docker network prune
 ```
+
+```shell
+docker rmi $(docker images --filter "label=io.sentry.sentry-sdk-benchmark")
+```
+
+```shell
+docker rmi $(docker images -f "dangling=true" -q)
+```
