@@ -93,7 +93,7 @@ docker network prune
 Remove images with `sentry-sdk-benchmark` label:
 
 ```shell
-docker rmi $(docker images --filter "label=io.sentry.sentry-sdk-benchmark")
+docker rmi $(docker images -f "label=io.sentry.sentry-sdk-benchmark" -q)
 ```
 
 Remove all dangling (untagged) images:
