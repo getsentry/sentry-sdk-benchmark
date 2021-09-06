@@ -1,4 +1,7 @@
 version: "3.9"
+networks:
+  default:
+    internal: true
 services:
   cadvisor:
     image: "gcr.io/cadvisor/cadvisor:v0.37.5"
