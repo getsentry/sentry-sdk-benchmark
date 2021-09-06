@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/base32"
 	"fmt"
@@ -101,14 +102,14 @@ func (r BenchmarkID) String() string {
 	return base32Encoding.EncodeToString(r[:])
 }
 
-func Benchmark(cfg BenchmarkConfig) {
+func Benchmark(ctx context.Context, cfg BenchmarkConfig) {
 	oldprefix := log.Prefix()
 	defer log.SetPrefix(oldprefix)
 	log.SetPrefix(fmt.Sprintf("%s[%s] ", oldprefix, cfg.ID))
 
 	var results []*RunResult
 	for _, runCfg := range cfg.Runs {
-		results = append(results, run(cfg, runCfg))
+		results = append(results, run(ctx, cfg, runCfg))
 	}
 
 	report(results)
@@ -120,7 +121,7 @@ type RunResult struct {
 	Path        string
 }
 
-func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
+func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	oldprefix := log.Prefix()
 	defer log.SetPrefix(oldprefix)
 	log.SetPrefix(fmt.Sprintf("%s[%s] ", oldprefix, path.Join(append(strings.Split(benchmarkCfg.Platform, string(os.PathSeparator))[1:], runCfg.Name)...)))
@@ -170,8 +171,8 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 	}
 
 	defer composeDown(projectName)
-	composeBuild(projectName, result.ComposeFile)
-	composeUp(projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"))
+	composeBuild(ctx, projectName, result.ComposeFile)
+	composeUp(ctx, projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"))
 
 	return result
 }
@@ -189,9 +190,10 @@ func findDockerfile(path string) string {
 	panic(fmt.Errorf("no Dockerfile in %s", path))
 }
 
-func composeBuild(projectName string, composeFile []byte) {
+func composeBuild(ctx context.Context, projectName string, composeFile []byte) {
 	log.Print("Running 'docker compose build'...")
-	cmd := exec.Command(
+	cmd := exec.CommandContext(
+		ctx,
 		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",
@@ -205,7 +207,7 @@ func composeBuild(projectName string, composeFile []byte) {
 	}
 }
 
-func composeUp(projectName string, composeFile []byte, outpath string) {
+func composeUp(ctx context.Context, projectName string, composeFile []byte, outpath string) {
 	log.Printf("Running 'docker compose up', streaming logs to %q...", outpath)
 
 	out, err := os.Create(outpath)
@@ -214,7 +216,8 @@ func composeUp(projectName string, composeFile []byte, outpath string) {
 	}
 	defer out.Close()
 
-	cmd := exec.Command(
+	cmd := exec.CommandContext(
+		ctx,
 		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",

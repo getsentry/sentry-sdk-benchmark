@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -54,6 +56,9 @@ func main() {
 		}
 	}()
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		printUsage()
@@ -83,7 +88,7 @@ func main() {
 			openBrowser = false
 		}
 		for _, platform := range args {
-			Benchmark(BenchmarkConfigFromPlatform(platform))
+			Benchmark(ctx, BenchmarkConfigFromPlatform(platform))
 		}
 	}
 }
