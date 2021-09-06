@@ -67,3 +67,15 @@ The `sentry-sdk-benchmark` command automates the following steps:
     ```
 
 6. Open [`plotFiles.html`](tool/plot-hdr-histogram/plotFiles.html) and plot a latency by percentile distribution graph using the two resulting files.
+
+## Manually Cleaning Up Resources
+
+The `sentry-sdk-benchmark` tool always tries to clean up resources (containers and networks) after running. There are failure modes that may leave containers or networks behind. The following two commands can help cleaning up resources. Use with care as they will affect all Docker containers/networks, even those not created by `sentry-sdk-benchmark`.
+
+```shell
+docker rm -f $(docker ps -a -q)
+```
+
+```shell
+docker network prune
+```
