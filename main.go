@@ -35,6 +35,11 @@ func printUsage() {
 	fmt.Fprintln(os.Stderr)
 }
 
+// openBrowser controls whether to open a web browser to show HTML reports. The
+// default behavior is to open a browser, unless running multiple benchmarks
+// from a single command line execution.
+var openBrowser = true
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
 	log.SetPrefix("[sentry-sdk-benchmark] ")
@@ -62,6 +67,9 @@ func main() {
 			printUsage()
 			os.Exit(2)
 		}
+		if len(args) > 1 {
+			openBrowser = false
+		}
 		Report(args)
 	case "run":
 		args = args[1:]
@@ -70,6 +78,9 @@ func main() {
 		if len(args) == 0 {
 			printUsage()
 			os.Exit(2)
+		}
+		if len(args) > 1 {
+			openBrowser = false
 		}
 		for _, platform := range args {
 			Benchmark(BenchmarkConfigFromPlatform(platform))

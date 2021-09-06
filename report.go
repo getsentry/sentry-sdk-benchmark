@@ -118,7 +118,9 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	browser.Open(reportPath)
+	if openBrowser {
+		browser.Open(reportPath)
+	}
 }
 
 type ReportFile struct {
