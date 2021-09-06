@@ -10,7 +10,7 @@ func TestParseSDKInfo(t *testing.T) {
 		want SDKInfo
 	}{
 		{
-			in: "sentry_client=sentry.python/1.3.0",
+			in: "sentry_client=sentry.python/1.3.0\r\n\r\n{\"event_id\":\"c822b648d94e47a2b9cd7d67a9984eee\",\"sent_at\":...",
 			want: SDKInfo{
 				Name:    "sentry.python",
 				Version: "1.3.0",

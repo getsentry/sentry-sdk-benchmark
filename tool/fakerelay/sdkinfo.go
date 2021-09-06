@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-var t = regexp.MustCompile(`sentry_client=([^ ,]+)`)
+var t = regexp.MustCompile(`sentry_client=([^\s,]+)`)
 
 type SDKInfo struct {
 	Name    string `json:"name"`
