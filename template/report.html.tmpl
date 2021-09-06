@@ -280,7 +280,9 @@
   </head>
   <body>
     <h1>{{ .Title }}</h1>
-    <h3>{{ .RelayMetrics.sdk.name }} {{ .RelayMetrics.sdk.version }}</h3>
+    {{ with .RelayMetrics -}}
+    <h3>{{ .sdk.name }} {{ .sdk.version }}</h3>
+    {{- end }}
     <!--Div that will hold the chart-->
     <div id="chart_div">Loading...</div>
     <p>
@@ -299,14 +301,15 @@
     </p>
 
     <!-- Information about the run -->
-    {{ range $dat := .Data }}
+    {{ range .Data }}
     <details>
-      <summary>{{ $dat.Name }} Run Details</summary>
+      <summary>{{ .Name }} Run Details</summary>
+      {{ with .TestResult.Metrics -}}
       <div class="runDetails">
         <h4>Errors</h4>
         <ul>
-        {{ range $err := $dat.TestResult.Errors }}
-          <li>{{ $err }}</li>
+        {{ range .Errors }}
+          <li>{{ . }}</li>
         {{ else }}
           <li>No Errors</li>
         {{ end }}
@@ -315,27 +318,28 @@
         <h4>Result</h4>
         <dl>
           <dt>Earliest</dt>
-          <dd>{{ $dat.TestResult.Earliest }}</dd>
+          <dd>{{ .Earliest }}</dd>
           <dt>Latest</dt>
-          <dd>{{ $dat.TestResult.Latest }}</dd>
+          <dd>{{ .Latest }}</dd>
           <dt>End</dt>
-          <dd>{{ $dat.TestResult.End }}</dd>
+          <dd>{{ .End }}</dd>
           <dt>Duration</dt>
-          <dd>{{ $dat.TestResult.Duration }}</dd>
+          <dd>{{ .Duration }}</dd>
           <dt>Wait</dt>
-          <dd>{{ $dat.TestResult.Wait }}</dd>
+          <dd>{{ .Wait }}</dd>
           <dt>Requests</dt>
-          <dd>{{ $dat.TestResult.Requests }}</dd>
+          <dd>{{ .Requests }}</dd>
           <dt>Throughput</dt>
-          <dd>{{ $dat.TestResult.Throughput }}</dd>
+          <dd>{{ .Throughput }}</dd>
           <dt>Success</dt>
-          <dd>{{ $dat.TestResult.Success }}</dd>
-          {{ range $key, $value := $dat.TestResult.StatusCodes }}
+          <dd>{{ .Success }}</dd>
+          {{ range $key, $value := .StatusCodes }}
           <dt>Status Code {{ $key }}</dt>
           <dd>{{ $value }}</dd>
           {{ end }}
         </dl>
       </div>
+      {{- end }}
     </details>
     {{ end }}
 
@@ -353,17 +357,19 @@
         <th>Min</th>
       </tr>
 
-      {{ range $dat := .Data }}
+      {{ range .Data }}
       <tr>
-        <th>{{ $dat.Name }}</th>
-        <td>{{ round $dat.TestResult.Latencies.Total }}</td>
-        <td>{{ round $dat.TestResult.Latencies.Mean }}</td>
-        <td>{{ round $dat.TestResult.Latencies.P50 }}</td>
-        <td>{{ round $dat.TestResult.Latencies.P90 }}</td>
-        <td>{{ round $dat.TestResult.Latencies.P95 }}</td>
-        <td>{{ round $dat.TestResult.Latencies.P99 }}</td>
-        <td>{{ round $dat.TestResult.Latencies.Max }}</td>
-        <td>{{ round $dat.TestResult.Latencies.Min }}</td>
+        <th>{{ .Name }}</th>
+        {{ with .TestResult.Metrics -}}
+        <td>{{ round .Latencies.Total }}</td>
+        <td>{{ round .Latencies.Mean }}</td>
+        <td>{{ round .Latencies.P50 }}</td>
+        <td>{{ round .Latencies.P90 }}</td>
+        <td>{{ round .Latencies.P95 }}</td>
+        <td>{{ round .Latencies.P99 }}</td>
+        <td>{{ round .Latencies.Max }}</td>
+        <td>{{ round .Latencies.Min }}</td>
+        {{- end }}
       </tr>
       {{ end }}
     </table>
@@ -376,12 +382,14 @@
         <th>After</th>
         <th>Difference</th>
       </tr>
-      {{ range $dat := .Data }}
+      {{ range .Data }}
         <tr>
-          <th>{{ $dat.Name }}</th>
-          <td>{{ $dat.TestResult.Stats.app.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ $dat.TestResult.Stats.app.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ $dat.TestResult.Stats.app.Difference.MemoryMaxUsageBytes }}</td>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Stats -}}
+          <td>{{ .app.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ .app.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ .app.Difference.MemoryMaxUsageBytes }}</td>
+          {{- end }}
         </tr>
       {{ end }}
     </table>
@@ -394,12 +402,14 @@
         <th>After</th>
         <th>Difference</th>
       </tr>
-      {{ range $dat := .Data }}
+      {{ range .Data }}
         <tr>
-          <th>{{ $dat.Name }}</th>
-          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageTotal }}</td>
-          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageTotal }}</td>
-          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageTotal }}</td>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Stats -}}
+          <td>{{ .app.Before.CPUUsageTotal }}</td>
+          <td>{{ .app.After.CPUUsageTotal }}</td>
+          <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          {{- end }}
         </tr>
       {{ end }}
     </table>
@@ -412,12 +422,14 @@
         <th>After</th>
         <th>Difference</th>
       </tr>
-      {{ range $dat := .Data }}
+      {{ range .Data }}
         <tr>
-          <th>{{ $dat.Name }}</th>
-          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageUser }}</td>
-          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageUser }}</td>
-          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageUser }}</td>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Stats -}}
+          <td>{{ .app.Before.CPUUsageUser }}</td>
+          <td>{{ .app.After.CPUUsageUser }}</td>
+          <td>{{ .app.Difference.CPUUsageUser }}</td>
+          {{- end }}
         </tr>
       {{ end }}
     </table>
@@ -430,12 +442,14 @@
         <th>After</th>
         <th>Difference</th>
       </tr>
-      {{ range $dat := .Data }}
+      {{ range .Data }}
         <tr>
-          <th>{{ $dat.Name }}</th>
-          <td>{{ $dat.TestResult.Stats.app.Before.CPUUsageTotal }}</td>
-          <td>{{ $dat.TestResult.Stats.app.After.CPUUsageTotal }}</td>
-          <td>{{ $dat.TestResult.Stats.app.Difference.CPUUsageTotal }}</td>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Stats -}}
+          <td>{{ .app.Before.CPUUsageTotal }}</td>
+          <td>{{ .app.After.CPUUsageTotal }}</td>
+          <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          {{- end }}
         </tr>
       {{ end }}
     </table>
@@ -447,12 +461,14 @@
         <th>Total</th>
         <th>Mean</th>
       </tr>
-      {{ range $dat := .Data }}
-      <tr>
-        <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.TestResult.BytesIn.Total }}</td>
-        <td>{{ $dat.TestResult.BytesIn.Mean }}</td>
-      </tr>
+      {{ range .Data }}
+        <tr>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Metrics -}}
+          <td>{{ .BytesIn.Total }}</td>
+          <td>{{ .BytesIn.Mean }}</td>
+          {{- end }}
+        </tr>
       {{ end }}
     </table>
 
@@ -463,29 +479,30 @@
         <th>Total</th>
         <th>Mean</th>
       </tr>
-      {{ range $dat := .Data }}
+      {{ range .Data }}
       <tr>
-        <th>{{ $dat.Name }}</th>
-        <td>{{ $dat.TestResult.BytesOut.Total }}</td>
-        <td>{{ $dat.TestResult.BytesOut.Mean }}</td>
+        <th>{{ .Name }}</th>
+        {{ with .TestResult.Metrics -}}
+        <td>{{ .BytesOut.Total }}</td>
+        <td>{{ .BytesOut.Mean }}</td>
+        {{- end }}
       </tr>
       {{ end }}
     </table>
-
     <hr>
-    {{ range $dat := .Data }}
+    {{ range .Data }}
       <details >
-        <summary>Percentile Table: <b>{{ $dat.Name }}</b></summary>
+        <summary>Percentile Table: <b>{{ .Name }}</b></summary>
         <div style="display: flex;">
-          <pre class="hdr" data-name="{{ $dat.Name }}">{{ $dat.HDR }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ $dat.Name }}')">Copy {{ $dat.Name }} HDR</button>
+          <pre class="hdr" data-name="{{ .Name }}">{{ .HDR }}</pre>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy {{ .Name }} HDR</button>
         </div>
       </details>
       <details>
-        <summary>Raw JSON: <b>{{ $dat.Name }}</b></summary>
+        <summary>Raw JSON: <b>{{ .Name }}</b></summary>
         <div style="display: flex;">
-          <pre style="width: 400px;" class="json jsonFormat" data-name="{{ $dat.Name }}">{{ $dat.TestResultJSON }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ $dat.Name }}')">Copy {{ $dat.Name }} JSON</button>
+          <pre style="width: 400px;" class="json jsonFormat" data-name="{{ .Name }}">{{ .TestResultJSON }}</pre>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy {{ .Name }} JSON</button>
         </div>
       </details>
     {{ end }}

@@ -55,9 +55,7 @@ func Report(s []string) {
 }
 
 func report(results []*RunResult) {
-	reportFile := ReportFile{
-		Data: make([]ReportFileData, 2),
-	}
+	var reportFile ReportFile
 
 	for i, res := range results {
 		folderPath := filepath.Dir(res.Path)
@@ -67,8 +65,10 @@ func report(results []*RunResult) {
 			reportFile.Title = folderPath
 		}
 
-		reportFile.Data[i].Name = name
-		reportFile.Data[i].HDR = string(readBytes(filepath.Join(folderPath, name+".hdr")))
+		var data ReportFileData
+
+		data.Name = name
+		data.HDR = string(readBytes(filepath.Join(folderPath, name+".hdr")))
 		tr := readTestResult(filepath.Join(folderPath, name+".json"))
 
 		if tr.RelayMetrics != nil {
@@ -97,14 +97,16 @@ func report(results []*RunResult) {
 			reportFile.FirstRequestEnv = e.String()
 		}
 
-		reportFile.Data[i].TestResult = tr
+		data.TestResult = tr
 
 		resJSON, err := json.Marshal(tr)
 		if err != nil {
 			panic(err)
 		}
 
-		reportFile.Data[i].TestResultJSON = string(resJSON)
+		data.TestResultJSON = string(resJSON)
+
+		reportFile.Data = append(reportFile.Data, data)
 	}
 
 	reportPath := filepath.Join(reportFile.Title, "report.html")

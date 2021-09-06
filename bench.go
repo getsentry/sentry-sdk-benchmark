@@ -26,11 +26,30 @@ type BenchmarkConfig struct {
 }
 
 func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
-	return BenchmarkConfig{
+	cfg := BenchmarkConfig{
 		ID:        NewBenchmarkID(),
 		StartTime: time.Now().UTC(),
-		Platform:  platform,
-		Runs: []RunConfig{
+	}
+	switch filepath.Base(platform) {
+	case "baseline":
+		cfg.Platform = filepath.Dir(platform)
+		cfg.Runs = []RunConfig{
+			{
+				Name:       "baseline",
+				NeedsRelay: false,
+			},
+		}
+	case "instrumented":
+		cfg.Platform = filepath.Dir(platform)
+		cfg.Runs = []RunConfig{
+			{
+				Name:       "instrumented",
+				NeedsRelay: true,
+			},
+		}
+	default:
+		cfg.Platform = platform
+		cfg.Runs = []RunConfig{
 			{
 				Name:       "baseline",
 				NeedsRelay: false,
@@ -39,8 +58,9 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 				Name:       "instrumented",
 				NeedsRelay: true,
 			},
-		},
+		}
 	}
+	return cfg
 }
 
 type RunConfig struct {
