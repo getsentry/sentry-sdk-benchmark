@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -155,9 +156,6 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 		panic(err)
 	}
 
-	setUp(projectName, b.Bytes())
-	defer tearDown(projectName)
-
 	result := &RunResult{
 		Name:        runCfg.Name,
 		ComposeFile: b.Bytes(),
@@ -171,7 +169,9 @@ func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
 		panic(err)
 	}
 
-	waitUntilExit("loadgen-" + runCfg.Name + "-" + benchmarkCfg.ID.String())
+	defer composeDown(projectName)
+	composeBuild(projectName, result.ComposeFile)
+	composeUp(projectName, result.ComposeFile, filepath.Join(result.Path, "docker-compose-up.log"))
 
 	return result
 }
@@ -189,13 +189,13 @@ func findDockerfile(path string) string {
 	panic(fmt.Errorf("no Dockerfile in %s", path))
 }
 
-func setUp(projectName string, composeFile []byte) {
-	log.Print("Running 'docker compose up'...")
+func composeBuild(projectName string, composeFile []byte) {
+	log.Print("Running 'docker compose build'...")
 	cmd := exec.Command(
 		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",
-		"up", "--detach",
+		"build",
 	)
 	cmd.Stdin = bytes.NewReader(composeFile)
 	cmd.Stdout = os.Stdout
@@ -205,7 +205,30 @@ func setUp(projectName string, composeFile []byte) {
 	}
 }
 
-func tearDown(projectName string) {
+func composeUp(projectName string, composeFile []byte, outpath string) {
+	log.Printf("Running 'docker compose up', streaming logs to %q...", outpath)
+
+	out, err := os.Create(outpath)
+	if err != nil {
+		panic(err)
+	}
+	defer out.Close()
+
+	cmd := exec.Command(
+		"docker", "compose",
+		"--project-name", projectName,
+		"--file", "-",
+		"up", "--exit-code-from", "loadgen",
+	)
+	cmd.Stdin = bytes.NewReader(composeFile)
+	cmd.Stdout = io.MultiWriter(out, os.Stdout)
+	cmd.Stderr = io.MultiWriter(out, os.Stderr)
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func composeDown(projectName string) {
 	log.Print("Running 'docker compose down'...")
 	cmd := exec.Command(
 		"docker", "compose",
@@ -215,17 +238,5 @@ func tearDown(projectName string) {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		panic(err)
-	}
-}
-
-func waitUntilExit(containerName string) {
-	log.Printf("Waiting for container %s to stop", containerName)
-	b, err := exec.Command("docker", "wait", containerName).CombinedOutput()
-	if err != nil {
-		panic(err)
-	}
-
-	if status := string(bytes.TrimSpace(b)); status != "0" {
-		panic(fmt.Errorf("Container %s exited with status %s", containerName, status))
 	}
 }
