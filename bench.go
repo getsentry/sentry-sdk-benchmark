@@ -180,7 +180,7 @@ func tearDown(projectName string) {
 	cmd := exec.Command(
 		"docker", "compose",
 		"--project-name", projectName,
-		"down", "--remove-orphans")
+		"down", "--remove-orphans", "--rmi", "local")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
