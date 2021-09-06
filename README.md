@@ -72,17 +72,31 @@ The `sentry-sdk-benchmark` command automates the following steps:
 
 The `sentry-sdk-benchmark` tool always tries to clean up resources (containers and networks) after running. There are failure modes that may leave containers or networks behind. The following two commands can help cleaning up resources. Use with care as they will affect all Docker containers/networks, even those not created by `sentry-sdk-benchmark`.
 
+List and remove all Docker Compose projects, including images:
+
+```shell
+for name in $(docker compose ls -q); do docker compose --project-name $name down --remove-orphans --rmi local; done
+```
+
+List and remove all Docker containers:
+
 ```shell
 docker rm -f $(docker ps -a -q)
 ```
+
+Remove all unused Docker networks:
 
 ```shell
 docker network prune
 ```
 
+Remove images with `sentry-sdk-benchmark` label:
+
 ```shell
 docker rmi $(docker images --filter "label=io.sentry.sentry-sdk-benchmark")
 ```
+
+Remove all dangling (untagged) images:
 
 ```shell
 docker rmi $(docker images -f "dangling=true" -q)
