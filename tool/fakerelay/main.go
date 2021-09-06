@@ -2,9 +2,11 @@ package main
 
 import (
 	"compress/gzip"
+	"context"
 	"expvar"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -34,7 +36,9 @@ func main() {
 		addr = "localhost" + addr
 	}
 
-	log.Print("Fake Relay")
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lmsgprefix)
+	log.SetPrefix("[fakerelay] ")
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		requestCount.Add(1)
@@ -62,5 +66,9 @@ func main() {
 		time.Sleep(80*time.Millisecond - time.Since(start))
 		fmt.Fprint(w, `{"id":"9f95bedf1f4c4487b1b4fa8eb384b48e"}`)
 	})
-	log.Fatal(http.ListenAndServe(addr, nil))
+
+	log.Fatal((&http.Server{Addr: addr, BaseContext: func(l net.Listener) context.Context {
+		log.Print("Serving on http://", l.Addr().String())
+		return context.Background()
+	}}).ListenAndServe())
 }
