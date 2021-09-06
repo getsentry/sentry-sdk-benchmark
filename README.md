@@ -8,11 +8,11 @@ The focus is on Performance Monitoring (tracing) of web servers.
 
 You will need `docker` and `go`.
 
-```
+```shell
 go install .
 ```
 
-```
+```shell
 sentry-sdk-benchmark platform/python/django
 ```
 
@@ -22,13 +22,13 @@ The `sentry-sdk-benchmark` command automates the following steps:
 
 1. Start `baseline` app:
 
-    ```
+    ```shell
     (cd platform/python/django/baseline && docker compose -p django-baseline up -d --build)
     ```
 
 2. Run load generator as a warm-up step:
 
-    ```
+    ```shell
     <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
     ```
 
@@ -38,31 +38,31 @@ The `sentry-sdk-benchmark` command automates the following steps:
 
 3. Run load generator to collect benchmark results:
 
-    ```
+    ```shell
     <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100
     ```
 
 4. Tear down containers:
 
-    ```
+    ```shell
     (cd platform/python/django/baseline && docker compose -p django-baseline down)
     ```
 
 5. Repeat the steps above, now for the `instrumented` app:
 
-    ```
+    ```shell
     (cd platform/python/django/instrumented && docker compose -p django-instrumented up -d --build)
     ```
 
-    ```
+    ```shell
     <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
     ```
 
-    ```
+    ```shell
     <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100-instrumented
     ```
 
-    ```
+    ```shell
     (cd platform/python/django/instrumented && docker compose -p django-instrumented down)
     ```
 
