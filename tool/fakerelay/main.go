@@ -42,23 +42,22 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		requestCount.Add(1)
-		if r.Header.Get("Content-Encoding") == "gzip" {
-			reader, err := gzip.NewReader(r.Body)
+		firstRequestOnce.Do(func() {
+			if r.Header.Get("Content-Encoding") == "gzip" {
+				reader, err := gzip.NewReader(r.Body)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					http.Error(w, err.Error(), 500)
+					return
+				}
+				r.Body = reader
+			}
+			b, err := httputil.DumpRequest(r, true)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				http.Error(w, err.Error(), 500)
 				return
 			}
-			r.Body = reader
-		}
-		b, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		os.Stdout.Write(b)
-		firstRequestOnce.Do(func() {
 			firstRequest.Set(string(b))
 			sdkInfo = ParseSDKInfo(b)
 		})
