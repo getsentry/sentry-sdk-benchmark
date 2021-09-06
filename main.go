@@ -36,7 +36,7 @@ func printUsage() {
 }
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lmsgprefix)
+	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
 	log.SetPrefix("[sentry-sdk-benchmark] ")
 
 	defer func() {
