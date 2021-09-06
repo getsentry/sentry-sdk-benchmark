@@ -13,6 +13,7 @@ import (
 
 // TestResult is the data collected for a test run.
 type TestResult struct {
+	FirstAppResponse string
 	*vegeta.Metrics
 	Stats        map[string]Stats       `json:"container_stats"`
 	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`

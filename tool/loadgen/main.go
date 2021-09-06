@@ -68,7 +68,8 @@ func main() {
 		stats.Before = containerStats(cAdvisorURL, containerName)
 	}
 
-	metrics := test(targetURL, rps, testDuration)
+	r := test(targetURL, rps, testDuration)
+	metrics := r.Metrics
 
 	if cAdvisorURL != "" {
 		stats.After = containerStats(cAdvisorURL, containerName)
@@ -81,8 +82,9 @@ func main() {
 	}
 
 	result := TestResult{
-		Metrics: metrics,
-		Stats:   map[string]Stats{"app": stats},
+		FirstAppResponse: r.FirstResponse,
+		Metrics:          metrics,
+		Stats:            map[string]Stats{"app": stats},
 	}
 	if fakerelayURL != "" {
 		result.RelayMetrics = relayMetrics(fakerelayURL)

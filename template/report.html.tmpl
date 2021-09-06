@@ -510,6 +510,13 @@
     {{ end }}
 
     <hr>
+    <h3>First Response from App</h3>
+    {{ range .Data }}
+    <p>{{ .Name }}</p>
+    <pre>{{ .TestResult.FirstAppResponse }}</pre>
+    {{ end }}
+
+    <hr>
     <h3>First Request to Relay</h3>
     <details>
       <summary>Request Headers</summary>

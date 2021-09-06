@@ -1,16 +1,26 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"net/http/httputil"
+	"sync"
 	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
+type FetchResult struct {
+	Metrics       *vegeta.Metrics
+	FirstResponse string
+}
+
 // fetch makes rps requests per second to fetch the given URL for the given
 // duration and returns metrics.
-func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.Attacker)) *vegeta.Metrics {
+func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.Attacker)) FetchResult {
 	target := vegeta.NewStaticTargeter(vegeta.Target{
 		Method: "GET",
 		URL:    url,
@@ -19,12 +29,27 @@ func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.At
 	attacker := vegeta.NewAttacker(opts...)
 	ch := attacker.Attack(target, rate, duration, "")
 
+	var result FetchResult
+	var responseOnce sync.Once
+
 	var m vegeta.Metrics
 	for res := range ch {
+		responseOnce.Do(func() {
+			b, _ := httputil.DumpResponse(&http.Response{
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				StatusCode:    int(res.Code),
+				Header:        res.Headers,
+				Body:          io.NopCloser(bytes.NewReader(res.Body)),
+				ContentLength: int64(len(res.Body)),
+			}, true)
+			result.FirstResponse = string(b)
+		})
 		m.Add(res)
 	}
 	m.Close()
-	return &m
+	result.Metrics = &m
+	return result
 }
 
 // waitUntilReady waits until the target web app is ready to receive traffic.
@@ -41,7 +66,8 @@ func waitUntilReady(url string, maxWait time.Duration) {
 	for i := 0; ; i++ {
 		log.Print("Waiting until target is ready")
 
-		metrics := fetch(url, 1, time.Second, vegeta.Timeout(10*time.Second))
+		r := fetch(url, 1, time.Second, vegeta.Timeout(10*time.Second))
+		metrics := r.Metrics
 
 		if n := metrics.StatusCodes["404"]; n > 0 {
 			panic(fmt.Errorf("bad target %q: got %d responses with status code 404", url, n))
@@ -72,7 +98,7 @@ func warmUp(url string, rps uint, d time.Duration) {
 }
 
 // test sends test traffic to the target web app and returns metrics.
-func test(url string, rps uint, d time.Duration) *vegeta.Metrics {
+func test(url string, rps uint, d time.Duration) FetchResult {
 	log.Printf("Testing target for %v", d)
 	return fetch(url, rps, d)
 }

@@ -143,6 +143,7 @@ type ReportFileData struct {
 // START copied from ./tool/loadgen
 
 type TestResult struct {
+	FirstAppResponse string
 	*vegeta.Metrics
 	Stats        map[string]Stats       `json:"container_stats"`
 	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
