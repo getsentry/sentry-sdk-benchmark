@@ -27,6 +27,13 @@ func init() {
 }
 
 func main() {
+	// Listen on all network interfaces when containerized (PID 1), or
+	// otherwise only on localhost (for testing)
+	addr := ":5000"
+	if os.Getpid() != 1 {
+		addr = "localhost" + addr
+	}
+
 	log.Print("Fake Relay")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -55,5 +62,5 @@ func main() {
 		time.Sleep(80*time.Millisecond - time.Since(start))
 		fmt.Fprint(w, `{"id":"9f95bedf1f4c4487b1b4fa8eb384b48e"}`)
 	})
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
