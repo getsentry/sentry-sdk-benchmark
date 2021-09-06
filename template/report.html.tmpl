@@ -478,14 +478,14 @@
         <summary>Percentile Table: <b>{{ $dat.Name }}</b></summary>
         <div style="display: flex;">
           <pre class="hdr" data-name="{{ $dat.Name }}">{{ $dat.HDR }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', {{ $dat.Name }})">Copy {{ $dat.Name }} HDR</button>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ $dat.Name }}')">Copy {{ $dat.Name }} HDR</button>
         </div>
       </details>
       <details>
         <summary>Raw JSON: <b>{{ $dat.Name }}</b></summary>
         <div style="display: flex;">
           <pre style="width: 400px;" class="json jsonFormat" data-name="{{ $dat.Name }}">{{ $dat.TestResultJSON }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', {{ $dat.Name }})">Copy {{ $dat.Name }} JSON</button>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ $dat.Name }}')">Copy {{ $dat.Name }} JSON</button>
         </div>
       </details>
     {{ end }}
