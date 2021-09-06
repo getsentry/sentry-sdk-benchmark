@@ -101,8 +101,9 @@ func (r BenchmarkID) String() string {
 }
 
 func Benchmark(cfg BenchmarkConfig) {
-	log.Printf("START %s %s", cfg.ID, cfg.Platform)
-	defer log.Printf("END   %s %s", cfg.ID, cfg.Platform)
+	oldprefix := log.Prefix()
+	defer log.SetPrefix(oldprefix)
+	log.SetPrefix(fmt.Sprintf("%s[%s] ", oldprefix, cfg.ID))
 
 	var results []*RunResult
 	for _, runCfg := range cfg.Runs {
@@ -119,6 +120,13 @@ type RunResult struct {
 }
 
 func run(benchmarkCfg BenchmarkConfig, runCfg RunConfig) *RunResult {
+	oldprefix := log.Prefix()
+	defer log.SetPrefix(oldprefix)
+	log.SetPrefix(fmt.Sprintf("%s[%s] ", oldprefix, path.Join(append(strings.Split(benchmarkCfg.Platform, string(os.PathSeparator))[1:], runCfg.Name)...)))
+
+	log.Print("START")
+	defer log.Print("END")
+
 	projectName := fmt.Sprintf("%s-%s-%s-%s",
 		filepath.Base(filepath.Dir(benchmarkCfg.Platform)),
 		filepath.Base(benchmarkCfg.Platform),
@@ -182,6 +190,7 @@ func findDockerfile(path string) string {
 }
 
 func setUp(projectName string, composeFile []byte) {
+	log.Print("Running 'docker compose up'...")
 	cmd := exec.Command(
 		"docker", "compose",
 		"--project-name", projectName,
@@ -197,6 +206,7 @@ func setUp(projectName string, composeFile []byte) {
 }
 
 func tearDown(projectName string) {
+	log.Print("Running 'docker compose down'...")
 	cmd := exec.Command(
 		"docker", "compose",
 		"--project-name", projectName,

@@ -115,7 +115,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	log.Printf("Generating benchmark report at %s", reportPath)
+	log.Printf("Writing benchmark report to %q", reportPath)
 	if err := reportTemplate.Execute(f, reportFile); err != nil {
 		panic(err)
 	}
