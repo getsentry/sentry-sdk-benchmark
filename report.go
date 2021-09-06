@@ -58,7 +58,7 @@ func report(results []*RunResult) {
 	var reportFile ReportFile
 
 	for i, res := range results {
-		folderPath := filepath.Dir(res.Path)
+		folderPath := res.Path
 		name := res.Name
 
 		if i == 0 {
@@ -68,8 +68,8 @@ func report(results []*RunResult) {
 		var data ReportFileData
 
 		data.Name = name
-		data.HDR = string(readBytes(filepath.Join(folderPath, name+".hdr")))
-		tr := readTestResult(filepath.Join(folderPath, name+".json"))
+		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
+		tr := readTestResult(filepath.Join(folderPath, "result.json"))
 
 		if tr.RelayMetrics != nil {
 			reportFile.RelayMetrics = tr.RelayMetrics
@@ -109,7 +109,7 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	reportPath := filepath.Join(reportFile.Title, "report.html")
+	reportPath := filepath.Join(filepath.Dir(reportFile.Title), "report.html")
 	f, err := os.Create(reportPath)
 	if err != nil {
 		panic(err)

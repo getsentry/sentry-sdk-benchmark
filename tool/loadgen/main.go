@@ -1,219 +1,94 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
+	"flag"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
-
-	cadvisor "github.com/google/cadvisor/client/v2"
-	cadvisor_info "github.com/google/cadvisor/info/v2"
-	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
-const target = "http://app:8080"
-
-var hasRelay = os.Getenv("HAS_RELAY") == "true"
-
 func main() {
-	log.Print("Load Generator")
-	defer log.Print("Bye!")
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lmsgprefix)
+	log.SetPrefix("[loadgen] ")
+
 	defer func() {
 		if err := recover(); err != nil {
-			log.Fatal(err)
+			_, file, line, ok := runtime.Caller(2)
+			if !ok {
+				panic(err)
+			}
+			log.Fatalf("Failure: %s:%d: %s", file, line, err)
 		}
 	}()
 
-	path := os.Getenv("RESULT_PATH")
-	if path == "" {
-		panic("Missing RESULT_PATH env var, aborting!")
+	var (
+		targetURL, cAdvisorURL, fakerelayURL string
+		containers                           string
+		maxWait                              time.Duration
+		warmupDuration, testDuration         time.Duration
+		rps                                  uint
+		out                                  string
+	)
+	flag.StringVar(&targetURL, "target", "", "target `URL` (example \"http://app:8080/update?queries=10\") (required)")
+	flag.StringVar(&cAdvisorURL, "cadvisor", "", "cAdvisor root `URL` (example \"http://cadvisor:8080\")")
+	flag.StringVar(&fakerelayURL, "fakerelay", "", "fakerelay root `URL` (example \"http://relay:5000\")")
+	flag.StringVar(&containers, "containers", "", "comma-separated list of container `names` to monitor with cAdvisor")
+	flag.DurationVar(&maxWait, "maxwait", 30*time.Second, "max wait until target is ready")
+	flag.DurationVar(&warmupDuration, "warmup", 15*time.Second, "warmup duration")
+	flag.DurationVar(&testDuration, "test", 30*time.Second, "test duration")
+	flag.UintVar(&rps, "rps", 10, "requests per second")
+	flag.StringVar(&out, "out", filepath.Join(os.TempDir(), "loadgen", "result", time.Now().Format("20060102-150405")), "output path")
+	flag.Parse()
+
+	if targetURL == "" {
+		fmt.Fprintln(flag.CommandLine.Output(), "flag -target is required")
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	containerName := os.Getenv("TARGET_CONTAINER_NAME")
-	if containerName == "" {
-		panic("Missing TARGET_CONTAINER_NAME env var, aborting!")
+	if cAdvisorURL != "" && containers == "" {
+		panic("flag -containers is required when -cadvisor is provided")
 	}
-
-	waitUntilReady()
-	warmUp()
-
-	result := test(containerName)
-
-	save(result, path)
-}
-
-// waitUntilReady waits until the target web app is ready to receive traffic.
-func waitUntilReady() {
-	log.Print("Waiting until web app is ready")
-	ready := false
-	for i := 0; i < 5; i++ {
-		ready = fetch(target+"/update?queries=1", 5*time.Second).Success == 1
-		if ready {
-			break
-		}
-		log.Print("Web app not ready, waiting...")
-		time.Sleep(2 * time.Second)
+	if strings.Contains(containers, ",") {
+		panic("not implemented: only one container name supported")
 	}
-	if !ready {
-		panic("Web app not ready")
-	}
-}
+	containerName := containers
 
-// warmUp sends some traffic to warm up the target web app, ensuring
-// connectivity with the database is established, caches are warm, any JIT has
-// taken place, etc.
-func warmUp() {
-	log.Print("Warming up web app")
-	fetch(target+"/update?queries=10", 15*time.Second)
-}
+	log.Printf("Target is %q", targetURL)
 
-type TestResult struct {
-	*vegeta.Metrics
-	Stats        map[string]Stats       `json:"container_stats"`
-	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
-}
-
-type Stats struct {
-	Before     ContainerStats           `json:"before"`
-	After      ContainerStats           `json:"after"`
-	Difference ContainerStatsDifference `json:"difference"`
-}
-
-type ContainerStats struct {
-	Timestamp           time.Time `json:"timestamp"`
-	MemoryMaxUsageBytes uint64    `json:"memory_max_usage_bytes"`
-	CPUUsageUser        uint64    `json:"cpu_usage_user"`
-	CPUUsageSystem      uint64    `json:"cpu_usage_system"`
-	CPUUsageTotal       uint64    `json:"cpu_usage_total"`
-}
-
-type ContainerStatsDifference struct {
-	Duration            time.Duration `json:"duration"`
-	MemoryMaxUsageBytes int64         `json:"memory_max_usage_bytes"`
-	CPUUsageUser        int64         `json:"cpu_usage_user"`
-	CPUUsageSystem      int64         `json:"cpu_usage_system"`
-	CPUUsageTotal       int64         `json:"cpu_usage_total"`
-}
-
-// test sends the actual test traffic to the target web app and returns the
-// collected results.
-func test(containerName string) TestResult {
-	log.Print("Testing web app")
+	waitUntilReady(targetURL, maxWait)
+	warmUp(targetURL, rps, warmupDuration)
 
 	stats := Stats{}
-	stats.Before = containerStats(containerName)
+	if cAdvisorURL != "" {
+		stats.Before = containerStats(cAdvisorURL, containerName)
+	}
 
-	metrics := fetch(target+"/update?queries=10", 20*time.Second)
+	metrics := test(targetURL, rps, testDuration)
 
-	stats.After = containerStats(containerName)
-	// Note: potential overflow ignored for simplicity
-	stats.Difference.Duration = stats.After.Timestamp.Sub(stats.Before.Timestamp)
-	stats.Difference.MemoryMaxUsageBytes = int64(stats.After.MemoryMaxUsageBytes - stats.Before.MemoryMaxUsageBytes)
-	stats.Difference.CPUUsageUser = int64(stats.After.CPUUsageUser - stats.Before.CPUUsageUser)
-	stats.Difference.CPUUsageSystem = int64(stats.After.CPUUsageSystem - stats.Before.CPUUsageSystem)
-	stats.Difference.CPUUsageTotal = int64(stats.After.CPUUsageTotal - stats.Before.CPUUsageTotal)
+	if cAdvisorURL != "" {
+		stats.After = containerStats(cAdvisorURL, containerName)
+		// Note: potential overflow ignored for simplicity
+		stats.Difference.Duration = stats.After.Timestamp.Sub(stats.Before.Timestamp)
+		stats.Difference.MemoryMaxUsageBytes = int64(stats.After.MemoryMaxUsageBytes - stats.Before.MemoryMaxUsageBytes)
+		stats.Difference.CPUUsageUser = int64(stats.After.CPUUsageUser - stats.Before.CPUUsageUser)
+		stats.Difference.CPUUsageSystem = int64(stats.After.CPUUsageSystem - stats.Before.CPUUsageSystem)
+		stats.Difference.CPUUsageTotal = int64(stats.After.CPUUsageTotal - stats.Before.CPUUsageTotal)
+	}
 
-	tr := TestResult{
+	result := TestResult{
 		Metrics: metrics,
 		Stats:   map[string]Stats{"app": stats},
 	}
-	if hasRelay {
-		tr.RelayMetrics = relayMetrics()
+	if fakerelayURL != "" {
+		result.RelayMetrics = relayMetrics(fakerelayURL)
 	}
-	return tr
-}
 
-// fetch requests the given URL several times for the given duration and with
-// the given concurrency level.
-func fetch(url string, duration time.Duration) *vegeta.Metrics {
-	target := vegeta.NewStaticTargeter(vegeta.Target{
-		Method: "GET",
-		URL:    url,
-	})
-	rate := vegeta.Rate{Freq: 10, Per: time.Second}
-	attacker := vegeta.NewAttacker()
-	ch := attacker.Attack(target, rate, duration, "")
+	save(result, out)
 
-	var m vegeta.Metrics
-	for res := range ch {
-		m.Add(res)
-	}
-	m.Close()
-	return &m
-}
-
-func containerStats(containerName string) ContainerStats {
-	client, err := cadvisor.NewClient("http://cadvisor:8080/")
-	if err != nil {
-		panic(err)
-	}
-	opts := &cadvisor_info.RequestOptions{
-		IdType: cadvisor_info.TypeDocker,
-		Count:  1,
-	}
-	m, err := client.Stats(containerName, opts)
-	if err != nil {
-		panic(err)
-	}
-	for _, v := range m {
-		return ContainerStats{
-			Timestamp:           v.Stats[0].Timestamp,
-			MemoryMaxUsageBytes: v.Stats[0].Memory.MaxUsage,
-			CPUUsageUser:        v.Stats[0].Cpu.Usage.User,
-			CPUUsageSystem:      v.Stats[0].Cpu.Usage.System,
-			CPUUsageTotal:       v.Stats[0].Cpu.Usage.Total,
-		}
-	}
-	panic("missing cAdvisor stats")
-}
-
-// relayMetrics returns /debug/vars exposed variables from the Fake Relay
-// instance.
-func relayMetrics() map[string]interface{} {
-	resp, err := http.Get("http://relay:5000/debug/vars")
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	dec := json.NewDecoder(resp.Body)
-	var m map[string]interface{}
-	err = dec.Decode(&m)
-	if err != nil {
-		panic(err)
-	}
-	return m
-}
-
-// save writes reports computed from metrics to the output path.
-func save(r TestResult, path string) {
-	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
-		panic(err)
-	}
-	writeReport(vegeta.NewTextReporter(r.Metrics), path+".txt")
-	writeReport(NewJSONReporter(r), path+".json")
-	writeReport(vegeta.NewHDRHistogramPlotReporter(r.Metrics), path+".hdr")
-}
-
-// writeReport writes the output of the reporter to the output path.
-func writeReport(r vegeta.Reporter, path string) {
-	f, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err := r.Report(f); err != nil {
-		panic(err)
-	}
-}
-
-// NewJSONReporter returns a vegeta.Reporter that writes out pretty JSON.
-func NewJSONReporter(m interface{}) vegeta.Reporter {
-	return func(w io.Writer) error {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(m)
-	}
+	log.Print("Success")
 }

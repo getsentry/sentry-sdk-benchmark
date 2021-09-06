@@ -19,10 +19,15 @@ services:
       - "io.sentry.sentry-sdk-benchmark"
     volumes:
     - "./result:/result:rw"
-    environment:
-      RESULT_PATH: "/result/{{ .ResultPath }}"
-      TARGET_CONTAINER_NAME: "app-{{ .RunName }}-{{ .ID }}"
-      HAS_RELAY: "{{ .NeedsRelay }}"
+    command: [
+      "-target", "http://app:8080/update?queries=10",
+      "-cadvisor", "http://cadvisor:8080",
+      {{ if .NeedsRelay -}}
+      "-fakerelay", "http://relay:5000",
+      {{- end }}
+      "-containers", "app-{{ .RunName }}-{{ .ID }}",
+      "-out", "/result/{{ .ResultPath }}",
+    ]
     depends_on:
     - "app"
   tfb-database:
