@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -35,16 +36,25 @@ func printUsage() {
 }
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lmsgprefix)
+	log.SetPrefix("[sentry-sdk-benchmark] ")
+
+	defer func() {
+		if err := recover(); err != nil {
+			_, file, line, ok := runtime.Caller(2)
+			if !ok {
+				panic(err)
+			}
+			log.Fatalf("Failure: %s:%d: %s", file, line, err)
+		}
+	}()
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		printUsage()
 		os.Exit(2)
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+
 	switch args := flag.Args(); args[0] {
 	case "report":
 		args = args[1:]
