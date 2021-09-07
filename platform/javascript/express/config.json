@@ -1,0 +1,6 @@
+{
+  "target": {
+    "path": "/updates?queries=10"
+  },
+  "rps": 10
+}

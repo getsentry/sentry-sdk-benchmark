@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -21,10 +22,18 @@ import (
 var dockerComposeTemplate = template.Must(template.ParseFiles(filepath.Join("template", "docker-compose.yml.tmpl")))
 
 type BenchmarkConfig struct {
-	ID        BenchmarkID
-	StartTime time.Time
-	Platform  string // a valid path like platform/python/django
-	Runs      []RunConfig
+	ID             BenchmarkID
+	StartTime      time.Time
+	Platform       string         // a valid path like platform/python/django
+	PlatformConfig PlatformConfig // from platform/*/*/config.json
+	Runs           []RunConfig
+}
+
+type PlatformConfig struct {
+	Target struct {
+		Path string
+	}
+	RPS uint16
 }
 
 func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
@@ -62,6 +71,15 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			},
 		}
 	}
+	f, err := os.Open(filepath.Join(cfg.Platform, "config.json"))
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	err = json.NewDecoder(f).Decode(&cfg.PlatformConfig)
+	if err != nil {
+		panic(err)
+	}
 	return cfg
 }
 
@@ -71,11 +89,12 @@ type RunConfig struct {
 }
 
 type DockerComposeData struct {
-	ID         BenchmarkID
-	RunName    string
-	App        App
-	ResultPath string
-	NeedsRelay bool
+	ID             BenchmarkID
+	RunName        string
+	PlatformConfig PlatformConfig
+	App            App
+	ResultPath     string
+	NeedsRelay     bool
 }
 
 type App struct {
@@ -144,8 +163,9 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 
 	var b bytes.Buffer
 	err := dockerComposeTemplate.Execute(&b, DockerComposeData{
-		ID:      benchmarkCfg.ID,
-		RunName: runCfg.Name,
+		ID:             benchmarkCfg.ID,
+		RunName:        runCfg.Name,
+		PlatformConfig: benchmarkCfg.PlatformConfig,
 		App: App{
 			ContextPath: contextPath,
 			Dockerfile:  dockerfile,

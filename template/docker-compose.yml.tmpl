@@ -20,7 +20,8 @@ services:
     volumes:
     - "./result:/result:rw"
     command: [
-      "-target", "http://app:8080/update?queries=10",
+      "-target", "http://app:8080{{ .PlatformConfig.Target.Path }}",
+      "-rps", "{{ .PlatformConfig.RPS }}",
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",
