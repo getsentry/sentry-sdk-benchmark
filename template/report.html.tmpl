@@ -528,6 +528,12 @@
       <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
     </details>
 
+    <h3>LoadGen Command</h3>
+    {{ range .Data }}
+    <p>{{ .Name }}</p>
+    <pre>{{ with .TestResult.LoadGenOptions -}}{{ range $c := .Command }}{{ $c }} {{ end }}{{ end }}</pre>
+    {{ end }}
+
     <!-- The actual snackbar -->
     <div id="snackbar"></div>
 

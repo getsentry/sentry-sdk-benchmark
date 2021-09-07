@@ -15,8 +15,11 @@ import (
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
-	Stats        map[string]Stats       `json:"container_stats"`
-	RelayMetrics map[string]interface{} `json:"relay_metrics,omitempty"`
+	Stats          map[string]Stats       `json:"container_stats"`
+	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
+	LoadGenOptions struct {
+		Command []string
+	}
 }
 
 // save writes reports computed from metrics to the output path.
