@@ -50,7 +50,7 @@ func waitUntilReady() {
 	log.Print("Waiting until web app is ready")
 	ready := false
 	for i := 0; i < 5; i++ {
-		ready = fetch(target+"/update?query=1", 5*time.Second).Success == 1
+		ready = fetch(target+"/update?queries=1", 5*time.Second).Success == 1
 		if ready {
 			break
 		}
@@ -67,7 +67,7 @@ func waitUntilReady() {
 // taken place, etc.
 func warmUp() {
 	log.Print("Warming up web app")
-	fetch(target+"/update?query=100", 15*time.Second)
+	fetch(target+"/update?queries=10", 15*time.Second)
 }
 
 type TestResult struct {
@@ -106,7 +106,7 @@ func test(containerName string) TestResult {
 	stats := Stats{}
 	stats.Before = containerStats(containerName)
 
-	metrics := fetch(target+"/update?query=100", 20*time.Second)
+	metrics := fetch(target+"/update?queries=10", 20*time.Second)
 
 	stats.After = containerStats(containerName)
 	// Note: potential overflow ignored for simplicity
@@ -133,7 +133,7 @@ func fetch(url string, duration time.Duration) *vegeta.Metrics {
 		Method: "GET",
 		URL:    url,
 	})
-	rate := vegeta.Rate{Freq: 100, Per: time.Second}
+	rate := vegeta.Rate{Freq: 10, Per: time.Second}
 	attacker := vegeta.NewAttacker()
 	ch := attacker.Attack(target, rate, duration, "")
 

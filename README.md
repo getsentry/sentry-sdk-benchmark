@@ -29,7 +29,7 @@ The `sentry-sdk-benchmark` command automates the following steps:
 2. Run load generator as a warm-up step:
 
     ```shell
-    <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
+    <<<'GET http://localhost:8080/update?queries=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
     ```
 
     You may repeat the command above a couple of times, observing that after the first run the maximum latency reported should drop down.
@@ -39,7 +39,7 @@ The `sentry-sdk-benchmark` command automates the following steps:
 3. Run load generator to collect benchmark results:
 
     ```shell
-    <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100
+    <<<'GET http://localhost:8080/update?queries=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100
     ```
 
 4. Tear down containers:
@@ -55,11 +55,11 @@ The `sentry-sdk-benchmark` command automates the following steps:
     ```
 
     ```shell
-    <<<'GET http://localhost:8080/update?query=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
+    <<<'GET http://localhost:8080/update?queries=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
     ```
 
     ```shell
-    <<<'GET http://localhost:8080/update?query=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100-instrumented
+    <<<'GET http://localhost:8080/update?queries=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100-instrumented
     ```
 
     ```shell
