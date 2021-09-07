@@ -1,3 +1,6 @@
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
+
 /**
  * Module dependencies.
  */
@@ -5,9 +8,6 @@ const cluster = require('cluster'),
   numCPUs = require('os').cpus().length,
   express = require('express'),
   helper = require('./helper');
-
-const Sentry = require('@sentry/node');
-const Tracing = require("@sentry/tracing");
 
 // Middleware
 const bodyParser = require('body-parser');
@@ -65,25 +65,14 @@ if (cluster.isMaster) {
 
   Sentry.init({
     integrations: [
-      // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
-      // enable Express.js middleware tracing
       new Tracing.Integrations.Express({ app }),
     ],
-  
-    // We recommend adjusting this value in production, or using tracesSampler
-    // for finer control
     tracesSampleRate: 1.0,
   });
 
-  // The request handler must be the first middleware on the app
   app.use(Sentry.Handlers.requestHandler());
-
-  // TracingHandler creates a trace for every incoming request
   app.use(Sentry.Handlers.tracingHandler());
-
-  // The error handler must be before any other error middleware and after all controllers
-  app.use(Sentry.Handlers.errorHandler());
 
   app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -154,6 +143,8 @@ if (cluster.isMaster) {
       });
     });
   });
+
+  app.use(Sentry.Handlers.errorHandler());
 
   app.listen(8080, () => {
     console.log('listening on port 8080');
