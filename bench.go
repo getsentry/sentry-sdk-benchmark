@@ -36,6 +36,16 @@ type PlatformConfig struct {
 	RPS uint16
 }
 
+func (cfg PlatformConfig) Validate() error {
+	if cfg.Target.Path == "" {
+		return fmt.Errorf(`platform config missing "target.path"`)
+	}
+	if cfg.RPS == 0 {
+		return fmt.Errorf(`platform config missing "rps"`)
+	}
+	return nil
+}
+
 func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 	cfg := BenchmarkConfig{
 		ID:        NewBenchmarkID(),
@@ -78,6 +88,9 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 	defer f.Close()
 	err = json.NewDecoder(f).Decode(&cfg.PlatformConfig)
 	if err != nil {
+		panic(err)
+	}
+	if err := cfg.PlatformConfig.Validate(); err != nil {
 		panic(err)
 	}
 	return cfg
