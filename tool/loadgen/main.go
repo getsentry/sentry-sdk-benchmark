@@ -84,7 +84,10 @@ func main() {
 	result := TestResult{
 		FirstAppResponse: r.FirstResponse,
 		Metrics:          metrics,
-		Stats:            map[string]Stats{"app": stats},
+		LoadGenOptions: struct{ Command []string }{
+			Command: os.Args,
+		},
+		Stats: map[string]Stats{"app": stats},
 	}
 	if fakerelayURL != "" {
 		result.RelayMetrics = relayMetrics(fakerelayURL)
