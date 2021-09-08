@@ -380,6 +380,18 @@
     <table>
       <tr>
         <th>   </th>
+        <th colspan="3" style="text-align: center;">App</th>
+        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+        <th colspan="3" style="text-align: center;">Relay</th>
+      </tr>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
         <th>Before</th>
         <th>After</th>
         <th>Difference</th>
@@ -391,6 +403,12 @@
           <td>{{ .app.Before.MemoryMaxUsageBytes }}</td>
           <td>{{ .app.After.MemoryMaxUsageBytes }}</td>
           <td>{{ .app.Difference.MemoryMaxUsageBytes }}</td>
+          <td>{{ .postgres.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ .postgres.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ .postgres.Difference.MemoryMaxUsageBytes }}</td>
+          <td>{{ .fakerelay.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ .fakerelay.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
           {{- end }}
         </tr>
       {{ end }}
@@ -400,10 +418,23 @@
     <table>
       <tr>
         <th>   </th>
+        <th colspan="3" style="text-align: center;">App</th>
+        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+        <th colspan="3" style="text-align: center;">Relay</th>
+      </tr>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
         <th>Before</th>
         <th>After</th>
         <th>Difference</th>
       </tr>
+
       {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
@@ -411,6 +442,12 @@
           <td>{{ .app.Before.CPUUsageTotal }}</td>
           <td>{{ .app.After.CPUUsageTotal }}</td>
           <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
+          <td>{{ .postgres.After.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
           {{- end }}
         </tr>
       {{ end }}
@@ -420,10 +457,23 @@
     <table>
       <tr>
         <th>   </th>
+        <th colspan="3" style="text-align: center;">App</th>
+        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+        <th colspan="3" style="text-align: center;">Relay</th>
+      </tr>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
         <th>Before</th>
         <th>After</th>
         <th>Difference</th>
       </tr>
+
       {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
@@ -431,6 +481,12 @@
           <td>{{ .app.Before.CPUUsageUser }}</td>
           <td>{{ .app.After.CPUUsageUser }}</td>
           <td>{{ .app.Difference.CPUUsageUser }}</td>
+          <td>{{ .postgres.Before.CPUUsageUser }}</td>
+          <td>{{ .postgres.After.CPUUsageUser }}</td>
+          <td>{{ .postgres.Difference.CPUUsageUser }}</td>
+          <td>{{ .fakerelay.Before.CPUUsageUser }}</td>
+          <td>{{ .fakerelay.After.CPUUsageUser }}</td>
+          <td>{{ .fakerelay.Difference.CPUUsageUser }}</td>
           {{- end }}
         </tr>
       {{ end }}
@@ -440,6 +496,18 @@
       <h3>Container Stats - CPU System</h3>
       <tr>
         <th>   </th>
+        <th colspan="3" style="text-align: center;">App</th>
+        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+        <th colspan="3" style="text-align: center;">Relay</th>
+      </tr>
+      <tr>
+        <th>   </th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
+        <th>Before</th>
+        <th>After</th>
+        <th>Difference</th>
         <th>Before</th>
         <th>After</th>
         <th>Difference</th>
@@ -451,6 +519,12 @@
           <td>{{ .app.Before.CPUUsageTotal }}</td>
           <td>{{ .app.After.CPUUsageTotal }}</td>
           <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
+          <td>{{ .postgres.After.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
           {{- end }}
         </tr>
       {{ end }}
