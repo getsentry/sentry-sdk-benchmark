@@ -531,8 +531,10 @@
     <h3>LoadGen Command</h3>
     {{ range .Data }}
     <p>{{ .Name }}</p>
-    <pre>{{ with .TestResult.LoadGenOptions -}}{{ range $c := .Command }}{{ $c }} {{ end }}{{ end }}</pre>
-    {{ end }}
+    {{ with .TestResult.LoadGenCommand -}}
+    <pre>{{ . }}</pre>
+    {{- end }}
+    {{- end }}
 
     <!-- The actual snackbar -->
     <div id="snackbar"></div>

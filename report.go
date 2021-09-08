@@ -147,9 +147,7 @@ type TestResult struct {
 	*vegeta.Metrics
 	Stats          map[string]Stats       `json:"container_stats"`
 	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
-	LoadGenOptions struct {
-		Command []string
-	}
+	LoadGenCommand string                 `json:"loadgen_command"`
 }
 
 type Stats struct {
