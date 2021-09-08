@@ -59,12 +59,12 @@ func main() {
 	waitUntilReady(targetURL, maxWait)
 	warmUp(targetURL, rps, warmupDuration)
 
-	statsMap := make(map[string]Stats)
+	stats := make(map[string]Stats)
 	if cAdvisorURL != "" {
 		for _, containerName := range strings.Split(containers, ",") {
 			imageName := strings.Split(containerName, "-")[0]
 
-			statsMap[imageName] = Stats{
+			stats[imageName] = Stats{
 				Before: containerStats(cAdvisorURL, containerName),
 			}
 		}
@@ -78,9 +78,9 @@ func main() {
 			imageName := strings.Split(containerName, "-")[0]
 
 			after := containerStats(cAdvisorURL, containerName)
-			before := statsMap[imageName].Before
+			before := stats[imageName].Before
 
-			statsMap[imageName] = Stats{
+			stats[imageName] = Stats{
 				Before: before,
 				After:  after,
 				Difference: ContainerStatsDifference{
@@ -98,7 +98,7 @@ func main() {
 		FirstAppResponse: r.FirstResponse,
 		Metrics:          metrics,
 		LoadGenCommand:   strings.Join(os.Args, " "),
-		Stats:            statsMap,
+		Stats:            stats,
 	}
 	if fakerelayURL != "" {
 		result.RelayMetrics = relayMetrics(fakerelayURL)
