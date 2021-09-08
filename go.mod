@@ -2,7 +2,10 @@ module github.com/getsentry/sentry-sdk-benchmark
 
 go 1.17
 
-require github.com/tsenart/vegeta/v12 v12.8.4
+require (
+	github.com/tsenart/vegeta/v12 v12.8.4
+	golang.org/x/perf v0.0.0-20210220033136-40a54f11e909
+)
 
 require (
 	github.com/google/go-cmp v0.5.5 // indirect
