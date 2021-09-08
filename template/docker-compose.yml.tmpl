@@ -25,10 +25,8 @@ services:
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",
-      "-containers", "app-{{ .RunName }}-{{ .ID }},fakerelay-{{ .RunName }}-{{ .ID }},postgres-{{ .RunName }}-{{ .ID }}",
-      {{- else }}
-      "-containers", "app-{{ .RunName }}-{{ .ID }}",
       {{- end }}
+      "-containers", "app-{{ .RunName }}-{{ .ID }},postgres-{{ .RunName }}-{{ .ID }}{{ if .NeedsRelay -}},fakerelay-{{ .RunName }}-{{ .ID }}{{- end }}",
       "-out", "/result/{{ .ResultPath }}",
     ]
     depends_on:
