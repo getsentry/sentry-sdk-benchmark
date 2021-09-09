@@ -26,7 +26,7 @@ The focus is on Performance Monitoring (tracing) of web servers.
 
 We provide a [collection of prepackaged web apps](platform/) implemented in different programming languages and using different frameworks.
 
-For each original app in a "baseline" directory, there is a slightly modified app in a corresponding "instrumented" directory which is a copy of the original app with minimal changes to add Sentry instrumentation (error and performance monitoring).
+For each original app in a "baseline" directory, there is a slightly modified app in a corresponding "instrumented" directory which is a copy of the original app with minimal changes to add Sentry instrumentation (error and performance monitoring). The "baseline" apps are implementations from [TechEmpower Framework Benchmarks](https://github.com/TechEmpower/FrameworkBenchmarks).
 
 The benchmark runner (`sentry-sdk-benchmark` tool) takes one or more apps as input and creates, serially, Docker Compose projects to test and gather data to compare baseline and instrumented apps. The output is presented as an HTML report.
 
@@ -51,7 +51,7 @@ Each Docker Compose project is responsible for spinning up a target app, a datab
                                                             instrumented apps
 ```
 
-Every app under test is supposed to interact with the database in response to requests from the load generator as described in the [Database Updates test](https://github.com/TechEmpower/FrameworkBenchmarks/wiki/Project-Information-Framework-Tests-Overview#database-updates).
+Every app under test is supposed to interact with a PostgreSQL database in response to requests from the load generator as described in the [Database Updates test](https://github.com/TechEmpower/FrameworkBenchmarks/wiki/Project-Information-Framework-Tests-Overview#database-updates).
 
 The load generator throws traffic at the target app at a fixed rate simulating an "open model", as described in [Closed versus open system models and their impact on performance and scheduling, Schroeder et al](https://www.cs.cmu.edu/~bianca/nsdi06.pdf).
 
