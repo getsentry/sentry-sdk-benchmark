@@ -53,39 +53,52 @@ func main() {
 	if cAdvisorURL != "" && containers == "" {
 		panic("flag -containers is required when -cadvisor is provided")
 	}
-	if strings.Contains(containers, ",") {
-		panic("not implemented: only one container name supported")
-	}
-	containerName := containers
 
 	log.Printf("Target is %q", targetURL)
 
 	waitUntilReady(targetURL, maxWait)
 	warmUp(targetURL, rps, warmupDuration)
 
-	stats := Stats{}
+	stats := make(map[string]Stats)
 	if cAdvisorURL != "" {
-		stats.Before = containerStats(cAdvisorURL, containerName)
+		for _, containerName := range strings.Split(containers, ",") {
+			imageName := strings.Split(containerName, "-")[0]
+
+			stats[imageName] = Stats{
+				Before: containerStats(cAdvisorURL, containerName),
+			}
+		}
 	}
 
 	r := test(targetURL, rps, testDuration)
 	metrics := r.Metrics
 
 	if cAdvisorURL != "" {
-		stats.After = containerStats(cAdvisorURL, containerName)
-		// Note: potential overflow ignored for simplicity
-		stats.Difference.Duration = stats.After.Timestamp.Sub(stats.Before.Timestamp)
-		stats.Difference.MemoryMaxUsageBytes = int64(stats.After.MemoryMaxUsageBytes - stats.Before.MemoryMaxUsageBytes)
-		stats.Difference.CPUUsageUser = int64(stats.After.CPUUsageUser - stats.Before.CPUUsageUser)
-		stats.Difference.CPUUsageSystem = int64(stats.After.CPUUsageSystem - stats.Before.CPUUsageSystem)
-		stats.Difference.CPUUsageTotal = int64(stats.After.CPUUsageTotal - stats.Before.CPUUsageTotal)
+		for _, containerName := range strings.Split(containers, ",") {
+			imageName := strings.Split(containerName, "-")[0]
+
+			after := containerStats(cAdvisorURL, containerName)
+			before := stats[imageName].Before
+
+			stats[imageName] = Stats{
+				Before: before,
+				After:  after,
+				Difference: ContainerStatsDifference{
+					Duration:            after.Timestamp.Sub(before.Timestamp),
+					MemoryMaxUsageBytes: int64(after.MemoryMaxUsageBytes - before.MemoryMaxUsageBytes),
+					CPUUsageUser:        int64(after.CPUUsageUser - before.CPUUsageUser),
+					CPUUsageSystem:      int64(after.CPUUsageSystem - before.CPUUsageSystem),
+					CPUUsageTotal:       int64(after.CPUUsageTotal - before.CPUUsageTotal),
+				},
+			}
+		}
 	}
 
 	result := TestResult{
 		FirstAppResponse: r.FirstResponse,
 		Metrics:          metrics,
 		LoadGenCommand:   strings.Join(os.Args, " "),
-		Stats:            map[string]Stats{"app": stats},
+		Stats:            stats,
 	}
 	if fakerelayURL != "" {
 		result.RelayMetrics = relayMetrics(fakerelayURL)

@@ -26,7 +26,7 @@ services:
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",
       {{- end }}
-      "-containers", "app-{{ .RunName }}-{{ .ID }}",
+      "-containers", "app-{{ .RunName }}-{{ .ID }},postgres-{{ .RunName }}-{{ .ID }},loadgen-{{ .RunName }}-{{ .ID }},cadvisor-{{ .RunName }}-{{ .ID }}{{ if .NeedsRelay -}},fakerelay-{{ .RunName }}-{{ .ID }}{{- end }}",
       "-out", "/result/{{ .ResultPath }}",
     ]
     depends_on:
