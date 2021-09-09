@@ -4,73 +4,88 @@ This repository contains reproducible benchmarks to evaluate the instrumentation
 
 The focus is on Performance Monitoring (tracing) of web servers.
 
+## How It Works
+
+```
+                      ┌────────────────────┐
+                      │┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼│
+   ┌───────────┐      │┼┼────────────────┼┼┼┐      ┌────────┐
+   │           │      │┼│                │┼┼│      │        │
+   │ Benchmark ├─────►├┼│ Docker Compose │┼┼┼─────►│  HTML  │
+   │  Runner   │      │┼│    Projects    │┼┼│      │ Report │
+   │           │      │┼│                │┼┼│      │        │
+   └──────────┬┘      │┼┼────────────────┼┼┼│      └────────┘
+              │       └┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼┼│
+              │        └────────────────────┘
+              │
+       ┌──────┴────────────────────────┐
+       │ Selection of prepackaged apps │
+       │   instrumented with Sentry    │
+       └───────────────────────────────┘
+```
+
+We provide a [collection of prepackaged web apps](platform/) implemented in different programming languages and using different frameworks.
+
+For each original app in a "baseline" directory, there is a slightly modified app in a corresponding "instrumented" directory which is a copy of the original app with minimal changes to add Sentry instrumentation (error and performance monitoring). The "baseline" apps are implementations from [TechEmpower Framework Benchmarks](https://github.com/TechEmpower/FrameworkBenchmarks).
+
+The benchmark runner (`sentry-sdk-benchmark` tool) takes one or more apps as input and creates, serially, Docker Compose projects to test and gather data to compare baseline and instrumented apps. The output is presented as an HTML report.
+
+Each Docker Compose project is responsible for spinning up a target app, a database server, and auxiliary tools to generate load and measure latencies and resource consumption. Those components exist as a handful of Docker containers:
+
+```
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │                                                                        │
+   │ Container Metrics Collector                                            │
+   │         (cAdvisor)                                                     │
+   │                                                                        │
+   └────────────────────────────────────────────────────────────────────────┘
+   ┌────────┐ ┌──────────────┐ ┌───────────────────────┐ ┌──────────────────┐
+   │        │ │              │ │                       │ │                  │
+   │ Target │ │   Database   │ │    Load Generator,    │ │   Mock Sentry    │
+   │  App   │ │ (PostgreSQL) │ │    Data Collector     │ │ Ingestion Server │
+   │        │ │              │ │ and Test Orchestrator │ │   (fakerelay)*   │
+   │        │ │              │ │      (loadgen)        │ │                  │
+   │        │ │              │ │                       │ │                  │
+   └────────┘ └──────────────┘ └───────────────────────┘ └──────────────────┘
+                                                          * only for
+                                                            instrumented apps
+```
+
+Every app under test is supposed to interact with a PostgreSQL database in response to requests from the load generator as described in the [Database Updates test](https://github.com/TechEmpower/FrameworkBenchmarks/wiki/Project-Information-Framework-Tests-Overview#database-updates).
+
+The load generator throws traffic at the target app at a fixed rate simulating an "open model", as described in [Closed versus open system models and their impact on performance and scheduling, Schroeder et al](https://www.cs.cmu.edu/~bianca/nsdi06.pdf).
+
+When the target app is instrumented with Sentry, the Sentry SDK is configured to send data from the app to the Mock Sentry Ingestion Server, which is basically a custom test replacement for the real Sentry ingestion pipeline.
+
+The load generator is also responsible for orchestrating all test steps and collecting data from all other components (either directly or indirectly via the Container Metrics Collector).
+
 ## Usage
 
 You will need `docker` and `go`.
 
-```shell
-go install .
-```
-
-```shell
-sentry-sdk-benchmark platform/python/django
-```
-
-## How It Works
-
-The `sentry-sdk-benchmark` command automates the following steps:
-
-1. Start `baseline` app:
+1. Compile the benchmark runner:
 
     ```shell
-    (cd platform/python/django/baseline && docker compose -p django-baseline up -d --build)
+    go build .
     ```
 
-2. Run load generator as a warm-up step:
+2. (Optional) Install the `sentry-sdk-benchmark` binary by moving it to a directory in your `$PATH`, for example:
 
     ```shell
-    <<<'GET http://localhost:8080/update?queries=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
+    mv sentry-sdk-benchmark /usr/local/bin/
     ```
 
-    You may repeat the command above a couple of times, observing that after the first run the maximum latency reported should drop down.
-
-    Check that the success ratio is 100%.
-
-3. Run load generator to collect benchmark results:
+3. Run the `sentry-sdk-benchmark` tool:
 
     ```shell
-    <<<'GET http://localhost:8080/update?queries=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100
+    sentry-sdk-benchmark platform/python/django
     ```
 
-4. Tear down containers:
+## Cleaning Up Resources
 
-    ```shell
-    (cd platform/python/django/baseline && docker compose -p django-baseline down)
-    ```
+The `sentry-sdk-benchmark` tool always tries to clean up resources (containers, images and networks) after running. In the eventual case that something was left behind, the following commands can help cleaning up resources.
 
-5. Repeat the steps above, now for the `instrumented` app:
-
-    ```shell
-    (cd platform/python/django/instrumented && docker compose -p django-instrumented up -d --build)
-    ```
-
-    ```shell
-    <<<'GET http://localhost:8080/update?queries=10' vegeta attack -duration 10s -rate 500/1s | vegeta report
-    ```
-
-    ```shell
-    <<<'GET http://localhost:8080/update?queries=100' vegeta attack -duration 20s -rate 500/1s | vegeta report -type=hdrplot | tee results/django100-instrumented
-    ```
-
-    ```shell
-    (cd platform/python/django/instrumented && docker compose -p django-instrumented down)
-    ```
-
-6. Open [`plotFiles.html`](tool/plot-hdr-histogram/plotFiles.html) and plot a latency by percentile distribution graph using the two resulting files.
-
-## Manually Cleaning Up Resources
-
-The `sentry-sdk-benchmark` tool always tries to clean up resources (containers and networks) after running. There are failure modes that may leave containers or networks behind. The following two commands can help cleaning up resources. Use with care as they will affect all Docker containers/networks, even those not created by `sentry-sdk-benchmark`.
+Use the commands below with care as some of them may affect resources that were not necessarily created by `sentry-sdk-benchmark`.
 
 List and remove all Docker Compose projects, including images:
 
