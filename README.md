@@ -43,7 +43,7 @@ Each Docker Compose project is responsible for spinning up a target app, a datab
    │        │ │              │ │                       │ │                  │
    │ Target │ │   Database   │ │    Load Generator,    │ │   Mock Sentry    │
    │  App   │ │ (PostgreSQL) │ │    Data Collector     │ │ Ingestion Server │
-   │        │ │              │ │ and Test Orchestrator │ │   (fakerelay)    │
+   │        │ │              │ │ and Test Orchestrator │ │   (fakerelay)*   │
    │        │ │              │ │      (loadgen)        │ │                  │
    │        │ │              │ │                       │ │                  │
    └────────┘ └──────────────┘ └───────────────────────┘ └──────────────────┘
