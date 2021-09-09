@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,10 +15,6 @@ const BenchstatPrefix = "Benchmark"
 
 // Compare compares runs from the same platform
 func Compare(s []string) {
-	if len(s) < 2 {
-		log.Fatalf("compare requires more than one result")
-	}
-
 	builders := make(map[string]*strings.Builder)
 	for _, path := range s {
 		info, err := os.Stat(path)

@@ -86,6 +86,10 @@ func main() {
 		Report(args)
 	case "compare":
 		args = args[1:]
+		if len(args) == 0 {
+			printUsage()
+			os.Exit(2)
+		}
 		Compare(args)
 	case "run":
 		args = args[1:]
