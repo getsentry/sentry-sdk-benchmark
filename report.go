@@ -25,11 +25,10 @@ var funcMap = template.FuncMap{
 }
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
+// Report generates an HTML report summarizing the results of one or more benchmark runs.
+//
+// Must be called with 1 or more valid result paths.
 func Report(s []string) {
-	if len(s) != 1 {
-		panic("Reporting on multiple results is not supported yet")
-	}
-
 	files, err := ioutil.ReadDir(s[0])
 	if err != nil {
 		log.Fatal(err)
@@ -37,18 +36,30 @@ func Report(s []string) {
 
 	// Generate run results from folder names
 	var runResults []*RunResult
-	for _, f := range files {
-		if f.IsDir() {
-			name := f.Name()
-			runResults = append(runResults, &RunResult{
-				Name: name,
-				Path: filepath.Join(s[0], name),
-			})
+	hasMultipleResults := len(s) > 1
+
+	for _, resultPath := range s {
+		for _, f := range files {
+			if f.IsDir() {
+				name := f.Name()
+				path := filepath.Join(resultPath, name)
+
+				// If there is multiple results, we need to uniquely identify them by more than just
+				// their name (baseline, instrumented), so we rely on the entire folder path.
+				if hasMultipleResults {
+					name = path
+				}
+
+				runResults = append(runResults, &RunResult{
+					Name: name,
+					Path: path,
+				})
+			}
 		}
 	}
 
 	if len(runResults) == 0 {
-		panic(fmt.Errorf("no valid results in directory %s", s[0]))
+		panic(fmt.Errorf("no valid results in: %s", s))
 	}
 
 	report(runResults)
@@ -109,7 +120,13 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	reportPath := filepath.Join(filepath.Dir(reportFile.Title), "report.html")
+	var reportPath string
+	if len(results) > 2 {
+		reportPath = filepath.Join(filepath.Dir(filepath.Dir(reportFile.Title)), "report.html")
+	} else {
+		reportPath = filepath.Join(filepath.Dir(reportFile.Title), "report.html")
+	}
+
 	f, err := os.Create(reportPath)
 	if err != nil {
 		panic(err)
