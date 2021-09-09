@@ -9,7 +9,7 @@ import (
 func TestWriteStat(t *testing.T) {
 	var b strings.Builder
 
-	writeStat(&b, BenchstatPrefix, "Latencies", "1", time.Duration(11703760800).Milliseconds())
+	writeStat(&b, BenchstatPrefix, "Latencies", "1", intToString(time.Duration(11703760800).Milliseconds()), "ms")
 
 	got := b.String()
 	want := "BenchmarkLatencies 1 11703 ms\n"
