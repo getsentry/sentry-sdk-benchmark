@@ -47,11 +47,7 @@ func Compare(s []string) {
 		}
 	}
 
-	c := &benchstat.Collection{
-		Alpha:      0.05,
-		AddGeoMean: false,
-		DeltaTest:  benchstat.UTest,
-	}
+	c := &benchstat.Collection{}
 
 	for key, b := range builders {
 		if err := c.AddFile(key, strings.NewReader(b.String())); err != nil {
