@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -62,10 +61,7 @@ func Compare(s []string) {
 	}
 
 	// Print comparison.
-	tables := c.Tables()
-	var buf bytes.Buffer
-	benchstat.FormatText(&buf, tables)
-	os.Stdout.Write(buf.Bytes())
+	benchstat.FormatText(os.Stdout, c.Tables())
 }
 
 func addResult(b *strings.Builder, folderPath string) {
