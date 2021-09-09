@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -46,14 +47,21 @@ func Compare(s []string) {
 		}
 	}
 
-	c := &benchstat.Collection{}
-
-	for key, b := range builders {
-		if err := c.AddFile(key, strings.NewReader(b.String())); err != nil {
+	// Sort names to make output deterministic.
+	var names []string
+	for name := range builders {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var c benchstat.Collection
+	for _, name := range names {
+		file := strings.NewReader(builders[name].String())
+		if err := c.AddFile(name, file); err != nil {
 			panic(err)
 		}
 	}
 
+	// Print comparison.
 	tables := c.Tables()
 	var buf bytes.Buffer
 	benchstat.FormatText(&buf, tables)
