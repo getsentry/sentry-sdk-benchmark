@@ -1,17 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"golang.org/x/perf/benchstat"
 )
-
-const BenchstatPrefix = "Benchmark"
 
 // Compare compares runs from the same platform
 func Compare(s []string) {
@@ -64,48 +63,27 @@ func Compare(s []string) {
 	benchstat.FormatText(os.Stdout, c.Tables())
 }
 
-func addResult(b *strings.Builder, folderPath string) {
+func addResult(w io.Writer, folderPath string) {
 	tr := readTestResult(filepath.Join(folderPath, "result.json"))
 
 	// Latencies
-	const LatenciesPrefix = BenchstatPrefix + "Latencies"
-	writeStat(b, LatenciesPrefix, "Total", "1", floatToString(tr.Latencies.Total.Seconds()), "s")
-	writeStat(b, LatenciesPrefix, "Mean", "1", intToString(tr.Latencies.Mean.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "50th", "1", intToString(tr.Latencies.P50.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "90th", "1", intToString(tr.Latencies.P90.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "95th", "1", intToString(tr.Latencies.P95.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "99th", "1", intToString(tr.Latencies.P99.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "Max", "1", intToString(tr.Latencies.Max.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "Min", "1", intToString(tr.Latencies.Min.Milliseconds()), "ms")
+	writeStat(w, "LatenciesTotal", tr.Latencies.Total.Seconds(), "s")
+	writeStat(w, "LatenciesMean", tr.Latencies.Mean.Milliseconds(), "ms")
+	writeStat(w, "Latencies50th", tr.Latencies.P50.Milliseconds(), "ms")
+	writeStat(w, "Latencies90th", tr.Latencies.P90.Milliseconds(), "ms")
+	writeStat(w, "Latencies95th", tr.Latencies.P95.Milliseconds(), "ms")
+	writeStat(w, "Latencies99th", tr.Latencies.P99.Milliseconds(), "ms")
+	writeStat(w, "LatenciesMax", tr.Latencies.Max.Milliseconds(), "ms")
+	writeStat(w, "LatenciesMin", tr.Latencies.Min.Milliseconds(), "ms")
 
 	// Other Metrics
-	writeStat(b, BenchstatPrefix, "Duration", "1", intToString(tr.Duration.Milliseconds()), "ms")
-	writeStat(b, BenchstatPrefix, "Wait", "1", intToString(tr.Wait.Milliseconds()), "ms")
-	writeStat(b, BenchstatPrefix, "Requests", "1", uintToString(tr.Requests), "req")
-	writeStat(b, BenchstatPrefix, "Rate", "1", floatToString(tr.Rate), "req/s")
-	writeStat(b, BenchstatPrefix, "Throughput", "1", floatToString(tr.Throughput), "req/s")
+	writeStat(w, "Duration", tr.Duration.Milliseconds(), "ms")
+	writeStat(w, "Wait", tr.Wait.Milliseconds(), "ms")
+	writeStat(w, "Requests", tr.Requests, "req")
+	writeStat(w, "Rate", tr.Rate, "req/s")
+	writeStat(w, "Throughput", tr.Throughput, "req/s")
 }
 
-func writeStat(b *strings.Builder, prefix, suffix, iterations, value, unit string) {
-	b.WriteString(prefix)
-	b.WriteString(suffix)
-	b.WriteRune(' ')
-	b.WriteString(iterations)
-	b.WriteRune(' ')
-	b.WriteString(value)
-	b.WriteRune(' ')
-	b.WriteString(unit)
-	b.WriteRune('\n')
-}
-
-func intToString(i int64) string {
-	return strconv.FormatInt(i, 10)
-}
-
-func uintToString(i uint64) string {
-	return strconv.FormatUint(i, 10)
-}
-
-func floatToString(f float64) string {
-	return strconv.FormatFloat(f, 'f', -1, 64)
+func writeStat(w io.Writer, name string, value interface{}, unit string) {
+	fmt.Fprintf(w, "Benchmark%s 1 %v %s\n", name, value, unit)
 }
