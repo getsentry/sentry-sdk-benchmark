@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,9 +28,9 @@ var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMa
 //
 // Must be called with 1 or more valid result paths.
 func Report(s []string) {
-	files, err := ioutil.ReadDir(s[0])
+	entries, err := os.ReadDir(s[0])
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	// Generate run results from folder names
@@ -39,22 +38,23 @@ func Report(s []string) {
 	hasMultipleResults := len(s) > 1
 
 	for _, resultPath := range s {
-		for _, f := range files {
-			if f.IsDir() {
-				name := f.Name()
-				path := filepath.Join(resultPath, name)
-
-				// If there is multiple results, we need to uniquely identify them by more than just
-				// their name (baseline, instrumented), so we rely on the entire folder path.
-				if hasMultipleResults {
-					name = path
-				}
-
-				runResults = append(runResults, &RunResult{
-					Name: name,
-					Path: path,
-				})
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
 			}
+			name := e.Name()
+			path := filepath.Join(resultPath, name)
+
+			// If there is multiple results, we need to uniquely identify them by more than just
+			// their name (baseline, instrumented), so we rely on the entire folder path.
+			if hasMultipleResults {
+				name = path
+			}
+
+			runResults = append(runResults, &RunResult{
+				Name: name,
+				Path: path,
+			})
 		}
 	}
 
