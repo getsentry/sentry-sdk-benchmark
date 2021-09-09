@@ -30,6 +30,14 @@ This subcommand allows re-generating a report from benchmark result data on dema
 Examples:
 %[1]s report result/python/django/20210818-082527-tbnfsga
 %[1]s report result/python/django/20210818-*
+
+Usage:	%[1]s compare RESULT [RESULT ...]
+
+Compares various runs using benchstat.
+
+Examples:
+%[1]s compare result/python/django/20210818-082527-tbnfsga result/platform/python/django/20210909-150838-bcvjada
+%[1]s compare result/python/django/20210818-*
 `
 
 func printUsage() {
@@ -76,6 +84,9 @@ func main() {
 			openBrowser = false
 		}
 		Report(args)
+	case "compare":
+		args = args[1:]
+		Compare(args)
 	case "run":
 		args = args[1:]
 		fallthrough
