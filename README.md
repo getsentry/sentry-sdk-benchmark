@@ -87,10 +87,14 @@ The `sentry-sdk-benchmark` tool always tries to clean up resources (containers, 
 
 Use the commands below with care as some of them may affect resources that were not necessarily created by `sentry-sdk-benchmark`.
 
-List and remove all Docker Compose projects, including images:
+<details>
+<summary>Docker clean up commands</summary>
+
+<blockquote>
+List and remove all Docker Compose projects, including containers, images, and networks:
 
 ```shell
-for name in $(docker compose ls -q); do docker compose --project-name $name down --remove-orphans --rmi local; done
+for name in $(docker compose ls -q); do docker compose -p $name down --remove-orphans --rmi local; done
 ```
 
 List and remove all Docker containers:
@@ -116,6 +120,9 @@ Remove all dangling (untagged) images:
 ```shell
 docker rmi $(docker images -f "dangling=true" -q)
 ```
+
+</blockquote>
+</details>
 
 ## Adding More Platforms
 
