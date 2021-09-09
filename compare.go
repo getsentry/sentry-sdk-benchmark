@@ -70,32 +70,43 @@ func addResult(b *strings.Builder, folderPath string) {
 
 	// Latencies
 	const LatenciesPrefix = BenchstatPrefix + "Latencies"
-	writeStat(b, LatenciesPrefix, "Total", "1", tr.Latencies.Total.Milliseconds())
-	writeStat(b, LatenciesPrefix, "Mean", "1", tr.Latencies.Mean.Milliseconds())
-	writeStat(b, LatenciesPrefix, "50th", "1", tr.Latencies.P50.Milliseconds())
-	writeStat(b, LatenciesPrefix, "90th", "1", tr.Latencies.P90.Milliseconds())
-	writeStat(b, LatenciesPrefix, "95th", "1", tr.Latencies.P95.Milliseconds())
-	writeStat(b, LatenciesPrefix, "95th", "1", tr.Latencies.P95.Milliseconds())
-	writeStat(b, LatenciesPrefix, "99th", "1", tr.Latencies.P99.Milliseconds())
-	writeStat(b, LatenciesPrefix, "Max", "1", tr.Latencies.Max.Milliseconds())
-	writeStat(b, LatenciesPrefix, "Min", "1", tr.Latencies.Min.Milliseconds())
+	writeStat(b, LatenciesPrefix, "Total", "1", floatToString(tr.Latencies.Total.Seconds()), "s")
+	writeStat(b, LatenciesPrefix, "Mean", "1", intToString(tr.Latencies.Mean.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "50th", "1", intToString(tr.Latencies.P50.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "90th", "1", intToString(tr.Latencies.P90.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "95th", "1", intToString(tr.Latencies.P95.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "99th", "1", intToString(tr.Latencies.P99.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "Max", "1", intToString(tr.Latencies.Max.Milliseconds()), "ms")
+	writeStat(b, LatenciesPrefix, "Min", "1", intToString(tr.Latencies.Min.Milliseconds()), "ms")
 
 	// Other Metrics
-	writeStat(b, BenchstatPrefix, "Duration", "1", tr.Duration.Milliseconds())
-	writeStat(b, BenchstatPrefix, "Wait", "1", tr.Wait.Milliseconds())
-	writeStat(b, BenchstatPrefix, "Requests", "1", int64(tr.Requests))
-	writeStat(b, BenchstatPrefix, "Rate", "1", int64(tr.Rate))
-	writeStat(b, BenchstatPrefix, "Throughput", "1", int64(tr.Throughput))
+	writeStat(b, BenchstatPrefix, "Duration", "1", intToString(tr.Duration.Milliseconds()), "ms")
+	writeStat(b, BenchstatPrefix, "Wait", "1", intToString(tr.Wait.Milliseconds()), "ms")
+	writeStat(b, BenchstatPrefix, "Requests", "1", uintToString(tr.Requests), "req")
+	writeStat(b, BenchstatPrefix, "Rate", "1", floatToString(tr.Rate), "req/s")
+	writeStat(b, BenchstatPrefix, "Throughput", "1", floatToString(tr.Throughput), "req/s")
 }
 
-func writeStat(b *strings.Builder, prefix, suffix, iterations string, value int64) {
+func writeStat(b *strings.Builder, prefix, suffix, iterations, value, unit string) {
 	b.WriteString(prefix)
 	b.WriteString(suffix)
 	b.WriteRune(' ')
 	b.WriteString(iterations)
 	b.WriteRune(' ')
-	b.WriteString(strconv.FormatInt(value, 10))
+	b.WriteString(value)
 	b.WriteRune(' ')
-	b.WriteString("ms")
+	b.WriteString(unit)
 	b.WriteRune('\n')
+}
+
+func intToString(i int64) string {
+	return strconv.FormatInt(i, 10)
+}
+
+func uintToString(i uint64) string {
+	return strconv.FormatUint(i, 10)
+}
+
+func floatToString(f float64) string {
+	return strconv.FormatFloat(f, 'f', -1, 64)
 }
