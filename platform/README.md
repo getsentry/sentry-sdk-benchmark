@@ -35,7 +35,7 @@ Follow the steps below to add new platforms or frameworks to use with the `sentr
     ```zsh
     LANGUAGE=Go
     FRAMEWORK=go-std
-    mkdir platform/${LANGUAGE:l}/${FRAMEWORK:l}/baseline/
+    mkdir -p platform/${LANGUAGE:l}/${FRAMEWORK:l}/baseline/
     rsync -avz FrameworkBenchmarks/frameworks/${LANGUAGE}/${FRAMEWORK}/ platform/${LANGUAGE:l}/${FRAMEWORK:l}/baseline/
     ```
 
