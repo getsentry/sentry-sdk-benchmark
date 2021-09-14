@@ -548,23 +548,6 @@
       {{ end }}
     </table>
 
-    <h3>Bytes Out</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th>Total</th>
-        <th>Mean</th>
-      </tr>
-      {{ range .Data }}
-      <tr>
-        <th>{{ .Name }}</th>
-        {{ with .TestResult.Metrics -}}
-        <td>{{ .BytesOut.Total }}</td>
-        <td>{{ .BytesOut.Mean }}</td>
-        {{- end }}
-      </tr>
-      {{ end }}
-    </table>
     <hr>
     {{ range .Data }}
       <details >
