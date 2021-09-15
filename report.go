@@ -26,6 +26,14 @@ var funcMap = template.FuncMap{
 }
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
+var reportCSS template.CSS
+var reportJS template.JS
+
+func init() {
+	reportCSS = template.CSS(readBytes(filepath.Join("template", "report.css")))
+	reportJS = template.JS(readBytes(filepath.Join("template", "script.js")))
+}
+
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
 //
 // Must be called with 1 or more valid result paths.
@@ -68,7 +76,10 @@ func Report(s []string) {
 }
 
 func report(results []*RunResult) {
-	var reportFile ReportFile
+	reportFile := ReportFile{
+		ReportCSS: reportCSS,
+		ReportJS:  reportJS,
+	}
 
 	p := plot.New()
 
@@ -131,7 +142,6 @@ func report(results []*RunResult) {
 
 	var b bytes.Buffer
 	p.WriteTo(&b)
-
 	reportFile.LatencyPlot = template.HTML(b.String())
 
 	var reportPath string
@@ -163,6 +173,8 @@ type ReportFile struct {
 	FirstRequestHeaders string
 	FirstRequestEnv     string
 	LatencyPlot         template.HTML
+	ReportCSS           template.CSS
+	ReportJS            template.JS
 }
 
 type ResultData struct {
