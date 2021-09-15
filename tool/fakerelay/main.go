@@ -15,16 +15,16 @@ import (
 )
 
 var (
-	// Number of requests recieved by fakerelay instance
+	// Number of requests received by fakerelay instance
 	requestCount = expvar.NewInt("requests")
 
-	// string representation of first request recieved by fakerelay instance
-	firstRequest     = expvar.NewString("first_request")
+	// string representation of first request received by fakerelay instance
 	firstRequestOnce sync.Once
+	firstRequest     = expvar.NewString("first_request")
 	sdkInfo          SDKInfo
 
-	// Total bytes recieved by fakerelay instance
-	bytesRecieved = expvar.NewInt("bytes_recieved")
+	// Total bytes received by fakerelay instance
+	bytesReceived = expvar.NewInt("bytes_received")
 )
 
 func init() {
@@ -63,7 +63,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			http.Error(w, err.Error(), 500)
 		} else {
-			bytesRecieved.Add(int64(len(b)))
+			bytesReceived.Add(int64(len(b)))
 			firstRequestOnce.Do(func() {
 				firstRequest.Set(string(b))
 				sdkInfo = ParseSDKInfo(b)
