@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,8 +31,8 @@ var reportCSS template.CSS
 var reportJS template.JS
 
 func init() {
-	reportCSS = template.CSS(readBytes(filepath.Join("template", "report.css")))
-	reportJS = template.JS(readBytes(filepath.Join("template", "script.js")))
+	reportCSS = template.CSS(getTmplAssets("css"))
+	reportJS = template.JS(getTmplAssets("js"))
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
@@ -218,6 +219,26 @@ func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
 
 	f.FirstRequestHeaders = h.String()
 	f.FirstRequestEnv = e.String()
+}
+
+func getTmplAssets(name string) []byte {
+	var b []byte
+	err := filepath.WalkDir(filepath.Join("template", name), func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		if err != nil {
+			panic(err)
+		}
+		b = append(b, readBytes(path)...)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return b
 }
 
 func readBytes(path string) []byte {
