@@ -15,6 +15,7 @@ import (
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
+	LoadGenResult  []*vegeta.Result       `json:"loadgen_result"`
 	Stats          map[string]Stats       `json:"container_stats"`
 	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
 	LoadGenCommand string                 `json:"loadgen_command"`

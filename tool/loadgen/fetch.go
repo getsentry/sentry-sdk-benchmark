@@ -16,6 +16,7 @@ import (
 type FetchResult struct {
 	Metrics       *vegeta.Metrics
 	FirstResponse string
+	Res           []*vegeta.Result
 }
 
 // fetch makes rps requests per second to fetch the given URL for the given
@@ -33,6 +34,7 @@ func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.At
 	var responseOnce sync.Once
 
 	var m vegeta.Metrics
+	var r []*vegeta.Result
 	for res := range ch {
 		responseOnce.Do(func() {
 			b, _ := httputil.DumpResponse(&http.Response{
@@ -46,9 +48,11 @@ func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.At
 			result.FirstResponse = string(b)
 		})
 		m.Add(res)
+		r = append(r, res)
 	}
 	m.Close()
 	result.Metrics = &m
+	result.Res = r
 	return result
 }
 

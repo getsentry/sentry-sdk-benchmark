@@ -96,6 +96,7 @@ func main() {
 
 	result := TestResult{
 		FirstAppResponse: r.FirstResponse,
+		LoadGenResult:    r.Res,
 		Metrics:          metrics,
 		LoadGenCommand:   strings.Join(os.Args, " "),
 		Stats:            stats,
