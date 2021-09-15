@@ -92,50 +92,21 @@ func report(results []*RunResult) {
 		}
 
 		var data ResultData
-
 		data.Name = name
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
-		tr := readTestResult(filepath.Join(folderPath, "result.json"))
 
+		tr := readTestResult(filepath.Join(folderPath, "result.json"))
 		for _, r := range tr.LoadGenResult {
 			r.Attack = name
 			p.Add(r)
 		}
 
-		if tr.RelayMetrics != nil {
-			reportFile.RelayMetrics = tr.RelayMetrics
-
-			reqArr := strings.Split(reportFile.RelayMetrics["first_request"].(string), "\n")
-
-			var h strings.Builder
-			var e strings.Builder
-
-			for _, r := range reqArr {
-				if r == "" || r == "\r" {
-					continue
-				}
-
-				// hack to check if it's an envelope item
-				if r[0] == '{' {
-					e.WriteString(r)
-					e.WriteRune('\n')
-				} else {
-					h.WriteString(r)
-				}
-			}
-
-			reportFile.FirstRequestHeaders = h.String()
-			reportFile.FirstRequestEnv = e.String()
-		}
-
 		data.TestResult = tr
+		data.TestResultJSON = marshalToStr(tr)
 
-		resJSON, err := json.Marshal(tr)
-		if err != nil {
-			panic(err)
+		if tr.RelayMetrics != nil {
+			setRelayData(&reportFile, tr.RelayMetrics)
 		}
-
-		data.TestResultJSON = string(resJSON)
 
 		reportFile.Data = append(reportFile.Data, data)
 	}
@@ -219,6 +190,36 @@ type ContainerStatsDifference struct {
 
 // END copied from ./tool/loadgen
 
+func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
+	f.RelayMetrics = relayMetrics
+
+	firstReq, ok := relayMetrics["first_request"]
+	if !ok {
+		return
+	}
+
+	var h strings.Builder
+	var e strings.Builder
+
+	reqArr := strings.Split(firstReq.(string), "\n")
+	for _, r := range reqArr {
+		if r == "" || r == "\r" {
+			continue
+		}
+
+		// hack to check if it's an envelope item
+		if r[0] == '{' {
+			e.WriteString(r)
+			e.WriteRune('\n')
+		} else {
+			h.WriteString(r)
+		}
+	}
+
+	f.FirstRequestHeaders = h.String()
+	f.FirstRequestEnv = e.String()
+}
+
 func readBytes(path string) []byte {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -232,4 +233,13 @@ func readTestResult(path string) (tr TestResult) {
 		panic(err)
 	}
 	return tr
+}
+
+func marshalToStr(t interface{}) string {
+	j, err := json.Marshal(t)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(j)
 }
