@@ -48,27 +48,27 @@ func main() {
 		start := time.Now()
 		requestCount.Add(1)
 
-		if r.Header.Get("Content-Encoding") == "gzip" {
-			reader, err := gzip.NewReader(r.Body)
+		bytesReceived.Add(r.ContentLength)
+
+		firstRequestOnce.Do(func() {
+			if r.Header.Get("Content-Encoding") == "gzip" {
+				reader, err := gzip.NewReader(r.Body)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					http.Error(w, err.Error(), 500)
+					return
+				}
+				r.Body = reader
+			}
+			b, err := httputil.DumpRequest(r, true)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				http.Error(w, err.Error(), 500)
 				return
 			}
-			r.Body = reader
-		}
-
-		b, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			http.Error(w, err.Error(), 500)
-		} else {
-			bytesReceived.Add(int64(len(b)))
-			firstRequestOnce.Do(func() {
-				firstRequest.Set(string(b))
-				sdkInfo = ParseSDKInfo(b)
-			})
-		}
+			firstRequest.Set(string(b))
+			sdkInfo = ParseSDKInfo(b)
+		})
 
 		w.Header().Add("Content-Type", "application/json")
 		time.Sleep(80*time.Millisecond - time.Since(start))
