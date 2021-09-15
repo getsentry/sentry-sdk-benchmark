@@ -48,7 +48,9 @@ func main() {
 		start := time.Now()
 		requestCount.Add(1)
 
-		bytesReceived.Add(r.ContentLength)
+		if r.ContentLength > 0 {
+			bytesReceived.Add(r.ContentLength)
+		}
 
 		firstRequestOnce.Do(func() {
 			if r.Header.Get("Content-Encoding") == "gzip" {
