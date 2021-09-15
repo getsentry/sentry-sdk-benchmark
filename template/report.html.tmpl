@@ -1,441 +1,544 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ .Title }}</title>
-    <meta name="description" content="Sentry SDK Benchmark Report" />
-    <meta name="author" content="Sentry" />
 
-    <style type="text/css">
-      .hidden {
-          display: none;
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>{{ .Title }}</title>
+  <meta name="description" content="Sentry SDK Benchmark Report" />
+  <meta name="author" content="Sentry (sentry.io)" />
+
+  <style type="text/css">
+    .hidden {
+      display: none;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td,
+    th {
+      border: 1px solid black;
+      text-align: left;
+      padding: 8px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+
+    dl {
+      margin-top: 0;
+    }
+
+    dt {
+      float: left;
+      clear: left;
+      width: 120px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    dt::after {
+      content: ":";
+    }
+
+    dd {
+      margin: 0 0 0 130px;
+      padding: 0 0 0.5em 0;
+    }
+
+    h4 {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    ul {
+      margin-top: 0;
+    }
+
+    .runDetails {
+      border: 1px solid black;
+      padding: 10px;
+    }
+
+    /* The snackbar - position it at the bottom and in the middle of the screen */
+    #snackbar {
+      visibility: hidden;
+      min-width: 200px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 100px;
+      padding: 8px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 30px;
+    }
+
+    /* Show the snackbar when clicking on a button (class added with JavaScript) */
+    #snackbar.show {
+      visibility: visible;
+      -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    /* Animations to fade the snackbar in and out */
+    @-webkit-keyframes fadein {
+      from {
+        bottom: 0;
+        opacity: 0;
       }
 
-      table {
-        border-collapse: collapse;
-      }
-
-      td, th {
-        border: 1px solid black;
-        text-align: left;
-        padding: 8px;
-      }
-
-      tr:nth-child(even) {
-        background-color: #dddddd;
-      }
-
-      dl {
-        margin-top: 0;
-      }
-
-      dt {
-        float: left;
-        clear: left;
-        width: 120px;
-        text-align: right;
-        font-weight: bold;
-      }
-
-      dt::after {
-        content: ":";
-      }
-
-      dd {
-        margin: 0 0 0 130px;
-        padding: 0 0 0.5em 0;
-      }
-
-      h4 {
-        margin-bottom: 0;
-        margin-top: 0;
-      }
-
-      ul {
-        margin-top: 0;
-      }
-
-      .runDetails {
-        border: 1px solid black;
-        padding: 10px;
-      }
-
-      /* The snackbar - position it at the bottom and in the middle of the screen */
-      #snackbar {
-        visibility: hidden;
-        min-width: 200px;
-        margin-left: -125px;
-        background-color: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 100px;
-        padding: 8px;
-        position: fixed;
-        z-index: 1;
-        left: 50%;
+      to {
         bottom: 30px;
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadein {
+      from {
+        bottom: 0;
+        opacity: 0;
       }
 
-      /* Show the snackbar when clicking on a button (class added with JavaScript) */
-      #snackbar.show {
-        visibility: visible;
-        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+      to {
+        bottom: 30px;
+        opacity: 1;
+      }
+    }
+
+    @-webkit-keyframes fadeout {
+      from {
+        bottom: 30px;
+        opacity: 1;
       }
 
-      /* Animations to fade the snackbar in and out */
-      @-webkit-keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
+      to {
+        bottom: 0;
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeout {
+      from {
+        bottom: 30px;
+        opacity: 1;
       }
 
-      @keyframes fadein {
-        from {bottom: 0; opacity: 0;}
-        to {bottom: 30px; opacity: 1;}
+      to {
+        bottom: 0;
+        opacity: 0;
+      }
+    }
+  </style>
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    // Based on example from: https://github.com/HdrHistogram/HdrHistogram/blob/9af106907eb6618c4c3fb5ac0da773ad0fee4f13/GoogleChartsExample/plotFiles.html
+
+    // Declare constants
+    const DEFAULT_TICK = { v: 1000000, f: "99.9999%" };
+    const TICKS = [
+      { v: 1, f: "0%" },
+      { v: 10, f: "90%" },
+      { v: 100, f: "99%" },
+      { v: 1000, f: "99.9%" },
+      { v: 10000, f: "99.99%" },
+      { v: 100000, f: "99.999%" },
+      { v: 1000000, f: "99.9999%" },
+      { v: 10000000, f: "99.99999%" },
+    ];
+
+    // Declare mutable globals
+    let maxPercentile = DEFAULT_TICK.v;
+    let chartData = null;
+    let chart = null;
+
+    // Load the Visualization API and the corechart package.
+    google.load("visualization", "1.0", { packages: ["corechart"] });
+
+    // Set a callback to run when the Google Visualization API is loaded.
+    google.setOnLoadCallback(drawInitialChart);
+
+    function setChartData(names, histos) {
+      while (names.length < histos.length) {
+        names.push("Unknown");
       }
 
-      @-webkit-keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
+      var series = [];
+      for (var i = 0; i < histos.length; i++) {
+        series = appendDataSeries(histos[i], names[i], series);
       }
 
-      @keyframes fadeout {
-        from {bottom: 30px; opacity: 1;}
-        to {bottom: 0; opacity: 0;}
-      }
-    </style>
+      chartData = google.visualization.arrayToDataTable(series);
+    }
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-      // Based on example from: https://github.com/HdrHistogram/HdrHistogram/blob/9af106907eb6618c4c3fb5ac0da773ad0fee4f13/GoogleChartsExample/plotFiles.html
+    function drawInitialChart() {
+      const histos = [];
+      const names = [];
+      const hdrNodes = document.querySelectorAll(".hdr");
+      hdrNodes.forEach((node) => {
+        // name
+        names.push(node.getAttribute("data-name"))
+        // actual data
+        histos.push(node.innerHTML)
+      });
 
-      // Declare constants
-      const DEFAULT_TICK = { v: 1000000, f: "99.9999%" };
-      const TICKS = [
-        { v: 1, f: "0%" },
-        { v: 10, f: "90%" },
-        { v: 100, f: "99%" },
-        { v: 1000, f: "99.9%" },
-        { v: 10000, f: "99.99%" },
-        { v: 100000, f: "99.999%" },
-        { v: 1000000, f: "99.9999%" },
-        { v: 10000000, f: "99.99999%" },
-      ];
+      setChartData(names, histos);
+      drawChart();
+      createEnvDetails();
 
-      // Declare mutable globals
-      let maxPercentile = DEFAULT_TICK.v;
-      let chartData = null;
-      let chart = null;
+      formatJSON();
+    }
 
-      // Load the Visualization API and the corechart package.
-      google.load("visualization", "1.0", { packages: ["corechart"] });
+    function createEnvDetails() {
+      const node = document.getElementById("requestEnv");
+      const items = node.innerHTML.split("\n").filter(i => i !== "");
 
-      // Set a callback to run when the Google Visualization API is loaded.
-      google.setOnLoadCallback(drawInitialChart);
+      const formatNode = document.getElementById("formatEnv");
+      formatNode.innerHTML = "";
 
-      function setChartData(names, histos) {
-        while (names.length < histos.length) {
-          names.push("Unknown");
-        }
+      items.forEach(item => {
+        const preEle = document.createElement("pre");
+        preEle.className = "jsonFormat"
+        preEle.innerHTML = item;
+        formatNode.appendChild(preEle);
+      });
+    }
 
-        var series = [];
-        for (var i = 0; i < histos.length; i++) {
-          series = appendDataSeries(histos[i], names[i], series);
-        }
+    function formatJSON() {
+      const nodes = document.querySelectorAll(".jsonFormat");
+      nodes.forEach(node => {
+        node.innerHTML = JSON.stringify(JSON.parse(node.innerHTML), null, 4);
+      });
+    }
 
-        chartData = google.visualization.arrayToDataTable(series);
-      }
-
-      function drawInitialChart() {
-        const histos = [];
-        const names = [];
-        const hdrNodes = document.querySelectorAll(".hdr");
-        hdrNodes.forEach((node) => {
-          // name
-          names.push(node.getAttribute("data-name"))
-          // actual data
-          histos.push(node.innerHTML)
-        });
-
-        setChartData(names, histos);
-        drawChart();
-        createEnvDetails();
-
-        formatJSON();
-      }
-
-      function createEnvDetails() {
-        const node = document.getElementById("requestEnv");
-        const items = node.innerHTML.split("\n").filter(i => i !== "");
-
-        const formatNode = document.getElementById("formatEnv");
-        formatNode.innerHTML = "";
-
-        items.forEach(item => {
-          const preEle = document.createElement("pre");
-          preEle.className = "jsonFormat"
-          preEle.innerHTML = item;
-          formatNode.appendChild(preEle);
-        });
-      }
-
-      function formatJSON() {
-        const nodes = document.querySelectorAll(".jsonFormat");
-        nodes.forEach(node => {
-          node.innerHTML = JSON.stringify(JSON.parse(node.innerHTML), null, 4);
-        });
-      }
-
-      function drawChart() {
-        var options = {
-          title: "Latency by Percentile Distribution",
-          height: 480,
-          hAxis: {
-            title: "Percentile",
-            minValue: 1,
-            logScale: true,
-            ticks: TICKS,
-            viewWindowMode: "explicit",
-            viewWindow: {
-              max: maxPercentile,
-              min: 1,
-            },
+    function drawChart() {
+      var options = {
+        title: "Latency by Percentile Distribution",
+        height: 480,
+        hAxis: {
+          title: "Percentile",
+          minValue: 1,
+          logScale: true,
+          ticks: TICKS,
+          viewWindowMode: "explicit",
+          viewWindow: {
+            max: maxPercentile,
+            min: 1,
           },
-          vAxis: { title: "Latency (ms)", minValue: 0 },
-          legend: { position: "bottom" },
-        };
+        },
+        vAxis: { title: "Latency (ms)", minValue: 0 },
+        legend: { position: "bottom" },
+      };
 
-        // add tooltips with correct percentile text to data:
-        var columns = [0];
-        for (var i = 1; i < chartData.getNumberOfColumns(); i++) {
-          columns.push(i);
-          columns.push({
-            type: "string",
-            properties: {
-              role: "tooltip",
-            },
-            calc: (function (j) {
-              return function (dt, row) {
-                var percentile = 100.0 - 100.0 / dt.getValue(row, 0);
-                return (
-                  dt.getColumnLabel(j) +
-                  ": " +
-                  percentile.toPrecision(7) +
-                  "\%'ile = " +
-                  dt.getValue(row, j) +
-                  " ms"
-                );
-              };
-            })(i),
-          });
-        }
-        var view = new google.visualization.DataView(chartData);
-        view.setColumns(columns);
-
-        chart = new google.visualization.LineChart(
-          document.getElementById("chart_div")
-        );
-        chart.draw(view, options);
-
-        google.visualization.events.addListener(chart, "ready", function () {
-          chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+      // add tooltips with correct percentile text to data:
+      var columns = [0];
+      for (var i = 1; i < chartData.getNumberOfColumns(); i++) {
+        columns.push(i);
+        columns.push({
+          type: "string",
+          properties: {
+            role: "tooltip",
+          },
+          calc: (function (j) {
+            return function (dt, row) {
+              var percentile = 100.0 - 100.0 / dt.getValue(row, 0);
+              return (
+                dt.getColumnLabel(j) +
+                ": " +
+                percentile.toPrecision(7) +
+                "\%'ile = " +
+                dt.getValue(row, j) +
+                " ms"
+              );
+            };
+          })(i),
         });
       }
+      var view = new google.visualization.DataView(chartData);
+      view.setColumns(columns);
 
-      function appendDataSeries(histo, name, dataSeries) {
-        var series;
-        var seriesCount;
-        if (dataSeries.length == 0) {
-          series = [["X", name]];
-          seriesCount = 1;
-        } else {
-          series = dataSeries;
-          series[0].push(name);
-          seriesCount = series[0].length - 1;
-        }
+      chart = new google.visualization.LineChart(
+        document.getElementById("chart_div")
+      );
+      chart.draw(view, options);
 
-        var lines = histo.split("\n");
+      google.visualization.events.addListener(chart, "ready", function () {
+        chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+      });
+    }
 
-        var seriesIndex = 1;
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          var values = line.trim().split(/[ ]+/);
+    function appendDataSeries(histo, name, dataSeries) {
+      var series;
+      var seriesCount;
+      if (dataSeries.length == 0) {
+        series = [["X", name]];
+        seriesCount = 1;
+      } else {
+        series = dataSeries;
+        series[0].push(name);
+        seriesCount = series[0].length - 1;
+      }
 
-          if (line[0] != "#" && values.length == 4) {
-            var y = parseFloat(values[0]);
-            var x = parseFloat(values[3]);
+      var lines = histo.split("\n");
 
-            if (!isNaN(x) && !isNaN(y)) {
-              if (seriesIndex >= series.length) {
-                series.push([x]);
-              }
+      var seriesIndex = 1;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        var values = line.trim().split(/[ ]+/);
 
-              while (series[seriesIndex].length < seriesCount) {
-                series[seriesIndex].push(null);
-              }
+        if (line[0] != "#" && values.length == 4) {
+          var y = parseFloat(values[0]);
+          var x = parseFloat(values[3]);
 
-              series[seriesIndex].push(y);
-              seriesIndex++;
+          if (!isNaN(x) && !isNaN(y)) {
+            if (seriesIndex >= series.length) {
+              series.push([x]);
             }
+
+            while (series[seriesIndex].length < seriesCount) {
+              series[seriesIndex].push(null);
+            }
+
+            series[seriesIndex].push(y);
+            seriesIndex++;
           }
         }
+      }
 
-        while (seriesIndex < series.length) {
-          series[seriesIndex].push(null);
-          seriesIndex++;
+      while (seriesIndex < series.length) {
+        series[seriesIndex].push(null);
+        seriesIndex++;
+      }
+
+      return series;
+    }
+
+    // Reacts to Slider Input: Updates Chart
+    function showValue(newValue) {
+      const newPercentile = Math.pow(10, newValue);
+      const percentile = 100.0 - 100.0 / newPercentile;
+      document.getElementById("percentileRange").innerHTML = percentile + "%";
+      maxPercentile = newPercentile;
+      drawChart();
+      return { typed: "" };
+    }
+
+    function copy(className, runName) {
+      const hdrNodes = document.querySelectorAll(`.${className}`);
+      hdrNodes.forEach(node => {
+        if (node.getAttribute("data-name") === runName) {
+          navigator.clipboard.writeText(node.innerHTML);
+          const snack = document.getElementById("snackbar");
+          snackbar.innerHTML = `Copied ${className} for ${runName}`
+          // Add the "show" class to DIV
+          snackbar.className = "show";
+          setTimeout(() => {
+            snackbar.className = snackbar.className.replace("show", "");
+            snackbar.innerHTML = "";
+          }, 1000);
         }
+      })
+    }
+  </script>
+</head>
 
-        return series;
-      }
+<body>
+  <header>
+    <h1>Sentry SDK Benchmark Report</h1>
+  </header>
 
-      // Reacts to Slider Input: Updates Chart
-      function showValue(newValue) {
-        const newPercentile = Math.pow(10, newValue);
-        const percentile = 100.0 - 100.0 / newPercentile;
-        document.getElementById("percentileRange").innerHTML = percentile + "%";
-        maxPercentile = newPercentile;
-        drawChart();
-        return { typed: "" };
-      }
+  <nav>
+    <ul>
+      <li><a href="#configuration">Configuration</a></li>
+      <li><a href="#latency">Latency</a></li>
+      <li><a href="#memory-cpu">Memory & CPU Usage</a></li>
+      <li><a href="#network">Network Traffic</a></li>
+      <li><a href="#debug">Debugging</a></li>
+    </ul>
+  </nav>
 
-      function copy(className, runName) {
-        const hdrNodes = document.querySelectorAll(`.${className}`);
-        hdrNodes.forEach(node => {
-          if (node.getAttribute("data-name") === runName) {
-            navigator.clipboard.writeText(node.innerHTML);
-            const snack = document.getElementById("snackbar");
-            snackbar.innerHTML = `Copied ${className} for ${runName}`
-            // Add the "show" class to DIV
-            snackbar.className = "show";
-            setTimeout(() => {
-              snackbar.className = snackbar.className.replace("show", "");
-              snackbar.innerHTML = "";
-            }, 1000);
-          }
-        })
-      }
-    </script>
-  </head>
-  <body>
-    <h1>{{ .Title }}</h1>
-    {{ with .RelayMetrics -}}
-    <h3>{{ .sdk.name }} {{ .sdk.version }}</h3>
-    {{- end }}
-    <!--Div that will hold the chart-->
-    <div id="chart_div">Loading...</div>
-    <p>
-      Percentile range:
-      <input
-        type="range"
-        class="slider-width500"
-        min="1"
-        max="8"
-        value="7"
-        step="1"
-        width="300px"
-        onchange="showValue(this.value)"
-      />
-      <span id="percentileRange">99.99999%</span>
-    </p>
-
-    <!-- Information about the run -->
-    {{ range .Data }}
-    <details>
-      <summary>{{ .Name }} Run Details</summary>
-      {{ with .TestResult.Metrics -}}
-      <div class="runDetails">
-        <h4>Errors</h4>
-        <ul>
-        {{ range .Errors }}
-          <li>{{ . }}</li>
-        {{ else }}
-          <li>No Errors</li>
-        {{ end }}
-        </ul>
-
-        <h4>Result</h4>
+  <main>
+    <section>
+      <h2 id="configuration">Configuration</h2>
+      <div>
+        <h3>Target Application</h3>
         <dl>
-          <dt>Earliest</dt>
-          <dd>{{ .Earliest }}</dd>
-          <dt>Latest</dt>
-          <dd>{{ .Latest }}</dd>
-          <dt>End</dt>
-          <dd>{{ .End }}</dd>
-          <dt>Duration</dt>
-          <dd>{{ .Duration }}</dd>
-          <dt>Wait</dt>
-          <dd>{{ .Wait }}</dd>
-          <dt>Requests</dt>
-          <dd>{{ .Requests }}</dd>
-          <dt>Rate (as configured)</dt>
-          <dd>{{ .Rate }}</dd>
-          <dt>Throughput (as observed)</dt>
-          <dd>{{ .Throughput }}</dd>
-          <dt>Success</dt>
-          <dd>{{ .Success }}</dd>
-          {{ range $key, $value := .StatusCodes }}
-          <dt>Status Code {{ $key }}</dt>
-          <dd>{{ $value }}</dd>
-          {{ end }}
+          <div>
+            <dt>Language</dt>
+            <dd>{{ .Title }}</dd>
+          </div>
+          <div>
+            <dt>Framework</dt>
+            <dd><a href="https://github.com/getsentry/sentry-sdk-benchmark/tree/main/platform">{{ "TODO" }}</a></dd>
+          </div>
+          {{ with .RelayMetrics -}}
+          <div>
+            <dt>Sentry SDK version</dt>
+            <dd><a href="https://github.com/getsentry/{{ .sdk.name }}/releases/{{ .sdk.version }}">{{ .sdk.version }}</a></dd>
+          </div>
+          {{- end }}
         </dl>
       </div>
-      {{- end }}
-    </details>
-    {{ end }}
+      <div>
+        <h3>Test Configuration</h3>
+        <dl>
+          <div>
+            <dt>Target URL</dt>
+            <dd>{{ "TODO" }}</dd>
+          </div>
+          <div>
+            <dt>Duration</dt>
+            <dd>{{ "TODO" }}</dd>
+          </div>
+          <div>
+            <dt>Requests</dt>
+            <dd>{{ "TODO" }}</dd>
+          </div>
+          <div>
+            <dt><abbr title="Requests Per Second">RPS</abbr></dt>
+            <dd>{{ "TODO" }}</dd>
+          </div>
+        </dl>
 
-    <h3>Latencies</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th>Total</th>
-        <th>Mean</th>
-        <th>50th</th>
-        <th>90th</th>
-        <th>95th</th>
-        <th>99th</th>
-        <th>Max</th>
-        <th>Min</th>
-      </tr>
+        {{ range .Data }}
+        <details>
+          <summary>{{ .Name }} Run Details</summary>
+          {{ with .TestResult.Metrics -}}
+          <div class="runDetails">
+            <h4>Errors</h4>
+            <ul>
+              {{ range .Errors }}
+              <li>{{ . }}</li>
+              {{ else }}
+              <li>No Errors</li>
+              {{ end }}
+            </ul>
 
-      {{ range .Data }}
-      <tr>
-        <th>{{ .Name }}</th>
-        {{ with .TestResult.Metrics -}}
-        <td>{{ round .Latencies.Total }}</td>
-        <td>{{ round .Latencies.Mean }}</td>
-        <td>{{ round .Latencies.P50 }}</td>
-        <td>{{ round .Latencies.P90 }}</td>
-        <td>{{ round .Latencies.P95 }}</td>
-        <td>{{ round .Latencies.P99 }}</td>
-        <td>{{ round .Latencies.Max }}</td>
-        <td>{{ round .Latencies.Min }}</td>
-        {{- end }}
-      </tr>
-      {{ end }}
-    </table>
+            <h4>Result</h4>
+            <dl>
+              <dt>Earliest</dt>
+              <dd>{{ .Earliest }}</dd>
+              <dt>Latest</dt>
+              <dd>{{ .Latest }}</dd>
+              <dt>End</dt>
+              <dd>{{ .End }}</dd>
+              <dt>Duration</dt>
+              <dd>{{ .Duration }}</dd>
+              <dt>Wait</dt>
+              <dd>{{ .Wait }}</dd>
+              <dt>Requests</dt>
+              <dd>{{ .Requests }}</dd>
+              <dt>Rate (as configured)</dt>
+              <dd>{{ .Rate }}</dd>
+              <dt>Throughput (as observed)</dt>
+              <dd>{{ .Throughput }}</dd>
+              <dt>Success</dt>
+              <dd>{{ .Success }}</dd>
+              {{ range $key, $value := .StatusCodes }}
+              <dt>Status Code {{ $key }}</dt>
+              <dd>{{ $value }}</dd>
+              {{ end }}
+            </dl>
+          </div>
+          {{- end }}
+        </details>
+        {{ end }}
+      </div>
+      <div>
+        <h3>Hardware Specification</h3>
+        <dl>
+          <div>
+            <dt>Computer</dt>
+            <dd>{{ "TODO ~ MacBook Pro (15-inch, 2019)" }}</dd>
+          </div>
+          <div>
+            <dt>Processor</dt>
+            <dd>{{ "TODO ~ 2.3 GHz 8-Core Intel Core i9" }}</dd>
+          </div>
+          <div>
+            <dt>Memory</dt>
+            <dd>{{ "TODO ~ 32 GB 2400 MHz DDR4" }}</dd>
+          </div>
+          <div>
+            <dt>Operating System</dt>
+            <dd>{{ "TODO ~ macOS Big Sur 11.5.2" }}</dd>
+          </div>
+          <div>
+            <dt>Docker</dt>
+            <dd>{{ "TODO ~ Docker Desktop 4.0.0.12 / 8 cores / 4 GB" }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+    <section>
+      <h2 id="latency">Latency</h2>
+      <div id="chart_div">Loading...</div>
+      <p>
+        Percentile range:
+        <input type="range" class="slider-width500" min="1" max="8" value="7" step="1" width="300px"
+          onchange="showValue(this.value)" />
+        <span id="percentileRange">99.99999%</span>
+      </p>
+      <table>
+        <tr>
+          <th> </th>
+          <th>Min</th>
+          <th>Mean</th>
+          <th>50th</th>
+          <th>90th</th>
+          <th>95th</th>
+          <th>99th</th>
+          <th>Max</th>
+          <th>Total</th>
+        </tr>
 
-    <h3>Container Stats - Memory</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th colspan="3" style="text-align: center;">App</th>
-        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-        <th colspan="3" style="text-align: center;">Relay</th>
-      </tr>
-      <tr>
-        <th>   </th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-      </tr>
-      {{ range .Data }}
+        {{ range .Data }}
+        <tr>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Metrics -}}
+          <td>{{ round .Latencies.Min }}</td>
+          <td>{{ round .Latencies.Mean }}</td>
+          <td>{{ round .Latencies.P50 }}</td>
+          <td>{{ round .Latencies.P90 }}</td>
+          <td>{{ round .Latencies.P95 }}</td>
+          <td>{{ round .Latencies.P99 }}</td>
+          <td>{{ round .Latencies.Max }}</td>
+          <td>{{ round .Latencies.Total }}</td>
+          {{- end }}
+        </tr>
+        {{ end }}
+      </table>
+    </section>
+    <section>
+      <h2 id="memory-cpu">Memory & CPU Usage</h2>
+      <h3>Memory</h3>
+      <table>
+        <tr>
+          <th> </th>
+          <th colspan="3" style="text-align: center;">App</th>
+          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+          <th colspan="3" style="text-align: center;">Relay</th>
+        </tr>
+        <tr>
+          <th> </th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+        </tr>
+        {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Stats -}}
@@ -450,70 +553,31 @@
           <td>{{ .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
           {{- end }}
         </tr>
-      {{ end }}
-    </table>
+        {{ end }}
+      </table>
 
-    <h3>Container Stats - CPU Total</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th colspan="3" style="text-align: center;">App</th>
-        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-        <th colspan="3" style="text-align: center;">Relay</th>
-      </tr>
-      <tr>
-        <th>   </th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-      </tr>
-
-      {{ range .Data }}
+      <h3>CPU User</h3>
+      <table>
         <tr>
-          <th>{{ .Name }}</th>
-          {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.CPUUsageTotal }}</td>
-          <td>{{ .app.After.CPUUsageTotal }}</td>
-          <td>{{ .app.Difference.CPUUsageTotal }}</td>
-          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
-          <td>{{ .postgres.After.CPUUsageTotal }}</td>
-          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
-          {{- end }}
+          <th> </th>
+          <th colspan="3" style="text-align: center;">App</th>
+          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+          <th colspan="3" style="text-align: center;">Relay</th>
         </tr>
-      {{ end }}
-    </table>
+        <tr>
+          <th> </th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+        </tr>
 
-    <h3>Container Stats - CPU User</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th colspan="3" style="text-align: center;">App</th>
-        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-        <th colspan="3" style="text-align: center;">Relay</th>
-      </tr>
-      <tr>
-        <th>   </th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-      </tr>
-
-      {{ range .Data }}
+        {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Stats -}}
@@ -528,30 +592,30 @@
           <td>{{ .fakerelay.Difference.CPUUsageUser }}</td>
           {{- end }}
         </tr>
-      {{ end }}
-    </table>
+        {{ end }}
+      </table>
 
-    <table>
-      <h3>Container Stats - CPU System</h3>
-      <tr>
-        <th>   </th>
-        <th colspan="3" style="text-align: center;">App</th>
-        <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-        <th colspan="3" style="text-align: center;">Relay</th>
-      </tr>
-      <tr>
-        <th>   </th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-        <th>Before</th>
-        <th>After</th>
-        <th>Difference</th>
-      </tr>
-      {{ range .Data }}
+      <table>
+        <h3>CPU System</h3>
+        <tr>
+          <th> </th>
+          <th colspan="3" style="text-align: center;">App</th>
+          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+          <th colspan="3" style="text-align: center;">Relay</th>
+        </tr>
+        <tr>
+          <th> </th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+        </tr>
+        {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Stats -}}
@@ -566,17 +630,58 @@
           <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
           {{- end }}
         </tr>
-      {{ end }}
-    </table>
+        {{ end }}
+      </table>
 
-    <h3>Bytes In</h3>
-    <table>
-      <tr>
-        <th>   </th>
-        <th>Total</th>
-        <th>Mean</th>
-      </tr>
-      {{ range .Data }}
+      <h3>CPU Total</h3>
+      <table>
+        <tr>
+          <th> </th>
+          <th colspan="3" style="text-align: center;">App</th>
+          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
+          <th colspan="3" style="text-align: center;">Relay</th>
+        </tr>
+        <tr>
+          <th> </th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+          <th>Before</th>
+          <th>After</th>
+          <th>Difference</th>
+        </tr>
+
+        {{ range .Data }}
+        <tr>
+          <th>{{ .Name }}</th>
+          {{ with .TestResult.Stats -}}
+          <td>{{ .app.Before.CPUUsageTotal }}</td>
+          <td>{{ .app.After.CPUUsageTotal }}</td>
+          <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
+          <td>{{ .postgres.After.CPUUsageTotal }}</td>
+          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
+          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
+          {{- end }}
+        </tr>
+        {{ end }}
+      </table>
+    </section>
+    <section>
+      <h2 id="network">Network Traffic</h2>
+      <h3>Bytes In</h3>
+      <table>
+        <tr>
+          <th> </th>
+          <th>Total</th>
+          <th>Mean</th>
+        </tr>
+        {{ range .Data }}
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Metrics -}}
@@ -584,55 +689,61 @@
           <td>{{ .BytesIn.Mean }}</td>
           {{- end }}
         </tr>
-      {{ end }}
-    </table>
+        {{ end }}
+      </table>
+    </section>
+    <section>
+      <h2 id="debug">Debugging</h2>
 
-    <hr>
-    {{ range .Data }}
-      <details >
+      <h3>First Response from App</h3>
+      {{ range .Data }}
+      <p>{{ .Name }}</p>
+      <pre>{{ .TestResult.FirstAppResponse }}</pre>
+      {{ end }}
+
+      <hr>
+      <h3>First Request to Relay</h3>
+      <pre>{{ .FirstRequestHeaders }}</pre>
+      <div id="formatEnv">Loading...</div>
+      <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
+
+      <hr>
+      <h3>LoadGen Command</h3>
+      {{ range .Data }}
+      <p>{{ .Name }}</p>
+      {{ with .TestResult.LoadGenCommand -}}
+      <pre>{{ . }}</pre>
+      {{- end }}
+      {{- end }}
+
+      <hr>
+      {{ range .Data }}
+      <details>
         <summary>Percentile Table: <b>{{ .Name }}</b></summary>
         <div style="display: flex;">
           <pre class="hdr" data-name="{{ .Name }}">{{ .HDR }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy {{ .Name }} HDR</button>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy
+            {{ .Name }} HDR</button>
         </div>
       </details>
       <details>
         <summary>Raw JSON: <b>{{ .Name }}</b></summary>
         <div style="display: flex;">
           <pre style="width: 400px;" class="json jsonFormat" data-name="{{ .Name }}">{{ .TestResultJSON }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy {{ .Name }} JSON</button>
+          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy
+            {{ .Name }} JSON</button>
         </div>
       </details>
-    {{ end }}
+      {{ end }}
+    </section>
 
-    <hr>
-    <h3>First Response from App</h3>
-    {{ range .Data }}
-    <p>{{ .Name }}</p>
-    <pre>{{ .TestResult.FirstAppResponse }}</pre>
-    {{ end }}
-
-    <hr>
-    <h3>First Request to Relay</h3>
-    <details>
-      <summary>Request Headers</summary>
-      <pre>{{ .FirstRequestHeaders }}</pre>
-    </details>
-    <details>
-      <summary>Envelope</summary>
-      <div id="formatEnv">Loading...</div>
-      <div id="requestEnv" class="hidden">{{ .FirstRequestEnv }}</div>
-    </details>
-
-    <h3>LoadGen Command</h3>
-    {{ range .Data }}
-    <p>{{ .Name }}</p>
-    {{ with .TestResult.LoadGenCommand -}}
-    <pre>{{ . }}</pre>
-    {{- end }}
-    {{- end }}
-
-    <!-- The actual snackbar -->
     <div id="snackbar"></div>
-  </body>
+  </main>
+
+  <footer>
+    <p>Report generated with the <a
+        href="https://github.com/getsentry/sentry-sdk-benchmark"><code>sentry-sdk-benchmark</code></a> tool.</p>
+  </footer>
+</body>
+
 </html>
