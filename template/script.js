@@ -13,6 +13,11 @@ const TICKS = [
   { v: 10000000, f: "99.99999%" },
 ];
 
+const CLASSNAMES = Object.freeze({
+  JSON_FORMAT: "jsonFormat",
+  HDR: "hdr"
+});
+
 // Declare mutable globals
 let maxPercentile = DEFAULT_TICK.v;
 let chartData = null;
@@ -24,23 +29,10 @@ google.load("visualization", "1.0", { packages: ["corechart"] });
 // Set a callback to run when the Google Visualization API is loaded.
 google.setOnLoadCallback(drawInitialChart);
 
-function setChartData(names, histos) {
-  while (names.length < histos.length) {
-    names.push("Unknown");
-  }
-
-  var series = [];
-  for (var i = 0; i < histos.length; i++) {
-    series = appendDataSeries(histos[i], names[i], series);
-  }
-
-  chartData = google.visualization.arrayToDataTable(series);
-}
-
 function drawInitialChart() {
   const histos = [];
   const names = [];
-  const hdrNodes = document.querySelectorAll(".hdr");
+  const hdrNodes = document.querySelectorAll(getClassName(CLASSNAMES.HDR));
   hdrNodes.forEach((node) => {
     // name
     names.push(node.getAttribute("data-name"));
@@ -55,6 +47,19 @@ function drawInitialChart() {
   formatJSON();
 }
 
+function setChartData(names, histos) {
+  while (names.length < histos.length) {
+    names.push("Unknown");
+  }
+
+  let series = [];
+  for (let i = 0; i < histos.length; i++) {
+    series = appendDataSeries(histos[i], names[i], series);
+  }
+
+  chartData = google.visualization.arrayToDataTable(series);
+}
+
 function createEnvDetails() {
   const node = document.getElementById("requestEnv");
   const items = node.innerHTML.split("\n").filter((i) => i !== "");
@@ -64,21 +69,21 @@ function createEnvDetails() {
 
   items.forEach((item) => {
     const preEle = document.createElement("pre");
-    preEle.className = "jsonFormat";
+    preEle.className = CLASSNAMES.JSON_FORMAT;
     preEle.innerHTML = item;
     formatNode.appendChild(preEle);
   });
 }
 
 function formatJSON() {
-  const nodes = document.querySelectorAll(".jsonFormat");
+  const nodes = document.querySelectorAll(getClassName(CLASSNAMES.JSON_FORMAT));
   nodes.forEach((node) => {
     node.innerHTML = JSON.stringify(JSON.parse(node.innerHTML), null, 4);
   });
 }
 
 function drawChart() {
-  var options = {
+  const options = {
     title: "Latency by Percentile Distribution",
     height: 480,
     hAxis: {
@@ -97,17 +102,17 @@ function drawChart() {
   };
 
   // add tooltips with correct percentile text to data:
-  var columns = [0];
-  for (var i = 1; i < chartData.getNumberOfColumns(); i++) {
+  const columns = [0];
+  for (let i = 1; i < chartData.getNumberOfColumns(); i++) {
     columns.push(i);
     columns.push({
       type: "string",
       properties: {
         role: "tooltip",
       },
-      calc: (function (j) {
+      calc: ((j) => {
         return function (dt, row) {
-          var percentile = 100.0 - 100.0 / dt.getValue(row, 0);
+          const percentile = 100.0 - 100.0 / dt.getValue(row, 0);
           return (
             dt.getColumnLabel(j) +
             ": " +
@@ -120,7 +125,7 @@ function drawChart() {
       })(i),
     });
   }
-  var view = new google.visualization.DataView(chartData);
+  const view = new google.visualization.DataView(chartData);
   view.setColumns(columns);
 
   chart = new google.visualization.LineChart(
@@ -128,14 +133,14 @@ function drawChart() {
   );
   chart.draw(view, options);
 
-  google.visualization.events.addListener(chart, "ready", function () {
+  google.visualization.events.addListener(chart, "ready", () => {
     chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
   });
 }
 
 function appendDataSeries(histo, name, dataSeries) {
-  var series;
-  var seriesCount;
+  let series;
+  let seriesCount;
   if (dataSeries.length == 0) {
     series = [["X", name]];
     seriesCount = 1;
@@ -145,16 +150,16 @@ function appendDataSeries(histo, name, dataSeries) {
     seriesCount = series[0].length - 1;
   }
 
-  var lines = histo.split("\n");
+  const lines = histo.split("\n");
 
-  var seriesIndex = 1;
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i].trim();
-    var values = line.trim().split(/[ ]+/);
+  let seriesIndex = 1;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const values = line.trim().split(/[ ]+/);
 
     if (line[0] != "#" && values.length == 4) {
-      var y = parseFloat(values[0]);
-      var x = parseFloat(values[3]);
+      const y = parseFloat(values[0]);
+      const x = parseFloat(values[3]);
 
       if (!isNaN(x) && !isNaN(y)) {
         if (seriesIndex >= series.length) {
@@ -205,3 +210,5 @@ function copy(className, runName) {
     }
   });
 }
+
+const getClassName = (name) => `.${name}`;
