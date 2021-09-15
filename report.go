@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
+	"github.com/tsenart/vegeta/v12/lib/plot"
 )
 
 var funcMap = template.FuncMap{
@@ -68,6 +70,8 @@ func Report(s []string) {
 func report(results []*RunResult) {
 	var reportFile ReportFile
 
+	p := plot.New()
+
 	for i, res := range results {
 		folderPath := res.Path
 		name := res.Name
@@ -76,11 +80,16 @@ func report(results []*RunResult) {
 			reportFile.Title = folderPath
 		}
 
-		var data ReportFileData
+		var data ResultData
 
 		data.Name = name
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
 		tr := readTestResult(filepath.Join(folderPath, "result.json"))
+
+		for _, r := range tr.LoadGenResult {
+			r.Attack = name
+			p.Add(r)
+		}
 
 		if tr.RelayMetrics != nil {
 			reportFile.RelayMetrics = tr.RelayMetrics
@@ -120,6 +129,11 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
+	var b bytes.Buffer
+	p.WriteTo(&b)
+
+	reportFile.LatencyPlot = template.HTML(b.String())
+
 	var reportPath string
 	if len(results) > 2 {
 		reportPath = filepath.Join(filepath.Dir(filepath.Dir(reportFile.Title)), "report.html")
@@ -144,13 +158,14 @@ func report(results []*RunResult) {
 
 type ReportFile struct {
 	Title               string
-	Data                []ReportFileData
+	Data                []ResultData
 	RelayMetrics        map[string]interface{}
 	FirstRequestHeaders string
 	FirstRequestEnv     string
+	LatencyPlot         template.HTML
 }
 
-type ReportFileData struct {
+type ResultData struct {
 	Name           string
 	HDR            string
 	TestResult     TestResult
@@ -162,6 +177,7 @@ type ReportFileData struct {
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
+	LoadGenResult  []*vegeta.Result       `json:"loadgen_result"`
 	Stats          map[string]Stats       `json:"container_stats"`
 	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
 	LoadGenCommand string                 `json:"loadgen_command"`
