@@ -15,15 +15,12 @@ import (
 )
 
 var (
-	// Number of requests received by fakerelay instance
 	requestCount = expvar.NewInt("requests")
 
-	// string representation of first request received by fakerelay instance
 	firstRequestOnce sync.Once
 	firstRequest     = expvar.NewString("first_request")
 	sdkInfo          SDKInfo
 
-	// Total bytes received by fakerelay instance
 	bytesReceived = expvar.NewInt("bytes_received")
 )
 
