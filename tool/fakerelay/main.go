@@ -20,6 +20,8 @@ var (
 	firstRequestOnce sync.Once
 	firstRequest     = expvar.NewString("first_request")
 	sdkInfo          SDKInfo
+
+	bytesReceived = expvar.NewInt("bytes_received")
 )
 
 func init() {
@@ -42,6 +44,12 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		requestCount.Add(1)
+
+		if r.ContentLength < 0 {
+			panic("unexpected Content-Length")
+		}
+		bytesReceived.Add(r.ContentLength)
+
 		firstRequestOnce.Do(func() {
 			if r.Header.Get("Content-Encoding") == "gzip" {
 				reader, err := gzip.NewReader(r.Body)
@@ -61,6 +69,7 @@ func main() {
 			firstRequest.Set(string(b))
 			sdkInfo = ParseSDKInfo(b)
 		})
+
 		w.Header().Add("Content-Type", "application/json")
 		time.Sleep(80*time.Millisecond - time.Since(start))
 		fmt.Fprint(w, `{"id":"9f95bedf1f4c4487b1b4fa8eb384b48e"}`)
