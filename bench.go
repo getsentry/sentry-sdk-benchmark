@@ -79,6 +79,10 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 				Name:       "instrumented",
 				NeedsRelay: true,
 			},
+			{
+				Name:       "instrumented-no-threading",
+				NeedsRelay: true,
+			},
 		}
 	}
 	f, err := os.Open(filepath.Join(cfg.Platform, "config.json"))
