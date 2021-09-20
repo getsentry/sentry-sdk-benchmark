@@ -87,19 +87,27 @@ func BenchmarkConfigFromPath(path string) BenchmarkConfig {
 			},
 		}
 	}
-	f, err := os.Open(filepath.Join(cfg.Platform, "config.json"))
+	cfg.PlatformConfig = MustReadPlatformConfig(filepath.Join(cfg.Platform, "config.json"))
+	return cfg
+}
+
+// MustReadPlatformConfig reads and validates a PlatformConfig from path. It
+// panics if the configuration cannot be read or is invalid.
+func MustReadPlatformConfig(path string) PlatformConfig {
+	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	err = json.NewDecoder(f).Decode(&cfg.PlatformConfig)
+	var pc PlatformConfig
+	err = json.NewDecoder(f).Decode(&pc)
 	if err != nil {
 		panic(err)
 	}
-	if err := cfg.PlatformConfig.Validate(); err != nil {
+	if err := pc.Validate(); err != nil {
 		panic(err)
 	}
-	return cfg
+	return pc
 }
 
 type RunConfig struct {
