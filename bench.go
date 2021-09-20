@@ -49,46 +49,63 @@ func (cfg PlatformConfig) Validate() error {
 // BenchmarkConfigFromPath returns the necessary configuration to run a
 // benchmark targeting the app or apps at the given path.
 //
+// Path must be either a directory with a configuration file and one or more app
+// directories, or path must be an app directory whose parent contains a
+// configuration file.
+//
+// BenchmarkConfigFromPath panics if it cannot create a valid configuration from
+// the given path.
+//
 // Path is always cleaned with filepath.Clean, such that equivalent spellings of
 // the same path will return equivalent configuration.
 func BenchmarkConfigFromPath(path string) BenchmarkConfig {
 	path = filepath.Clean(path)
+	if fi, err := os.Stat(path); err != nil || !fi.IsDir() {
+		panic(fmt.Errorf("could not read directory: %q", path))
+	}
+	pcpath := MustFindPlatformConfig(path)
 	cfg := BenchmarkConfig{
-		ID:        NewBenchmarkID(),
-		StartTime: time.Now().UTC(),
+		ID:             NewBenchmarkID(),
+		StartTime:      time.Now().UTC(),
+		Platform:       filepath.Dir(pcpath),
+		PlatformConfig: MustReadPlatformConfig(pcpath),
 	}
-	switch filepath.Base(path) {
-	case "baseline":
-		cfg.Platform = filepath.Dir(path)
-		cfg.Runs = []RunConfig{
-			{
-				Name:       "baseline",
-				NeedsRelay: false,
-			},
-		}
-	case "instrumented":
-		cfg.Platform = filepath.Dir(path)
-		cfg.Runs = []RunConfig{
-			{
-				Name:       "instrumented",
-				NeedsRelay: true,
-			},
-		}
-	default:
-		cfg.Platform = path
-		cfg.Runs = []RunConfig{
-			{
-				Name:       "baseline",
-				NeedsRelay: false,
-			},
-			{
-				Name:       "instrumented",
-				NeedsRelay: true,
-			},
-		}
+	var apps []string
+	if cfg.Platform == path {
+		// all apps of the platform
+		apps = subDirs(path)
+	} else {
+		// single app
+		apps = []string{path}
 	}
-	cfg.PlatformConfig = MustReadPlatformConfig(filepath.Join(cfg.Platform, "config.json"))
+	if len(apps) == 0 {
+		panic(fmt.Errorf("no app to benchmark in %q", path))
+	}
+	for _, app := range apps {
+		name := filepath.Base(app)
+		cfg.Runs = append(cfg.Runs, RunConfig{
+			Name:       name,
+			NeedsRelay: name != "baseline",
+		})
+	}
 	return cfg
+}
+
+// MustFindPlatformConfig returns the path to the platform configuration for the
+// given path. Path itself must contain a configuration file or path's parent
+// directory must contain a configuration file. MustFindPlatformConfig panics if
+// a configuration file cannot be found.
+func MustFindPlatformConfig(path string) string {
+	candidates := []string{
+		filepath.Join(path, "config.json"),
+		filepath.Join(filepath.Dir(path), "config.json"),
+	}
+	for _, p := range candidates {
+		if fi, err := os.Stat(p); err == nil && !fi.IsDir() {
+			return p
+		}
+	}
+	panic(fmt.Errorf("no config file found in: %q", candidates))
 }
 
 // MustReadPlatformConfig reads and validates a PlatformConfig from path. It
@@ -108,6 +125,22 @@ func MustReadPlatformConfig(path string) PlatformConfig {
 		panic(err)
 	}
 	return pc
+}
+
+// subDirs returns all subdirectories of path.
+func subDirs(path string) []string {
+	var s []string
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		s = append(s, e.Name())
+	}
+	return s
 }
 
 type RunConfig struct {
