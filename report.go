@@ -30,8 +30,8 @@ var reportCSS template.CSS
 var reportJS template.JS
 
 func init() {
-	reportCSS = template.CSS(getTmplAssets([]string{"css/dygraph.css", "css/report.css"}))
-	reportJS = template.JS(getTmplAssets([]string{"js/script.js"}))
+	reportCSS = template.CSS(getTmplAssets("css", []string{"dygraph.css", "report.css"}))
+	reportJS = template.JS(getTmplAssets("js", []string{"script.js"}))
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
@@ -220,11 +220,11 @@ func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
 	f.FirstRequestEnv = e.String()
 }
 
-func getTmplAssets(paths []string) []byte {
+func getTmplAssets(folder string, paths []string) []byte {
 	var b []byte
 
 	for _, p := range paths {
-		b = append(b, readBytes(p)...)
+		b = append(b, readBytes(filepath.Join("template", folder, p))...)
 	}
 
 	return b
