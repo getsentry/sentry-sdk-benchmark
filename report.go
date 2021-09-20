@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-sdk-benchmark/internal/plot"
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
-	"github.com/tsenart/vegeta/v12/lib/plot"
 )
 
 var funcMap = template.FuncMap{
@@ -111,9 +110,28 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	var b bytes.Buffer
-	p.WriteTo(&b)
-	reportFile.LatencyPlot = template.HTML(b.String())
+	plotData, err := p.GetData()
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO(abhi): have a global list of ids we can refer to.
+	latencyChartJS, err := GenerateChart("latencyTimePlot", plotData.Data, DygraphsOpts{
+		Title:       plotData.Title,
+		Labels:      plotData.Labels,
+		YLabel:      "Latency (ms)",
+		XLabel:      "Seconds elapsed",
+		Legend:      "always",
+		ShowRoller:  true,
+		LogScale:    true,
+		StrokeWidth: 1.3,
+		Colors:      getLabelColors(plotData.Labels[1:]),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	reportFile.ReportJS = append(reportFile.ReportJS, latencyChartJS)
 
 	var reportPath string
 	if len(results) > 2 {
