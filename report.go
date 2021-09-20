@@ -26,12 +26,12 @@ var funcMap = template.FuncMap{
 }
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
-var reportCSS template.CSS
-var reportJS template.JS
+var reportCSS []template.CSS
+var reportJS []template.JS
 
 func init() {
-	reportCSS = template.CSS(getTmplAssets("css", []string{"dygraph.css", "report.css"}))
-	reportJS = template.JS(getTmplAssets("js", []string{"script.js"}))
+	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css"})
+	reportJS = getJSAssets([]string{"dygraph.min.js", "script.js"})
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
@@ -144,8 +144,8 @@ type ReportFile struct {
 	FirstRequestHeaders string
 	FirstRequestEnv     string
 	LatencyPlot         template.HTML
-	ReportCSS           template.CSS
-	ReportJS            template.JS
+	ReportCSS           []template.CSS
+	ReportJS            []template.JS
 }
 
 type ResultData struct {
@@ -220,14 +220,20 @@ func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
 	f.FirstRequestEnv = e.String()
 }
 
-func getTmplAssets(folder string, paths []string) []byte {
-	var b []byte
-
-	for _, p := range paths {
-		b = append(b, readBytes(filepath.Join("template", folder, p))...)
+func getCSSAssets(paths []string) []template.CSS {
+	t := make([]template.CSS, len(paths))
+	for i, p := range paths {
+		t[i] = template.CSS(readBytes(filepath.Join("template", "css", p)))
 	}
+	return t
+}
 
-	return b
+func getJSAssets(paths []string) []template.JS {
+	t := make([]template.JS, len(paths))
+	for i, p := range paths {
+		t[i] = template.JS(readBytes(filepath.Join("template", "js", p)))
+	}
+	return t
 }
 
 func readBytes(path string) []byte {
