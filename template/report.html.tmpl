@@ -10,17 +10,13 @@
   <meta name="author" content="Sentry (sentry.io)" />
 
   {{ range .ReportCSS }}
-  <style type="text/css">
-    {{ . }}
-  </style>
+  <style>{{.}}</style>
   {{ end }}
 
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
 
   {{ range .ReportJS }}
-  <script type="text/javascript">
-    {{ . }}
-  </script>
+  <script>{{.}}</script>
   {{ end }}
 </head>
 
