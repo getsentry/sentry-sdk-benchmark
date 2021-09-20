@@ -9,7 +9,6 @@ package plot
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"math"
 	"sort"
 	"strconv"
@@ -218,17 +217,6 @@ func (p *Plot) data() (dataPoints, []string, error) {
 	sort.Sort(data)
 
 	return data, labels, nil
-}
-
-type countingWriter struct {
-	n int64
-	w io.Writer
-}
-
-func (cw *countingWriter) Write(p []byte) (int, error) {
-	n, err := cw.w.Write(p)
-	cw.n += int64(n)
-	return n, err
 }
 
 type dataPoints [][]float64
