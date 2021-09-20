@@ -46,7 +46,13 @@ func (cfg PlatformConfig) Validate() error {
 	return nil
 }
 
+// BenchmarkConfigFromPath returns the necessary configuration to run a
+// benchmark targeting the app or apps at the given path.
+//
+// Path is always cleaned with filepath.Clean, such that equivalent spellings of
+// the same path will return equivalent configuration.
 func BenchmarkConfigFromPath(path string) BenchmarkConfig {
+	path = filepath.Clean(path)
 	cfg := BenchmarkConfig{
 		ID:        NewBenchmarkID(),
 		StartTime: time.Now().UTC(),

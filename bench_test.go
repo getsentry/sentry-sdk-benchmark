@@ -54,6 +54,9 @@ func TestBenchmarkConfigFromPath(t *testing.T) {
 	}{
 		{"testdata/platform/python/django", djangoAll},
 		{"testdata/platform/python/django/instrumented", djangoInstrumented},
+		// ensure trailing slash makes no difference
+		{"testdata/platform/python/django/", djangoAll},
+		{"testdata/platform/python/django/instrumented/", djangoInstrumented},
 	}
 	opts := cmpopts.IgnoreFields(BenchmarkConfig{}, "ID", "StartTime")
 	for _, tt := range tests {
