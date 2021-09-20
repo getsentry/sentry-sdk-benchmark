@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -31,8 +30,8 @@ var reportCSS template.CSS
 var reportJS template.JS
 
 func init() {
-	reportCSS = template.CSS(getTmplAssets("css"))
-	reportJS = template.JS(getTmplAssets("js"))
+	reportCSS = template.CSS(getTmplAssets([]string{"css/dygraph.css", "css/report.css"}))
+	reportJS = template.JS(getTmplAssets([]string{"js/script.js"}))
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
@@ -221,21 +220,11 @@ func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
 	f.FirstRequestEnv = e.String()
 }
 
-func getTmplAssets(name string) []byte {
+func getTmplAssets(paths []string) []byte {
 	var b []byte
-	err := filepath.WalkDir(filepath.Join("template", name), func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
-		}
 
-		if err != nil {
-			panic(err)
-		}
-		b = append(b, readBytes(path)...)
-		return nil
-	})
-	if err != nil {
-		panic(err)
+	for _, p := range paths {
+		b = append(b, readBytes(p)...)
 	}
 
 	return b
