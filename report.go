@@ -26,7 +26,7 @@ var funcMap = template.FuncMap{
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 var reportCSS []template.CSS
-var reportJS []template.JS
+var reportJS []template.HTML
 
 func init() {
 	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css"})
@@ -116,7 +116,7 @@ func report(results []*RunResult) {
 	}
 
 	// TODO(abhi): have a global list of ids we can refer to.
-	latencyChartJS, err := GenerateChart("latencyTimePlot", plotData.Data, DygraphsOpts{
+	latencyPlot, err := GenerateChart("latencyTimePlot", plotData.Data, DygraphsOpts{
 		Title:       plotData.Title,
 		Labels:      plotData.Labels,
 		YLabel:      "Latency (ms)",
@@ -131,7 +131,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	reportFile.ReportJS = append(reportFile.ReportJS, latencyChartJS)
+	reportFile.LatencyPlot = latencyPlot
 
 	var reportPath string
 	if len(results) > 2 {
@@ -163,7 +163,7 @@ type ReportFile struct {
 	FirstRequestEnv     string
 	LatencyPlot         template.HTML
 	ReportCSS           []template.CSS
-	ReportJS            []template.JS
+	ReportJS            []template.HTML
 }
 
 type ResultData struct {
@@ -246,10 +246,11 @@ func getCSSAssets(paths []string) []template.CSS {
 	return t
 }
 
-func getJSAssets(paths []string) []template.JS {
-	t := make([]template.JS, len(paths))
+func getJSAssets(paths []string) []template.HTML {
+	t := make([]template.HTML, len(paths))
 	for i, p := range paths {
-		t[i] = template.JS(readBytes(filepath.Join("template", "js", p)))
+		js := template.JS(readBytes(filepath.Join("template", "js", p)))
+		t[i] = template.HTML("<script>" + js + "</script>")
 	}
 	return t
 }

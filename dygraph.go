@@ -2,29 +2,27 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 )
 
 // Based on script from: https://github.com/tsenart/vegeta/blob/master/lib/plot/assets/plot.html.tpl#L24
-const chartScript = `document.getElementById("{{ .ID }}");
-  const o = {{ .Opts }}
-  const d = {{ .Data }}
-  const plot = new Dygraph(container, data, opts);`
+const chartScript = `<script>
+  document.addEventListener("DOMContentLoaded", function () {
+	const c = document.getElementById("{{ .ID }}");
+	const d = {{ .Data }};
+	const o = {{ .Opts }};
+	new Dygraph(c, d, o);
+  });
+</script>`
 
 // GenerateChart creates a JS snippet that creates a Dygraph chart
 // based on given data and options. Dygraph charts require a container
 // to attach to, which can be identified by dom element id.
 //
 // TODO(abhi): Figure out reasonable defaults for dygraph options
-func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.JS, error) {
+func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.HTML, error) {
 	t, err := template.New(fmt.Sprintf("%s dygraph chart", id)).Parse(chartScript)
-	if err != nil {
-		return "", err
-	}
-
-	optsJSON, err := json.MarshalIndent(&opts, "    ", " ")
 	if err != nil {
 		return "", err
 	}
@@ -33,10 +31,10 @@ func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.JS, erro
 	t.Execute(&b, ChartData{
 		ID:   id,
 		Data: template.JS(data),
-		Opts: template.JS(optsJSON),
+		Opts: opts,
 	})
 
-	return template.JS(b.String()), nil
+	return template.HTML(b.String()), nil
 }
 
 var colors = []string{"#2B1D38", "#776589", "#9386A0", "#C6BECF", "#E7E1EC"}
@@ -66,5 +64,5 @@ type DygraphsOpts struct {
 type ChartData struct {
 	ID   string
 	Data template.JS
-	Opts template.JS
+	Opts DygraphsOpts
 }
