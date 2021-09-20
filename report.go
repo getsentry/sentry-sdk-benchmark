@@ -30,7 +30,7 @@ var reportJS []template.HTML
 
 func init() {
 	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css"})
-	reportJS = getJSAssets([]string{"dygraph.min.js", "graph.js", "script.js"})
+	reportJS = getJSAssets([]string{"dygraph.min.js", "script.js"})
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.

@@ -9,9 +9,7 @@
   <meta name="description" content="Sentry SDK Benchmark Report" />
   <meta name="author" content="Sentry (sentry.io)" />
 
-  {{ range .ReportCSS }}
-  <style>{{.}}</style>
-  {{ end }}
+  {{ range .ReportCSS }}<style>{{.}}</style>{{ end }}
 
   <script src="https://www.gstatic.com/charts/loader.js"></script>
 
@@ -187,7 +185,6 @@
 
       <!-- Latency over time plot -->
       {{ .LatencyPlot }}
-      <div id="latencyTimePlot" style="font-family: Courier; width: 100%%; height: 600px"></div>
     </section>
     <section>
       <h2 id="memory-cpu">Memory & CPU Usage</h2>
