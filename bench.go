@@ -46,14 +46,14 @@ func (cfg PlatformConfig) Validate() error {
 	return nil
 }
 
-func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
+func BenchmarkConfigFromPath(path string) BenchmarkConfig {
 	cfg := BenchmarkConfig{
 		ID:        NewBenchmarkID(),
 		StartTime: time.Now().UTC(),
 	}
-	switch filepath.Base(platform) {
+	switch filepath.Base(path) {
 	case "baseline":
-		cfg.Platform = filepath.Dir(platform)
+		cfg.Platform = filepath.Dir(path)
 		cfg.Runs = []RunConfig{
 			{
 				Name:       "baseline",
@@ -61,7 +61,7 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			},
 		}
 	case "instrumented":
-		cfg.Platform = filepath.Dir(platform)
+		cfg.Platform = filepath.Dir(path)
 		cfg.Runs = []RunConfig{
 			{
 				Name:       "instrumented",
@@ -69,7 +69,7 @@ func BenchmarkConfigFromPlatform(platform string) BenchmarkConfig {
 			},
 		}
 	default:
-		cfg.Platform = platform
+		cfg.Platform = path
 		cfg.Runs = []RunConfig{
 			{
 				Name:       "baseline",

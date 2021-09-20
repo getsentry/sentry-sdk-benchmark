@@ -102,8 +102,8 @@ func main() {
 		if len(args) > 1 {
 			openBrowser = false
 		}
-		for _, platform := range args {
-			Benchmark(ctx, BenchmarkConfigFromPlatform(platform))
+		for _, path := range args {
+			Benchmark(ctx, BenchmarkConfigFromPath(path))
 		}
 	}
 }
