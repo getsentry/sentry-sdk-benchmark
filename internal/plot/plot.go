@@ -8,6 +8,7 @@ package plot
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"math"
 	"sort"
@@ -267,4 +268,27 @@ func (ps dataPoints) Append(buf []byte) []byte {
 	}
 
 	return append(buf, "  ]"...)
+}
+
+type PlotData struct {
+	Title  string
+	Labels []string
+	Data   template.JS
+}
+
+// GetData gets plot data that can be rendered by Dygraph
+func (p Plot) GetData() (PlotData, error) {
+	dp, labels, err := p.data()
+	if err != nil {
+		return PlotData{}, err
+	}
+
+	var sz int
+	if len(dp) > 0 {
+		sz = len(dp) * len(dp[0]) * 12 // heuristic
+	}
+
+	data := dp.Append(make([]byte, 0, sz))
+
+	return PlotData{Title: p.title, Labels: labels, Data: template.JS(data)}, nil
 }
