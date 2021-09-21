@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-sdk-benchmark/internal/plot"
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
-	"github.com/tsenart/vegeta/v12/lib/plot"
 )
 
 var funcMap = template.FuncMap{
@@ -26,12 +25,12 @@ var funcMap = template.FuncMap{
 }
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
-var reportCSS template.CSS
-var reportJS template.JS
+var reportCSS []template.CSS
+var reportJS []template.HTML
 
 func init() {
-	reportCSS = template.CSS(readBytes(filepath.Join("template", "report.css")))
-	reportJS = template.JS(readBytes(filepath.Join("template", "script.js")))
+	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css"})
+	reportJS = getJSAssets([]string{"dygraph.min.js", "script.js"})
 }
 
 // Report generates an HTML report summarizing the results of one or more benchmark runs.
@@ -111,9 +110,28 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	var b bytes.Buffer
-	p.WriteTo(&b)
-	reportFile.LatencyPlot = template.HTML(b.String())
+	plotData, err := p.GetData()
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO(abhi): have a global list of ids we can refer to.
+	latencyPlot, err := GenerateChart("latencyTimePlot", plotData.Data, DygraphsOpts{
+		Title:       plotData.Title,
+		Labels:      plotData.Labels,
+		YLabel:      "Latency (ms)",
+		XLabel:      "Seconds elapsed",
+		Legend:      "always",
+		ShowRoller:  true,
+		LogScale:    true,
+		StrokeWidth: 1.3,
+		Colors:      getLabelColors(plotData.Labels[1:]),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	reportFile.LatencyPlot = latencyPlot
 
 	var reportPath string
 	if len(results) > 2 {
@@ -144,8 +162,8 @@ type ReportFile struct {
 	FirstRequestHeaders string
 	FirstRequestEnv     string
 	LatencyPlot         template.HTML
-	ReportCSS           template.CSS
-	ReportJS            template.JS
+	ReportCSS           []template.CSS
+	ReportJS            []template.HTML
 }
 
 type ResultData struct {
@@ -218,6 +236,23 @@ func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
 
 	f.FirstRequestHeaders = h.String()
 	f.FirstRequestEnv = e.String()
+}
+
+func getCSSAssets(paths []string) []template.CSS {
+	t := make([]template.CSS, len(paths))
+	for i, p := range paths {
+		t[i] = template.CSS(readBytes(filepath.Join("template", "css", p)))
+	}
+	return t
+}
+
+func getJSAssets(paths []string) []template.HTML {
+	t := make([]template.HTML, len(paths))
+	for i, p := range paths {
+		js := template.JS(readBytes(filepath.Join("template", "js", p)))
+		t[i] = template.HTML("<script>" + js + "</script>")
+	}
+	return t
 }
 
 func readBytes(path string) []byte {

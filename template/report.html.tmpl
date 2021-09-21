@@ -9,14 +9,11 @@
   <meta name="description" content="Sentry SDK Benchmark Report" />
   <meta name="author" content="Sentry (sentry.io)" />
 
-  <style type="text/css">
-    {{ .ReportCSS }}
-  </style>
+  {{ range .ReportCSS }}<style>{{.}}</style>{{ end }}
 
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  <script type="text/javascript">
-    {{ .ReportJS }}
-  </script>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  {{ range .ReportJS }}{{.}}{{ end }}
 </head>
 
 <body>
@@ -186,6 +183,7 @@
         {{ end }}
       </table>
 
+      <!-- Latency over time plot -->
       {{ .LatencyPlot }}
     </section>
     <section>
