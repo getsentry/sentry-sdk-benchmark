@@ -29,11 +29,14 @@ func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.HTML, er
 	}
 
 	var b bytes.Buffer
-	t.Execute(&b, ChartData{
+	err = t.Execute(&b, ChartData{
 		ID:   id,
 		Data: template.JS(data),
 		Opts: opts,
 	})
+	if err != nil {
+		return "", err
+	}
 
 	return template.HTML(b.String()), nil
 }
