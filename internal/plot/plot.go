@@ -2,8 +2,9 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found here: https://github.com/tsenart/vegeta/blob/d73edf2bc2663d83848da2a97a8401a7ed1440bc/LICENSE
 
-// Package plot is a modified version of the plotting functionality exposed by
-// in the Vegeta library: https://github.com/tsenart/vegeta/blob/d73edf2bc2663d83848da2a97a8401a7ed1440bc/lib/plot/plot.go
+// Package plot is a modified version of Package plot is a modified version of the
+// github.com/tsenart/vegeta/lib/plot package. It removes the `WriteTo()` function
+// contained in the original library and replaces it a `GetData()` function.
 package plot
 
 import (
