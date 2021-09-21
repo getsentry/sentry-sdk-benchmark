@@ -29,6 +29,10 @@ func TestBenchmarkConfigFromPath(t *testing.T) {
 				Name:       "instrumented",
 				NeedsRelay: true,
 			},
+			{
+				Name:       "opentelemetry",
+				NeedsRelay: true,
+			},
 		},
 	}
 	djangoInstrumented := BenchmarkConfig{
