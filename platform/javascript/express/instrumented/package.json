@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@sentry/node": "6.11.0",
     "body-parser": "1.19.0",
     "dateformat": "3.0.3",
     "escape-html": "1.0.3",
