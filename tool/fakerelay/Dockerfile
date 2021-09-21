@@ -4,7 +4,7 @@ WORKDIR /src
 
 EXPOSE 5000
 
-COPY go.mod go.sum ./
+COPY go.mod go.sum* ./
 RUN go mod download
 
 COPY . ./
