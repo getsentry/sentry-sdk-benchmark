@@ -212,15 +212,21 @@
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ .app.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ .app.Difference.MemoryMaxUsageBytes }}</td>
-          <td>{{ .postgres.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ .postgres.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ .postgres.Difference.MemoryMaxUsageBytes }}</td>
-          <td>{{ .fakerelay.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ .fakerelay.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormatUnsigned .app.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormatUnsigned .app.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormat .app.Difference.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormatUnsigned .postgres.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormatUnsigned .postgres.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormat .postgres.Difference.MemoryMaxUsageBytes }}</td>
+          {{ if .fakerelay }}
+          <td>{{ byteFormatUnsigned .fakerelay.Before.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormatUnsigned .fakerelay.After.MemoryMaxUsageBytes }}</td>
+          <td>{{ byteFormat .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
+          {{ else }}
+          <td></td>
+          <td></td>
+          <td></td>
+          {{ end }}
           {{- end }}
         </tr>
         {{ end }}

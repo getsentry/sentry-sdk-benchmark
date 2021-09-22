@@ -22,6 +22,12 @@ var funcMap = template.FuncMap{
 		}
 		return t.Truncate(10 * time.Microsecond)
 	},
+	"byteFormat": func(b int64) string {
+		return byteCountSI(b)
+	},
+	"byteFormatUnsigned": func(b uint64) string {
+		return byteCountSI(int64(b))
+	},
 }
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
@@ -276,4 +282,19 @@ func marshalToStr(t interface{}) string {
 	}
 
 	return string(j)
+}
+
+// From https://yourbasic.org/golang/formatting-byte-size-to-human-readable-format/
+func byteCountSI(b int64) string {
+	const unit = 1000
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB",
+		float64(b)/float64(div), "kMGTPE"[exp])
 }
