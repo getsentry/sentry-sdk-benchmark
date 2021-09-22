@@ -41,18 +41,6 @@ func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.HTML, er
 	return template.HTML(b.String()), nil
 }
 
-var colors = []string{"#2B1D38", "#776589", "#9386A0", "#C6BECF", "#E7E1EC"}
-
-func getLabelColors(labels []string) []string {
-	l := len(labels)
-
-	if l > len(colors) {
-		panic("not enough colours")
-	}
-
-	return colors[:len(labels)]
-}
-
 type DygraphsOpts struct {
 	Title       string   `json:"title"`
 	Labels      []string `json:"labels,omitempty"`

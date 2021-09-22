@@ -125,7 +125,6 @@ func report(results []*RunResult) {
 		ShowRoller:  true,
 		LogScale:    true,
 		StrokeWidth: 1.3,
-		Colors:      getLabelColors(plotData.Labels[1:]),
 	})
 	if err != nil {
 		panic(err)
