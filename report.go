@@ -18,26 +18,7 @@ import (
 
 var sdkNameRegex = regexp.MustCompile(`sentry\.([^\s.]+)`)
 
-var funcMap = template.FuncMap{
-	"round": func(t time.Duration) time.Duration {
-		if t.Round(time.Second) > 0 {
-			return t.Truncate(10 * time.Millisecond)
-		}
-		return t.Truncate(10 * time.Microsecond)
-	},
-	"byteFormat": func(b int64) string {
-		return byteCountSI(b)
-	},
-	"byteFormatUnsigned": func(b uint64) string {
-		return byteCountSI(int64(b))
-	},
-	"formatSDKName": formatSDKName,
-	"requestCalc": func(rps uint, d time.Duration) uint {
-		return uint(d.Seconds()) * rps
-	},
-}
-
-var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
+var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(reportFuncMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 var reportCSS []template.CSS
 var reportJS []template.HTML
@@ -131,29 +112,30 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	reportFile.AppDetails = getAppDetails(reportFile.Title, reportFile.RelayMetrics)
+	reportFile.AppDetails = getAppDetails(results[0].Path, reportFile.RelayMetrics)
 
 	plotData, err := p.GetData()
 	if err != nil {
 		panic(err)
 	}
-
 	// TODO(abhi): have a global list of ids we can refer to.
-	latencyPlot, err := GenerateChart("latencyTimePlot", plotData.Data, DygraphsOpts{
-		Title:       plotData.Title,
-		Labels:      plotData.Labels,
-		YLabel:      "Latency (ms)",
-		XLabel:      "Seconds elapsed",
-		Legend:      "always",
-		ShowRoller:  true,
-		LogScale:    true,
-		StrokeWidth: 1.3,
-	})
+	reportFile.LatencyPlot, err = GenerateChart(
+		"latencyTimePlot",
+		plotData.Data,
+		DygraphsOpts{
+			Title:       plotData.Title,
+			Labels:      plotData.Labels,
+			YLabel:      "Latency (ms)",
+			XLabel:      "Seconds elapsed",
+			Legend:      "always",
+			ShowRoller:  true,
+			LogScale:    true,
+			StrokeWidth: 1.3,
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
-
-	reportFile.LatencyPlot = latencyPlot
 
 	var reportPath string
 	if len(results) > 2 {
@@ -338,6 +320,24 @@ func byteCountSI(b int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB",
 		float64(b)/float64(div), "kMGTPE"[exp])
+}
+
+var reportFuncMap = template.FuncMap{
+	"round": func(t time.Duration) time.Duration {
+		if t.Round(time.Second) > 0 {
+			return t.Truncate(10 * time.Millisecond)
+		}
+		return t.Truncate(10 * time.Microsecond)
+	},
+	"byteFormat": func(b int64) string {
+		return byteCountSI(b)
+	},
+	"byteFormatUnsigned": func(b uint64) string {
+		return byteCountSI(int64(b))
+	},
+	"numRequests": func(rps uint, d time.Duration) uint {
+		return uint(d.Seconds()) * rps
+	},
 }
 
 func formatSDKName(n string) string {
