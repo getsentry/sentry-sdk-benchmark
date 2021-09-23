@@ -32,6 +32,9 @@ var funcMap = template.FuncMap{
 		return byteCountSI(int64(b))
 	},
 	"formatSDKName": formatSDKName,
+	"requestCalc": func(rps uint, d time.Duration) uint {
+		return uint(d.Seconds()) * rps
+	},
 }
 
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
@@ -106,6 +109,8 @@ func report(results []*RunResult) {
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
 
 		tr := readTestResult(filepath.Join(folderPath, "result.json"))
+
+		reportFile.LoadGenOptions = tr.Options
 
 		if len(tr.Errors) > 0 {
 			reportFile.HasErrors = true
@@ -183,6 +188,7 @@ type ReportFile struct {
 	ReportCSS           []template.CSS
 	ReportJS            []template.HTML
 	AppDetails          AppDetails
+	LoadGenOptions      Options
 }
 
 type AppDetails struct {
@@ -201,6 +207,19 @@ type ResultData struct {
 
 // START copied from ./tool/loadgen
 
+type Options struct {
+	TargetURL      string        `json:"target_url"`
+	CAdvisorURL    string        `json:"cadvisor_url"`
+	FakerelayURL   string        `json:"fakerelay_url"`
+	Containers     string        `json:"containers"`
+	MaxWait        time.Duration `json:"max_wait"`
+	WarmupDuration time.Duration `json:"warmup_duration"`
+	TestDuration   time.Duration `json:"test_duration"`
+	RPS            uint          `json:"rps"`
+	Out            string        `json:"out"`
+}
+
+// TestResult is the data collected for a test run.
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
@@ -208,6 +227,7 @@ type TestResult struct {
 	Stats          map[string]Stats       `json:"container_stats"`
 	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
 	LoadGenCommand string                 `json:"loadgen_command"`
+	Options        Options                `json:"options"`
 }
 
 type Stats struct {

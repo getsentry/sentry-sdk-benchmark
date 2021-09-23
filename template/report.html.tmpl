@@ -54,26 +54,27 @@
       </div>
       {{ end }}
       <div>
+        {{ with .LoadGenOptions }}
         <h3>Test Configuration</h3>
         <dl>
           <div>
             <dt>Target URL</dt>
-            <dd>{{ "TODO" }}</dd>
+            <dd>{{ .TargetURL }}</dd>
           </div>
           <div>
             <dt>Duration</dt>
-            <dd>{{ "TODO" }}</dd>
+            <dd>{{ round .TestDuration }}</dd>
           </div>
           <div>
             <dt>Requests</dt>
-            <dd>{{ "TODO" }}</dd>
+            <dd>{{ requestCalc .RPS .TestDuration }}</dd>
           </div>
           <div>
             <dt><abbr title="Requests Per Second">RPS</abbr></dt>
-            <dd>{{ "TODO" }}</dd>
+            <dd>{{ .RPS }}</dd>
           </div>
         </dl>
-
+        {{ end }}
         {{ range .Data }}
         <details>
           <summary>{{ .Name }} Run Details</summary>

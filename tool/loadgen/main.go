@@ -25,59 +25,52 @@ func main() {
 		}
 	}()
 
-	var (
-		targetURL, cAdvisorURL, fakerelayURL string
-		containers                           string
-		maxWait                              time.Duration
-		warmupDuration, testDuration         time.Duration
-		rps                                  uint
-		out                                  string
-	)
-	flag.StringVar(&targetURL, "target", "", "target `URL` (example \"http://app:8080/update?queries=10\") (required)")
-	flag.StringVar(&cAdvisorURL, "cadvisor", "", "cAdvisor root `URL` (example \"http://cadvisor:8080\")")
-	flag.StringVar(&fakerelayURL, "fakerelay", "", "fakerelay root `URL` (example \"http://relay:5000\")")
-	flag.StringVar(&containers, "containers", "", "comma-separated list of container `names` to monitor with cAdvisor")
-	flag.DurationVar(&maxWait, "maxwait", 30*time.Second, "max wait until target is ready")
-	flag.DurationVar(&warmupDuration, "warmup", 15*time.Second, "warmup duration")
-	flag.DurationVar(&testDuration, "test", 30*time.Second, "test duration")
-	flag.UintVar(&rps, "rps", 10, "requests per second")
-	flag.StringVar(&out, "out", filepath.Join(os.TempDir(), "loadgen", "result", time.Now().Format("20060102-150405")), "output path")
+	var options Options
+	flag.StringVar(&options.TargetURL, "target", "", "target `URL` (example \"http://app:8080/update?queries=10\") (required)")
+	flag.StringVar(&options.CAdvisorURL, "cadvisor", "", "cAdvisor root `URL` (example \"http://cadvisor:8080\")")
+	flag.StringVar(&options.FakerelayURL, "fakerelay", "", "fakerelay root `URL` (example \"http://relay:5000\")")
+	flag.StringVar(&options.Containers, "containers", "", "comma-separated list of container `names` to monitor with cAdvisor")
+	flag.DurationVar(&options.MaxWait, "maxwait", 30*time.Second, "max wait until target is ready")
+	flag.DurationVar(&options.WarmupDuration, "warmup", 15*time.Second, "warmup duration")
+	flag.DurationVar(&options.TestDuration, "test", 30*time.Second, "test duration")
+	flag.UintVar(&options.RPS, "rps", 10, "requests per second")
+	flag.StringVar(&options.Out, "out", filepath.Join(os.TempDir(), "loadgen", "result", time.Now().Format("20060102-150405")), "output path")
 	flag.Parse()
 
-	if targetURL == "" {
+	if options.TargetURL == "" {
 		fmt.Fprintln(flag.CommandLine.Output(), "flag -target is required")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if cAdvisorURL != "" && containers == "" {
+	if options.CAdvisorURL != "" && options.Containers == "" {
 		panic("flag -containers is required when -cadvisor is provided")
 	}
 
-	log.Printf("Target is %q", targetURL)
+	log.Printf("Target is %q", options.TargetURL)
 
-	waitUntilReady(targetURL, maxWait)
-	warmUp(targetURL, rps, warmupDuration)
+	waitUntilReady(options.TargetURL, options.MaxWait)
+	warmUp(options.TargetURL, options.RPS, options.WarmupDuration)
 
 	stats := make(map[string]Stats)
-	if cAdvisorURL != "" {
-		for _, containerName := range strings.Split(containers, ",") {
+	if options.CAdvisorURL != "" {
+		for _, containerName := range strings.Split(options.Containers, ",") {
 			imageName := strings.Split(containerName, "-")[0]
 
 			stats[imageName] = Stats{
-				Before: containerStats(cAdvisorURL, containerName),
+				Before: containerStats(options.CAdvisorURL, containerName),
 			}
 		}
 	}
 
-	r := test(targetURL, rps, testDuration)
+	r := test(options.TargetURL, options.RPS, options.TestDuration)
 	metrics := r.Metrics
 
-	if cAdvisorURL != "" {
-		for _, containerName := range strings.Split(containers, ",") {
+	if options.CAdvisorURL != "" {
+		for _, containerName := range strings.Split(options.Containers, ",") {
 			imageName := strings.Split(containerName, "-")[0]
 
-			after := containerStats(cAdvisorURL, containerName)
+			after := containerStats(options.CAdvisorURL, containerName)
 			before := stats[imageName].Before
 
 			stats[imageName] = Stats{
@@ -100,12 +93,13 @@ func main() {
 		Metrics:          metrics,
 		LoadGenCommand:   strings.Join(os.Args, " "),
 		Stats:            stats,
+		Options:          options,
 	}
-	if fakerelayURL != "" {
-		result.RelayMetrics = relayMetrics(fakerelayURL)
+	if options.FakerelayURL != "" {
+		result.RelayMetrics = relayMetrics(options.FakerelayURL)
 	}
 
-	save(result, out)
+	save(result, options.Out)
 
 	log.Print("Success")
 }
