@@ -28,7 +28,7 @@ func Test_formatSDKName(t *testing.T) {
 	}
 }
 
-func Test_getConfiguration(t *testing.T) {
+func Test_getAppDetails(t *testing.T) {
 	type args struct {
 		path         string
 		relayMetrics map[string]interface{}
@@ -36,7 +36,7 @@ func Test_getConfiguration(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Configuration
+		want AppDetails
 	}{
 		{
 			name: "Python Django",
@@ -52,7 +52,7 @@ func Test_getConfiguration(t *testing.T) {
 					return relayMetrics
 				}(),
 			},
-			want: Configuration{
+			want: AppDetails{
 				Language:   "python",
 				Framework:  "django",
 				SdkName:    "sentry-python",
@@ -73,17 +73,17 @@ func Test_getConfiguration(t *testing.T) {
 					return relayMetrics
 				}(),
 			},
-			want: Configuration{
+			want: AppDetails{
 				Language:   "javascript",
 				Framework:  "express",
 				SdkName:    "sentry-javascript",
-				SdkVersion: "6.11.0",
+				SdkVersion: "1.3.0",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getConfiguration(tt.args.path, tt.args.relayMetrics); !reflect.DeepEqual(got, tt.want) {
+			if got := getAppDetails(tt.args.path, tt.args.relayMetrics); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getConfiguration() = %v, want %v", got, tt.want)
 			}
 		})

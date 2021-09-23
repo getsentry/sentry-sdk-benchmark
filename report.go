@@ -126,7 +126,7 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	reportFile.Configuration = getConfiguration(reportFile.Title, reportFile.RelayMetrics)
+	reportFile.AppDetails = getAppDetails(reportFile.Title, reportFile.RelayMetrics)
 
 	plotData, err := p.GetData()
 	if err != nil {
@@ -182,10 +182,10 @@ type ReportFile struct {
 	LatencyPlot         template.HTML
 	ReportCSS           []template.CSS
 	ReportJS            []template.HTML
-	Configuration       Configuration
+	AppDetails          AppDetails
 }
 
-type Configuration struct {
+type AppDetails struct {
 	Language   string
 	Framework  string
 	SdkName    string
@@ -328,7 +328,7 @@ func formatSDKName(n string) string {
 	return strings.ReplaceAll(match, ".", "-")
 }
 
-func getConfiguration(path string, relayMetrics map[string]interface{}) Configuration {
+func getAppDetails(path string, relayMetrics map[string]interface{}) AppDetails {
 	pathList := strings.Split(path, string(filepath.Separator))
 	sdk := make(map[string]string)
 
@@ -346,7 +346,7 @@ func getConfiguration(path string, relayMetrics map[string]interface{}) Configur
 		}
 	}
 
-	return Configuration{
+	return AppDetails{
 		Language:   pathList[1],
 		Framework:  pathList[2],
 		SdkName:    formatSDKName(sdk["name"]),
