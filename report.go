@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +15,8 @@ import (
 	"github.com/getsentry/sentry-sdk-benchmark/internal/std/browser"
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
+
+var sdkNameRegex = regexp.MustCompile(`sentry\.([^\s.]+)`)
 
 var funcMap = template.FuncMap{
 	"round": func(t time.Duration) time.Duration {
@@ -28,7 +31,9 @@ var funcMap = template.FuncMap{
 	"byteFormatUnsigned": func(b uint64) string {
 		return byteCountSI(int64(b))
 	},
+	"formatSDKName": formatSDKName,
 }
+
 var reportTemplate = template.Must(template.New("report.html.tmpl").Funcs(funcMap).ParseFiles(filepath.Join("template", "report.html.tmpl")))
 
 var reportCSS []template.CSS
@@ -121,6 +126,8 @@ func report(results []*RunResult) {
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
+	reportFile.Configuration = getConfiguration(reportFile.Title, reportFile.RelayMetrics)
+
 	plotData, err := p.GetData()
 	if err != nil {
 		panic(err)
@@ -175,6 +182,14 @@ type ReportFile struct {
 	LatencyPlot         template.HTML
 	ReportCSS           []template.CSS
 	ReportJS            []template.HTML
+	Configuration       Configuration
+}
+
+type Configuration struct {
+	Language   string
+	Framework  string
+	SdkName    string
+	SdkVersion string
 }
 
 type ResultData struct {
@@ -303,4 +318,38 @@ func byteCountSI(b int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB",
 		float64(b)/float64(div), "kMGTPE"[exp])
+}
+
+func formatSDKName(n string) string {
+	match := sdkNameRegex.FindString(n)
+	if match == "" {
+		return n
+	}
+	return strings.ReplaceAll(match, ".", "-")
+}
+
+func getConfiguration(path string, relayMetrics map[string]interface{}) Configuration {
+	pathList := strings.Split(path, string(filepath.Separator))
+	sdk := make(map[string]string)
+
+	for k, v := range relayMetrics {
+		switch v := v.(type) {
+		case map[string]interface{}:
+			if k == "sdk" {
+				for n, i := range v {
+					switch i := i.(type) {
+					case string:
+						sdk[n] = i
+					}
+				}
+			}
+		}
+	}
+
+	return Configuration{
+		Language:   pathList[1],
+		Framework:  pathList[2],
+		SdkName:    formatSDKName(sdk["name"]),
+		SdkVersion: sdk["version"],
+	}
 }

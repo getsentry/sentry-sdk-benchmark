@@ -34,25 +34,25 @@
   <main>
     <section>
       <h2 id="configuration">Configuration</h2>
+      {{ with .Configuration }}
       <div>
         <h3>Target Application</h3>
         <dl>
           <div>
             <dt>Language</dt>
-            <dd>{{ .Title }}</dd>
+            <dd>{{ .Language }}</dd>
           </div>
           <div>
             <dt>Framework</dt>
-            <dd><a href="https://github.com/getsentry/sentry-sdk-benchmark/tree/main/platform">{{ "TODO" }}</a></dd>
+            <dd><a href="https://github.com/getsentry/sentry-sdk-benchmark/tree/main/platform/{{ .Language }}/{{ .Framework }}">{{ .Framework }}</a></dd>
           </div>
-          {{ with .RelayMetrics -}}
           <div>
             <dt>Sentry SDK version</dt>
-            <dd><a href="https://github.com/getsentry/{{ .sdk.name }}/releases/{{ .sdk.version }}">{{ .sdk.version }}</a></dd>
+            <dd><a href="https://github.com/getsentry/{{ .SdkName }}/releases/{{ .SdkVersion }}">{{ .SdkVersion }}</a></dd>
           </div>
-          {{- end }}
         </dl>
       </div>
+      {{ end }}
       <div>
         <h3>Test Configuration</h3>
         <dl>
