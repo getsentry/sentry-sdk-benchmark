@@ -43,7 +43,7 @@ func Test_getAppDetails(t *testing.T) {
 			args: args{
 				path: "result/python/django/20210923-152931-snbclwa/baseline",
 				relayMetrics: func() map[string]interface{} {
-					sdk := make(map[string]string)
+					sdk := make(map[string]interface{})
 					sdk["name"] = "sentry.python"
 					sdk["version"] = "1.3.0"
 
@@ -64,7 +64,7 @@ func Test_getAppDetails(t *testing.T) {
 			args: args{
 				path: "result/javascript/express/20210923-145159-yaubxsi/baseline",
 				relayMetrics: func() map[string]interface{} {
-					sdk := make(map[string]string)
+					sdk := make(map[string]interface{})
 					sdk["name"] = "sentry.javascript"
 					sdk["version"] = "6.11.0"
 
@@ -77,7 +77,7 @@ func Test_getAppDetails(t *testing.T) {
 				Language:   "javascript",
 				Framework:  "express",
 				SdkName:    "sentry-javascript",
-				SdkVersion: "1.3.0",
+				SdkVersion: "6.11.0",
 			},
 		},
 	}
