@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -90,6 +91,10 @@ func report(results []*RunResult) {
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
 
 		tr := readTestResult(filepath.Join(folderPath, "result.json"))
+
+		if math.Round(tr.Throughput) != math.Round(tr.Rate) {
+			data.ThroughputDifferent = true
+		}
 
 		reportFile.LoadGenOptions = tr.Options
 
@@ -181,10 +186,11 @@ type AppDetails struct {
 }
 
 type ResultData struct {
-	Name           string
-	HDR            string
-	TestResult     TestResult
-	TestResultJSON string
+	Name                string
+	HDR                 string
+	TestResult          TestResult
+	TestResultJSON      string
+	ThroughputDifferent bool
 }
 
 // START copied from ./tool/loadgen
