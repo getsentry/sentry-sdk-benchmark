@@ -128,4 +128,5 @@ ul {
   border: solid #F55459;
   padding: 0px 20px 15px 20px;
   width: 600px;
+  background-color: rgba(250, 71, 71, 0.05);
 }
