@@ -123,3 +123,9 @@ ul {
     opacity: 0;
   }
 }
+
+.errorBox {
+  border: solid #F55459;
+  padding: 0px 20px 15px 20px;
+  width: 600px;
+}

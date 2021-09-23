@@ -144,6 +144,31 @@
         </dl>
       </div>
     </section>
+    {{ if .HasErrors }}
+    <section>
+      <div class="errorBox">
+        <h3><b>Errors</b></h3>
+        There were errors in the benchmark run, the results below may not be representative....
+        <details>
+        <summary>Details</summary>
+        {{ range .Data }}
+        <div style="display: flex;flex-direction: column;">
+        <p><b>{{ .Name }}</b></p>
+        {{ with .TestResult.Metrics -}}
+        <ul>
+          {{ range .Errors }}
+          <li>{{ . }}</li>
+          {{ else }}
+          <li>No Errors</li>
+          {{ end }}
+        </ul>
+        {{ end }}
+        </div>
+        {{ end }}
+        </details>
+      </div>
+    </section>
+    {{- end }}
     <section>
       <h2 id="latency">Latency</h2>
       <div id="chart_div">Loading...</div>

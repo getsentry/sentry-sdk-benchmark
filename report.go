@@ -101,6 +101,11 @@ func report(results []*RunResult) {
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
 
 		tr := readTestResult(filepath.Join(folderPath, "result.json"))
+
+		if len(tr.Errors) > 0 {
+			reportFile.HasErrors = true
+		}
+
 		for _, r := range tr.LoadGenResult {
 			r.Attack = name
 			p.Add(r)
@@ -166,6 +171,7 @@ type ReportFile struct {
 	RelayMetrics        map[string]interface{}
 	FirstRequestHeaders string
 	FirstRequestEnv     string
+	HasErrors           bool
 	LatencyPlot         template.HTML
 	ReportCSS           []template.CSS
 	ReportJS            []template.HTML
