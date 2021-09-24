@@ -278,7 +278,7 @@ func composeBuild(ctx context.Context, projectName string, composeFile []byte) {
 	log.Print("Running 'docker compose build'...")
 	cmd := exec.CommandContext(
 		ctx,
-		"docker-compose",
+		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",
 		"build",
@@ -302,7 +302,7 @@ func composeUp(ctx context.Context, projectName string, composeFile []byte, outp
 
 	cmd := exec.CommandContext(
 		ctx,
-		"docker-compose",
+		"docker", "compose",
 		"--project-name", projectName,
 		"--file", "-",
 		"up", "--exit-code-from", "loadgen",
@@ -318,7 +318,7 @@ func composeUp(ctx context.Context, projectName string, composeFile []byte, outp
 func composeDown(projectName string) {
 	log.Print("Running 'docker compose down'...")
 	cmd := exec.Command(
-		"docker-compose",
+		"docker", "compose",
 		"--project-name", projectName,
 		"down", "--remove-orphans", "--rmi", "local")
 	cmd.Stdout = os.Stdout
