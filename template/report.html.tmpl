@@ -4,15 +4,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>{{ .Title }}</title>
   <meta name="description" content="Sentry SDK Benchmark Report" />
   <meta name="author" content="Sentry (sentry.io)" />
 
+  <title>{{ .Title }}</title>
+
   {{ range .ReportCSS }}<style>{{.}}</style>{{ end }}
-
-  <script src="https://www.gstatic.com/charts/loader.js"></script>
-
   {{ range .ReportJS }}{{.}}{{ end }}
 </head>
 
