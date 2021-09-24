@@ -59,6 +59,12 @@ function drawChart() {
     xlabel: 'Percentile',
     legend: 'always',
     labels: ["Percentile"].concat(names),
+    valueFormatter: (num, _, seriesName) => {
+      if (seriesName === "Percentile") {
+        return `${Math.round((100.0 - 100.0 / num) * 10000000) / 10000000}%`;
+      }
+      return num;
+    },
     axes: {
       x: {
         ticker: () => TICKS,
