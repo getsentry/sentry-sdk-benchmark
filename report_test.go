@@ -110,6 +110,7 @@ func Test_percentDiff(t *testing.T) {
 			want: 15.07,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := percentDiff(tt.args.start, tt.args.final); got != tt.want {

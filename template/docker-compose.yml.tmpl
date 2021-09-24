@@ -22,6 +22,7 @@ services:
     command: [
       "-target", "http://app:8080{{ .PlatformConfig.Target.Path }}",
       "-rps", "{{ .PlatformConfig.RPS }}",
+      "-test", "{{ .PlatformConfig.Duration }}",
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",

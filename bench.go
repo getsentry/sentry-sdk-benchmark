@@ -33,7 +33,8 @@ type PlatformConfig struct {
 	Target struct {
 		Path string
 	}
-	RPS uint16
+	RPS      uint16
+	Duration string
 }
 
 func (cfg PlatformConfig) Validate() error {
@@ -42,6 +43,9 @@ func (cfg PlatformConfig) Validate() error {
 	}
 	if cfg.RPS == 0 {
 		return fmt.Errorf(`platform config missing "rps"`)
+	}
+	if cfg.Duration == "" {
+		return fmt.Errorf(`platform config missing "duration"`)
 	}
 	return nil
 }

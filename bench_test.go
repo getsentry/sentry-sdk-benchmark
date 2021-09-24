@@ -18,7 +18,8 @@ func TestBenchmarkConfigFromPath(t *testing.T) {
 			Target: struct{ Path string }{
 				Path: "/update?queries=10",
 			},
-			RPS: 10,
+			RPS:      10,
+			Duration: "30s",
 		},
 		Runs: []RunConfig{
 			{
@@ -43,7 +44,8 @@ func TestBenchmarkConfigFromPath(t *testing.T) {
 			Target: struct{ Path string }{
 				Path: "/update?queries=10",
 			},
-			RPS: 10,
+			RPS:      10,
+			Duration: "30s",
 		},
 		Runs: []RunConfig{
 			{
