@@ -94,7 +94,7 @@ Use the commands below with care as some of them may affect resources that were 
 List and remove all Docker Compose projects, including containers, images, and networks:
 
 ```shell
-for name in $(docker compose ls -q); do docker compose -p $name down --remove-orphans --rmi local; done
+for name in $(docker compose ls -a -q); do docker compose -p $name down --remove-orphans --rmi local; done
 ```
 
 List and remove all Docker containers:
