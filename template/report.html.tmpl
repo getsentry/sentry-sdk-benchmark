@@ -10,9 +10,6 @@
   <meta name="author" content="Sentry (sentry.io)" />
 
   {{ range .ReportCSS }}<style>{{.}}</style>{{ end }}
-
-  <script src="https://www.gstatic.com/charts/loader.js"></script>
-
   {{ range .ReportJS }}{{.}}{{ end }}
 </head>
 
@@ -177,7 +174,7 @@
     {{- end }}
     <section>
       <h2 id="latency">Latency</h2>
-      <div id="chart_div">Loading...</div>
+      <div id="percentileLatency" style="width: 1500px; height: 450px;"></div>
       <p>
         Percentile range:
         <input type="range" class="slider-width500" min="1" max="8" value="7" step="1" width="300px"
