@@ -132,15 +132,18 @@ func report(results []*RunResult) {
 		}
 
 		tr.FirstAppResponse = formatHTTP(tr.FirstAppResponse)
-		if tr.RelayMetrics["first_request"] != nil {
-			tr.RelayMetrics["first_request"] = formatHTTP(tr.RelayMetrics["first_request"].(string))
+		if firstReq := tr.RelayMetrics["first_request"]; firstReq != nil {
+			tr.RelayMetrics["first_request"] = formatHTTP(firstReq.(string))
 		}
 
 		data.TestResult = tr
 		data.TestResultJSON = marshalToStr(tr)
 
 		if tr.RelayMetrics != nil {
-			setRelayData(&reportFile, tr.RelayMetrics)
+			reportFile.RelayMetrics = tr.RelayMetrics
+			if firstReq := tr.RelayMetrics["first_request"]; firstReq != nil {
+				reportFile.FirstRequestRelay = firstReq.(string)
+			}
 		}
 
 		reportFile.Data = append(reportFile.Data, data)
@@ -196,18 +199,17 @@ func report(results []*RunResult) {
 }
 
 type ReportFile struct {
-	Title               string
-	Data                []ResultData
-	RelayMetrics        map[string]interface{}
-	FirstRequestHeaders string
-	FirstRequestEnv     string
-	HasErrors           bool
-	LatencyPlot         template.HTML
-	ReportCSS           []template.CSS
-	ReportJS            []template.HTML
-	AppDetails          AppDetails
-	LoadGenOptions      Options
-	Latency             []Latency
+	Title             string
+	Data              []ResultData
+	RelayMetrics      map[string]interface{}
+	FirstRequestRelay string
+	HasErrors         bool
+	LatencyPlot       template.HTML
+	ReportCSS         []template.CSS
+	ReportJS          []template.HTML
+	AppDetails        AppDetails
+	LoadGenOptions    Options
+	Latency           []Latency
 }
 
 type AppDetails struct {
@@ -300,36 +302,6 @@ type ContainerStatsDifference struct {
 }
 
 // END copied from ./tool/loadgen
-
-func setRelayData(f *ReportFile, relayMetrics map[string]interface{}) {
-	f.RelayMetrics = relayMetrics
-
-	firstReq, ok := relayMetrics["first_request"]
-	if !ok {
-		return
-	}
-
-	var h strings.Builder
-	var e strings.Builder
-
-	reqArr := strings.Split(firstReq.(string), "\n")
-	for _, r := range reqArr {
-		if r == "" || r == "\r" {
-			continue
-		}
-
-		// hack to check if it's an envelope item
-		if r[0] == '{' {
-			e.WriteString(r)
-			e.WriteRune('\n')
-		} else {
-			h.WriteString(r)
-		}
-	}
-
-	f.FirstRequestHeaders = h.String()
-	f.FirstRequestEnv = e.String()
-}
 
 func getCSSAssets(paths []string) []template.CSS {
 	t := make([]template.CSS, len(paths))

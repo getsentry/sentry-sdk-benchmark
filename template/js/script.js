@@ -21,9 +21,6 @@ document.addEventListener("DOMContentLoaded", init);
 
 function init() {
   drawChart();
-
-  createEnvDetails();
-  formatJSON();
 }
 
 function getChartData(names, histos) {
@@ -122,28 +119,6 @@ function appendDataSeries(histo, name, dataSeries) {
   }
 
   return series;
-}
-
-function createEnvDetails() {
-  const node = document.getElementById("requestEnv");
-  const items = node.innerHTML.split("\n").filter((i) => i !== "");
-
-  const formatNode = document.getElementById("formatEnv");
-  formatNode.innerHTML = "";
-
-  items.forEach((item) => {
-    const preEle = document.createElement("pre");
-    preEle.className = CLASSNAMES.JSON_FORMAT;
-    preEle.innerHTML = item;
-    formatNode.appendChild(preEle);
-  });
-}
-
-function formatJSON() {
-  const nodes = document.querySelectorAll(getClassName(CLASSNAMES.JSON_FORMAT));
-  nodes.forEach((node) => {
-    node.innerHTML = JSON.stringify(JSON.parse(node.innerHTML), null, 4);
-  });
 }
 
 function copy(className, runName) {
