@@ -177,13 +177,7 @@
     {{- end }}
     <section>
       <h2 id="latency">Latency</h2>
-      <div id="chart_div">Loading...</div>
-      <p>
-        Percentile range:
-        <input type="range" class="slider-width500" min="1" max="8" value="7" step="1" width="300px"
-          onchange="showValue(this.value)" />
-        <span id="percentileRange">99.99999%</span>
-      </p>
+      <div id="percentileLatency" style="width: 1500px; height: 450px;"></div>
       <table>
         <tr>
           <th> </th>
