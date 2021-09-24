@@ -3,6 +3,7 @@ package main
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 func Test_formatSDKName(t *testing.T) {
@@ -85,6 +86,34 @@ func Test_getAppDetails(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getAppDetails(tt.args.path, tt.args.relayMetrics); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getConfiguration() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_percentDiff(t *testing.T) {
+	type args struct {
+		start time.Duration
+		final time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "example percentage",
+			args: args{
+				start: 31201976,
+				final: 35903631,
+			},
+			want: 15.07,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := percentDiff(tt.args.start, tt.args.final); got != tt.want {
+				t.Errorf("percentDiff() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -188,19 +188,30 @@
           <th>Total</th>
         </tr>
 
-        {{ range .Data }}
+        {{ range .Latency }}
         <tr>
           <th>{{ .Name }}</th>
-          {{ with .TestResult.Metrics -}}
-          <td>{{ round .Latencies.Min }}</td>
-          <td>{{ round .Latencies.Mean }}</td>
-          <td>{{ round .Latencies.P50 }}</td>
-          <td>{{ round .Latencies.P90 }}</td>
-          <td>{{ round .Latencies.P95 }}</td>
-          <td>{{ round .Latencies.P99 }}</td>
-          <td>{{ round .Latencies.Max }}</td>
-          <td>{{ round .Latencies.Total }}</td>
-          {{- end }}
+          {{ if .Diff }}
+            <td>{{ round .Metrics.Min }} ({{ .Diff.Min }}%)</td>
+            <td>{{ round .Metrics.Mean }} ({{ .Diff.Mean }}%)</td>
+            <td>{{ round .Metrics.P50 }} ({{ .Diff.P50 }}%)</td>
+            <td>{{ round .Metrics.P90 }} ({{ .Diff.P90 }}%)</td>
+            <td>{{ round .Metrics.P95 }} ({{ .Diff.P95 }}%)</td>
+            <td>{{ round .Metrics.P99 }} ({{ .Diff.P99 }}%)</td>
+            <td>{{ round .Metrics.Max }} ({{ .Diff.Max }}%)</td>
+            <td>{{ round .Metrics.Total }} ({{ .Diff.Total }}%)</td>
+          {{ else }}
+            {{ with .Metrics -}}
+            <td>{{ round .Min }}</td>
+            <td>{{ round .Mean }}</td>
+            <td>{{ round .P50 }}</td>
+            <td>{{ round .P90 }}</td>
+            <td>{{ round .P95 }}</td>
+            <td>{{ round .P99 }}</td>
+            <td>{{ round .Max }}</td>
+            <td>{{ round .Total }}</td>
+            {{- end }}
+          {{ end }}
         </tr>
         {{ end }}
       </table>

@@ -74,10 +74,23 @@ func report(results []*RunResult) {
 	reportFile := ReportFile{
 		ReportCSS: reportCSS,
 		ReportJS:  reportJS,
+		Latency: []Latency{
+			{
+				Name: "baseline",
+				Diff: nil,
+			},
+		},
+	}
+
+	// Extract out baseline as order of run results is unknown
+	var baselineResult TestResult
+	for _, res := range results {
+		if res.Name == "baseline" {
+			baselineResult = readTestResult(filepath.Join(res.Path, "result.json"))
+		}
 	}
 
 	p := plot.New()
-
 	for i, res := range results {
 		folderPath := res.Path
 		name := res.Name
@@ -91,6 +104,16 @@ func report(results []*RunResult) {
 		data.HDR = string(readBytes(filepath.Join(folderPath, "histogram.hdr")))
 
 		tr := readTestResult(filepath.Join(folderPath, "result.json"))
+
+		if name == "baseline" {
+			reportFile.Latency[0].Metrics = tr.Latencies
+		} else {
+			reportFile.Latency = append(reportFile.Latency, Latency{
+				Name:    name,
+				Diff:    getLatencyDiff(baselineResult.Latencies, tr.Latencies),
+				Metrics: tr.Latencies,
+			})
+		}
 
 		if math.Round(tr.Throughput) != math.Round(tr.Rate) {
 			data.ThroughputDifferent = true
@@ -176,6 +199,7 @@ type ReportFile struct {
 	ReportJS            []template.HTML
 	AppDetails          AppDetails
 	LoadGenOptions      Options
+	Latency             []Latency
 }
 
 type AppDetails struct {
@@ -191,6 +215,33 @@ type ResultData struct {
 	TestResult          TestResult
 	TestResultJSON      string
 	ThroughputDifferent bool
+}
+
+type Latency struct {
+	Name    string                `json:"name"`
+	Diff    *LatencyDiff          `json:"diff,omitempty"`
+	Metrics vegeta.LatencyMetrics `json:"metrics"`
+}
+
+// LatencyDiff stores the percentage difference between
+// two vegeta.LatencyMetrics structs
+type LatencyDiff struct {
+	// Total is the total latency sum of all requests in an attack.
+	Total float64 `json:"total"`
+	// Mean is the mean request latency.
+	Mean float64 `json:"mean"`
+	// P50 is the 50th percentile request latency.
+	P50 float64 `json:"50th"`
+	// P90 is the 90th percentile request latency.
+	P90 float64 `json:"90th"`
+	// P95 is the 95th percentile request latency.
+	P95 float64 `json:"95th"`
+	// P99 is the 99th percentile request latency.
+	P99 float64 `json:"99th"`
+	// Max is the maximum observed request latency.
+	Max float64 `json:"max"`
+	// Min is the minimum observed request latency.
+	Min float64 `json:"min"`
 }
 
 // START copied from ./tool/loadgen
@@ -378,4 +429,25 @@ func getAppDetails(path string, relayMetrics map[string]interface{}) AppDetails 
 		SdkName:    formatSDKName(sdk["name"]),
 		SdkVersion: sdk["version"],
 	}
+}
+
+func getLatencyDiff(baseline, final vegeta.LatencyMetrics) *LatencyDiff {
+	return &LatencyDiff{
+		Total: percentDiff(baseline.Total, final.Total),
+		Mean:  percentDiff(baseline.Mean, final.Mean),
+		P50:   percentDiff(baseline.P50, final.P50),
+		P90:   percentDiff(baseline.P90, final.P90),
+		P95:   percentDiff(baseline.P95, final.P95),
+		P99:   percentDiff(baseline.P99, final.P99),
+		Max:   percentDiff(baseline.Max, final.Max),
+		Min:   percentDiff(baseline.Min, final.Min),
+	}
+}
+
+func percentDiff(start, final time.Duration) float64 {
+	s := start.Seconds()
+	f := final.Seconds()
+
+	p := ((f - s) / s) * 100
+	return math.Round(p*100) / 100
 }
