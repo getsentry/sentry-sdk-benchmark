@@ -130,3 +130,7 @@ ul {
   width: 600px;
   background-color: rgba(250, 71, 71, 0.05);
 }
+
+.dygraphChart {
+  margin-top: 20px;
+}

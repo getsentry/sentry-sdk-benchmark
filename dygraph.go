@@ -15,7 +15,7 @@ const chartHTML = `<script>
 	new Dygraph(c, d, o);
   });
 </script>
-<div id="{{ .ID }}"></div>`
+<div id="{{ .ID }}" class="dygraphChart"></div>`
 
 // GenerateChart creates a JS snippet that creates a Dygraph chart
 // based on given data and options. Dygraph charts require a container
@@ -41,6 +41,8 @@ func GenerateChart(id string, data []byte, opts DygraphsOpts) (template.HTML, er
 	return template.HTML(b.String()), nil
 }
 
+// DygraphsOpts configures options for a Dygraph Chart
+// See: https://dygraphs.com/options.html
 type DygraphsOpts struct {
 	Title       string   `json:"title"`
 	Labels      []string `json:"labels,omitempty"`
@@ -51,6 +53,8 @@ type DygraphsOpts struct {
 	ShowRoller  bool     `json:"showRoller"`
 	LogScale    bool     `json:"logScale"`
 	StrokeWidth float64  `json:"strokeWidth"`
+	Width       int      `json:"width,omitempty"`
+	RollPeriod  int      `json:"rollPeriod,omitempty"`
 }
 
 type ChartData struct {

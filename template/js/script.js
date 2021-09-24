@@ -58,6 +58,7 @@ function drawChart() {
     ylabel: 'Latency (ms)',
     xlabel: 'Percentile',
     legend: 'always',
+    width: 1500,
     labels: ["Percentile"].concat(names),
     valueFormatter: (num, _, seriesName) => {
       if (seriesName === "Percentile") {

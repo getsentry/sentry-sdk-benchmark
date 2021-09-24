@@ -151,7 +151,7 @@ func report(results []*RunResult) {
 		"latencyTimePlot",
 		plotData.Data,
 		DygraphsOpts{
-			Title:       plotData.Title,
+			Title:       "Latency over Time",
 			Labels:      plotData.Labels,
 			YLabel:      "Latency (ms)",
 			XLabel:      "Seconds elapsed",
@@ -159,6 +159,8 @@ func report(results []*RunResult) {
 			ShowRoller:  true,
 			LogScale:    true,
 			StrokeWidth: 1.3,
+			Width:       1500,
+			RollPeriod:  5,
 		},
 	)
 	if err != nil {
