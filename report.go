@@ -465,10 +465,13 @@ func percentDiff(start, final time.Duration) float64 {
 func formatHTTP(b string) string {
 	var s strings.Builder
 	bodyStart := strings.Index(b, "\r\n\r\n") + 4
+	if bodyStart < 4 {
+		return b
+	}
 	s.WriteString(b[:bodyStart])
 	body, err := jsonIndent([]byte(b[bodyStart:]))
 	if err != nil {
-		return string(b)
+		return b
 	}
 	s.Write(body)
 	return s.String()
