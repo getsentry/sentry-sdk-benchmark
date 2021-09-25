@@ -429,7 +429,7 @@
       {{ range .Data }}
       <details>
         <summary>Percentile Table: <b>{{ .Name }}</b></summary>
-        <div style="display: flex;">
+        <div style="display: flex; max-height: 30em; overflow-y: scroll;">
           <pre class="hdr" data-name="{{ .Name }}">{{ .HDR }}</pre>
           <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy
             {{ .Name }} HDR</button>
@@ -437,7 +437,7 @@
       </details>
       <details>
         <summary>Raw JSON: <b>{{ .Name }}</b></summary>
-        <div style="display: flex;">
+        <div style="display: flex; max-height: 30em; overflow-y: scroll;">
           <pre style="width: 400px;" class="json jsonFormat" data-name="{{ .Name }}">{{ .TestResultJSON }}</pre>
           <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy
             {{ .Name }} JSON</button>
