@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -128,6 +129,11 @@ func report(results []*RunResult) {
 		for _, r := range tr.LoadGenResult {
 			r.Attack = name
 			p.Add(r)
+		}
+
+		tr.FirstAppResponse = formatHTTP(tr.FirstAppResponse)
+		if tr.RelayMetrics["first_request"] != nil {
+			tr.RelayMetrics["first_request"] = formatHTTP(tr.RelayMetrics["first_request"].(string))
 		}
 
 		data.TestResult = tr
@@ -358,7 +364,7 @@ func readTestResult(path string) (tr TestResult) {
 }
 
 func marshalToStr(t interface{}) string {
-	j, err := json.Marshal(t)
+	j, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
 		panic(err)
 	}
@@ -452,4 +458,39 @@ func percentDiff(start, final time.Duration) float64 {
 
 	p := ((f - s) / s) * 100
 	return math.Round(p*100) / 100
+}
+
+// formatHTTP takes a raw HTTP 1.x request or response and pretty-prints JSON
+// bodies.
+func formatHTTP(b string) string {
+	var s strings.Builder
+	bodyStart := strings.Index(b, "\r\n\r\n") + 4
+	s.WriteString(b[:bodyStart])
+	body, err := jsonIndent([]byte(b[bodyStart:]))
+	if err != nil {
+		return string(b)
+	}
+	s.Write(body)
+	return s.String()
+}
+
+// jsonIndent is similar to json.Indent but can deal with a stream of JSON
+// values.
+func jsonIndent(src []byte) ([]byte, error) {
+	var w bytes.Buffer
+	dec := json.NewDecoder(bytes.NewReader(src))
+	enc := json.NewEncoder(&w)
+	enc.SetIndent("", "  ")
+	for dec.More() {
+		var m json.RawMessage
+		err := dec.Decode(&m)
+		if err != nil {
+			return nil, err
+		}
+		err = enc.Encode(m)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return w.Bytes(), nil
 }
