@@ -134,3 +134,7 @@ ul {
 .dygraphChart {
   margin-top: 20px;
 }
+
+pre {
+  white-space: pre-wrap; /* wrap long lines */
+}
