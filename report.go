@@ -73,6 +73,7 @@ func Report(s []string) {
 
 func report(results []*RunResult) {
 	reportFile := ReportFile{
+		ID:        filepath.Base(filepath.Dir(results[0].Path)),
 		ReportCSS: reportCSS,
 		ReportJS:  reportJS,
 		Latency: []Latency{
@@ -199,6 +200,7 @@ func report(results []*RunResult) {
 }
 
 type ReportFile struct {
+	ID                string
 	Title             string
 	Data              []ResultData
 	RelayMetrics      map[string]interface{}
