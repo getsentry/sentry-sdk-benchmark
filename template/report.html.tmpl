@@ -294,7 +294,7 @@
           {{ with .TestResult.Stats -}}
           <td>{{ .app.Before.CPUUsageUser }}</td>
           <td>{{ .app.After.CPUUsageUser }}</td>
-          <td>{{ .app.Difference.CPUUsageUser }}</td>
+          <td>{{ .app.Difference.CPUUsageUser }} ({{ percentDiffUInt .app.Before.CPUUsageUser .app.After.CPUUsageUser }}%)</td>
           <td>{{ .postgres.Before.CPUUsageUser }}</td>
           <td>{{ .postgres.After.CPUUsageUser }}</td>
           <td>{{ .postgres.Difference.CPUUsageUser }}</td>
@@ -330,15 +330,15 @@
         <tr>
           <th>{{ .Name }}</th>
           {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.CPUUsageTotal }}</td>
-          <td>{{ .app.After.CPUUsageTotal }}</td>
-          <td>{{ .app.Difference.CPUUsageTotal }}</td>
-          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
-          <td>{{ .postgres.After.CPUUsageTotal }}</td>
-          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
+          <td>{{ .app.Before.CPUUsageSystem }}</td>
+          <td>{{ .app.After.CPUUsageSystem }}</td>
+          <td>{{ .app.Difference.CPUUsageSystem }} ({{ percentDiffUInt .app.Before.CPUUsageSystem .app.After.CPUUsageSystem }}%)</td>
+          <td>{{ .postgres.Before.CPUUsageSystem }}</td>
+          <td>{{ .postgres.After.CPUUsageSystem }}</td>
+          <td>{{ .postgres.Difference.CPUUsageSystem }}</td>
+          <td>{{ .fakerelay.Before.CPUUsageSystem }}</td>
+          <td>{{ .fakerelay.After.CPUUsageSystem }}</td>
+          <td>{{ .fakerelay.Difference.CPUUsageSystem }}</td>
           {{- end }}
         </tr>
         {{ end }}
@@ -371,7 +371,7 @@
           {{ with .TestResult.Stats -}}
           <td>{{ .app.Before.CPUUsageTotal }}</td>
           <td>{{ .app.After.CPUUsageTotal }}</td>
-          <td>{{ .app.Difference.CPUUsageTotal }}</td>
+          <td>{{ .app.Difference.CPUUsageTotal }} ({{ percentDiffUInt .app.Before.CPUUsageTotal .app.After.CPUUsageTotal }}%)</td>
           <td>{{ .postgres.Before.CPUUsageTotal }}</td>
           <td>{{ .postgres.After.CPUUsageTotal }}</td>
           <td>{{ .postgres.Difference.CPUUsageTotal }}</td>

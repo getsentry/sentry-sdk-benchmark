@@ -377,6 +377,13 @@ var reportFuncMap = template.FuncMap{
 	"numRequests": func(rps uint, d time.Duration) uint {
 		return uint(d.Seconds()) * rps
 	},
+	"percentDiffUInt": func(before, after uint64) float64 {
+		b := float64(before)
+		a := float64(after)
+
+		p := ((a - b) / ((a + b) / 2)) * 100
+		return math.Round(p*100) / 100
+	},
 }
 
 func formatSDKName(n string) string {
