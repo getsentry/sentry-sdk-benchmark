@@ -381,7 +381,7 @@ var reportFuncMap = template.FuncMap{
 		b := float64(before)
 		a := float64(after)
 
-		p := ((a - b) / ((a + b) / 2)) * 100
+		p := ((a - b) / b) * 100
 		return math.Round(p*100) / 100
 	},
 }
