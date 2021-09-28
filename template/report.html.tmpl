@@ -73,7 +73,7 @@
         </dl>
         {{ end }}
         {{ range .Data }}
-        {{ with .ThroughputDifferent }}
+        {{ if .ThroughputDifferent }}
         <div class="errorBox" style="padding-bottom: 0px;">
           <p>Warning: throughput for <b>{{ .Name }}</b> does not match configured RPS</p>
         </div>
