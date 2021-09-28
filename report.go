@@ -174,12 +174,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
-	var reportPath string
-	if len(results) > 2 {
-		reportPath = filepath.Join(filepath.Dir(filepath.Dir(reportFile.Title)), "report.html")
-	} else {
-		reportPath = filepath.Join(filepath.Dir(reportFile.Title), "report.html")
-	}
+	reportPath := filepath.Join(filepath.Dir(reportFile.Title), "report.html")
 
 	f, err := os.Create(reportPath)
 	if err != nil {
