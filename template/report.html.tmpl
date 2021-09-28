@@ -414,7 +414,12 @@
 
       <hr>
       <h3>First Request to Relay</h3>
-      <pre>{{ .FirstRequestRelay }}</pre>
+      {{ range .Data }}
+      {{ if .TestResult.RelayMetrics.FirstRequest }}
+      <p>{{ .Name }}</p>
+      <pre>{{ .TestResult.RelayMetrics.FirstRequest }}</pre>
+      {{ end }}
+      {{ end }}
 
       <hr>
       <h3>LoadGen Command</h3>
