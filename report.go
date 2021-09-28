@@ -132,25 +132,22 @@ func report(results []*RunResult) {
 			p.Add(r)
 		}
 
-		tr.FirstAppResponse = formatHTTP(tr.FirstAppResponse)
-		if firstReq := tr.RelayMetrics["first_request"]; firstReq != nil {
-			tr.RelayMetrics["first_request"] = formatHTTP(firstReq.(string))
-		}
-
 		data.TestResult = tr
 		data.TestResultJSON = marshalToStr(tr)
-
-		if tr.RelayMetrics != nil {
-			reportFile.RelayMetrics = tr.RelayMetrics
-			if firstReq := tr.RelayMetrics["first_request"]; firstReq != nil {
-				reportFile.FirstRequestRelay = firstReq.(string)
-			}
-		}
 
 		reportFile.Data = append(reportFile.Data, data)
 	}
 
-	reportFile.AppDetails = getAppDetails(results[0].Path, reportFile.RelayMetrics)
+	// FIXME: AppDetails might be different per run. For now, this takes the
+	// first non-empty value.
+	for _, data := range reportFile.Data {
+		sdkInfo := data.TestResult.RelayMetrics.SDKInfo
+		var empty SDKInfo
+		if sdkInfo != empty {
+			reportFile.AppDetails = getAppDetails(results[0].Path, sdkInfo)
+			break
+		}
+	}
 
 	plotData, err := p.GetData()
 	if err != nil {
@@ -200,18 +197,18 @@ func report(results []*RunResult) {
 }
 
 type ReportFile struct {
-	ID                string
-	Title             string
-	Data              []ResultData
-	RelayMetrics      map[string]interface{}
-	FirstRequestRelay string
-	HasErrors         bool
-	LatencyPlot       template.HTML
-	ReportCSS         []template.CSS
-	ReportJS          []template.HTML
-	AppDetails        AppDetails
-	LoadGenOptions    Options
-	Latency           []Latency
+	ID        string
+	Title     string
+	Data      []ResultData
+	HasErrors bool
+
+	LatencyPlot template.HTML
+	ReportCSS   []template.CSS
+	ReportJS    []template.HTML
+
+	AppDetails     AppDetails
+	LoadGenOptions Options
+	Latency        []Latency
 }
 
 type AppDetails struct {
@@ -227,6 +224,18 @@ type ResultData struct {
 	TestResult          TestResult
 	TestResultJSON      string
 	ThroughputDifferent bool
+}
+
+type RelayMetrics struct {
+	Requests      int     `json:"requests"`
+	FirstRequest  string  `json:"first_request"`
+	SDKInfo       SDKInfo `json:"sdk"`
+	BytesReceived int     `json:"bytes_received"`
+}
+
+type SDKInfo struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
 }
 
 type Latency struct {
@@ -274,11 +283,11 @@ type Options struct {
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
-	LoadGenResult  []*vegeta.Result       `json:"loadgen_result"`
-	Stats          map[string]Stats       `json:"container_stats"`
-	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
-	LoadGenCommand string                 `json:"loadgen_command"`
-	Options        Options                `json:"options"`
+	LoadGenResult  []*vegeta.Result `json:"loadgen_result"`
+	Stats          map[string]Stats `json:"container_stats"`
+	RelayMetrics   RelayMetrics     `json:"relay_metrics,omitempty"`
+	LoadGenCommand string           `json:"loadgen_command"`
+	Options        Options          `json:"options"`
 }
 
 type Stats struct {
@@ -334,6 +343,8 @@ func readTestResult(path string) (tr TestResult) {
 	if err := json.Unmarshal(readBytes(path), &tr); err != nil {
 		panic(err)
 	}
+	tr.FirstAppResponse = formatHTTP(tr.FirstAppResponse)
+	tr.RelayMetrics.FirstRequest = formatHTTP(tr.RelayMetrics.FirstRequest)
 	return tr
 }
 
@@ -394,29 +405,13 @@ func formatSDKName(n string) string {
 	return strings.ReplaceAll(match, ".", "-")
 }
 
-func getAppDetails(path string, relayMetrics map[string]interface{}) AppDetails {
+func getAppDetails(path string, sdkInfo SDKInfo) AppDetails {
 	pathList := strings.Split(path, string(filepath.Separator))
-	sdk := make(map[string]string)
-
-	for k, v := range relayMetrics {
-		switch v := v.(type) {
-		case map[string]interface{}:
-			if k == "sdk" {
-				for n, i := range v {
-					switch i := i.(type) {
-					case string:
-						sdk[n] = i
-					}
-				}
-			}
-		}
-	}
-
 	return AppDetails{
 		Language:   pathList[1],
 		Framework:  pathList[2],
-		SdkName:    formatSDKName(sdk["name"]),
-		SdkVersion: sdk["version"],
+		SdkName:    formatSDKName(sdkInfo.Name),
+		SdkVersion: sdkInfo.Version,
 	}
 }
 
