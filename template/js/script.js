@@ -69,7 +69,6 @@ function drawChart() {
         logscale: true,
       },
     },
-    showRoller: true,
     strokeWidth: 1.3,
     drawAxesAtZero: true,
   });
