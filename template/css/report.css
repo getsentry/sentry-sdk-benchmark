@@ -2,21 +2,6 @@
   display: none;
 }
 
-table {
-  border-collapse: collapse;
-}
-
-td,
-th {
-  border: 1px solid black;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
 dl {
   margin-top: 0;
 }
@@ -125,7 +110,7 @@ ul {
 }
 
 .errorBox {
-  border: solid #F55459;
+  border: solid #f55459;
   padding: 0px 20px 15px 20px;
   width: 600px;
   background-color: rgba(250, 71, 71, 0.05);
@@ -137,4 +122,17 @@ ul {
 
 pre {
   white-space: pre-wrap; /* wrap long lines */
+}
+
+.text-primary {
+  color: #9386a0;
+}
+
+.sentry-background {
+  background: linear-gradient(
+    294.17deg,
+    rgb(47, 25, 55) 35.57%,
+    rgb(69, 38, 80) 92.42%,
+    rgb(69, 38, 80) 92.42%
+  );
 }

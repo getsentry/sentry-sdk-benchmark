@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Sentry SDK Benchmark Report" />
   <meta name="author" content="Sentry (sentry.io)" />
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 
   <title>{{ .Title }}</title>
 
@@ -14,450 +15,589 @@
 </head>
 
 <body>
-  <header>
-    <h1>Sentry SDK Benchmark Report</h1>
-  </header>
+  <div class="flex">
+    <nav class="w-2/12 sentry-background">
+      <ul class="space-y-2 text-primary font-medium px-4 mt-6 sticky top-6">
+        <li><a class="hover:text-white" href="#configuration">Configuration</a></li>
+        <li><a class="hover:text-white" href="#latency">Latency</a></li>
+        <li><a class="hover:text-white" href="#memory-cpu">Memory & CPU Usage</a></li>
+        <li><a class="hover:text-white" href="#network">Network Traffic</a></li>
+        <li><a class="hover:text-white" href="#debug">Debugging</a></li>
+      </ul>
+    </nav>
 
-  <nav>
-    <ul>
-      <li><a href="#configuration">Configuration</a></li>
-      <li><a href="#latency">Latency</a></li>
-      <li><a href="#memory-cpu">Memory & CPU Usage</a></li>
-      <li><a href="#network">Network Traffic</a></li>
-      <li><a href="#debug">Debugging</a></li>
-    </ul>
-  </nav>
+    <main class="w-10/12">
+      <header class="p-4 border-b shadow-lg mb-6">
+        <h1 class="text-primary text-xl">Sentry SDK Benchmark Report</h1>
+      </header>
+      <section class="px-12">
+        <h2 id="configuration" class="pt-4 text-primary font-medium text-lg">Configuration</h2>
+        <p class="text-gray-500 text-sm pb-4">Run: {{ .ID }}</p>
 
-  <main>
-    <section>
-      <h2 id="configuration">Configuration - Run: {{ .ID }}</h2>
-      {{ with .AppDetails }}
-      <div>
-        <h3>Target Application</h3>
-        <dl>
-          <div>
-            <dt>Language</dt>
-            <dd>{{ .Language }}</dd>
+        {{ with .AppDetails }}
+        <div class="flex flex-col">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow overflow-hidden border-b border-gray-200 rounded-t-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Language
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Framework
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sentry SDK version
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg- white divide-y divide-gray-200">
+                    <tr>
+                      <td class="px-6 py-2 whitespace-nowrap">
+                        {{ .Language }}
+                      </td>
+                      <td class="px-6 py-2 whitespace-nowrap">
+                        <a target="_blank" href="https://github.com/getsentry/sentry-sdk-benchmark/tree/main/platform/{{ .Language }}/{{ .Framework }}">{{ .Framework }}</a>
+                      </td>
+                      <td class="px-6 py-2 whitespace-nowrap">
+                        <a target="_blank" href="https://github.com/getsentry/{{ .SdkName }}/releases/{{ .SdkVersion }}">{{ .SdkVersion }}</a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div>
-            <dt>Framework</dt>
-            <dd><a href="https://github.com/getsentry/sentry-sdk-benchmark/tree/main/platform/{{ .Language }}/{{ .Framework }}">{{ .Framework }}</a></dd>
-          </div>
-          <div>
-            <dt>Sentry SDK version</dt>
-            <dd><a href="https://github.com/getsentry/{{ .SdkName }}/releases/{{ .SdkVersion }}">{{ .SdkVersion }}</a></dd>
-          </div>
-        </dl>
-      </div>
-      {{ end }}
-      <div>
-        {{ with .LoadGenOptions }}
-        <h3>Test Configuration</h3>
-        <dl>
-          <div>
-            <dt>Target URL</dt>
-            <dd>{{ .TargetURL }}</dd>
-          </div>
-          <div>
-            <dt>Duration</dt>
-            <dd>{{ round .TestDuration }}</dd>
-          </div>
-          <div>
-            <dt>Requests</dt>
-            <dd>{{ numRequests .RPS .TestDuration }}</dd>
-          </div>
-          <div>
-            <dt><abbr title="Requests Per Second">RPS</abbr></dt>
-            <dd>{{ .RPS }}</dd>
-          </div>
-        </dl>
-        {{ end }}
-        {{ range .Data }}
-        {{ if .ThroughputDifferent }}
-        <div class="errorBox" style="padding-bottom: 0px;">
-          <p>Warning: throughput for <b>{{ .Name }}</b> does not match configured RPS</p>
         </div>
         {{ end }}
-        <details>
-          <summary>{{ .Name }} Run Details</summary>
-          {{ with .TestResult.Metrics -}}
-          <div class="runDetails">
-            <h4>Errors</h4>
-            <ul>
-              {{ range .Errors }}
-              <li>{{ . }}</li>
-              {{ else }}
-              <li>No Errors</li>
-              {{ end }}
-            </ul>
-
-            <h4>Result</h4>
-            <dl>
-              <dt>Earliest</dt>
-              <dd>{{ .Earliest }}</dd>
-              <dt>Latest</dt>
-              <dd>{{ .Latest }}</dd>
-              <dt>End</dt>
-              <dd>{{ .End }}</dd>
-              <dt>Duration</dt>
-              <dd>{{ .Duration }}</dd>
-              <dt>Wait</dt>
-              <dd>{{ .Wait }}</dd>
-              <dt>Requests</dt>
-              <dd>{{ .Requests }}</dd>
-              <dt>Rate (as configured)</dt>
-              <dd>{{ .Rate }}</dd>
-              <dt>Throughput (as observed)</dt>
-              <dd>{{ .Throughput }}</dd>
-              <dt>Success</dt>
-              <dd>{{ .Success }}</dd>
-              {{ range $key, $value := .StatusCodes }}
-              <dt>Status Code {{ $key }}</dt>
-              <dd>{{ $value }}</dd>
-              {{ end }}
-            </dl>
+        <div>
+          {{ with .LoadGenOptions }}
+          <div class="flex flex-col">
+            <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div class="align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div class="shadow overflow-hidden border-b border-gray-200 rounded-b-lg">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Target URL
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Duration
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Requests
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <abbr title="Requests Per Second">RPS</abbr>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg- white divide-y divide-gray-200">
+                      <tr>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ .TargetURL }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ round .TestDuration }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ numRequests .RPS .TestDuration }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ .RPS }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
-          {{- end }}
-        </details>
-        {{ end }}
-      </div>
-      <!--
-      <div>
-        <h3>Hardware Specification</h3>
-        <dl>
-          <div>
-            <dt>Computer</dt>
-            <dd>{{ "TODO ~ MacBook Pro (15-inch, 2019)" }}</dd>
-          </div>
-          <div>
-            <dt>Processor</dt>
-            <dd>{{ "TODO ~ 2.3 GHz 8-Core Intel Core i9" }}</dd>
-          </div>
-          <div>
-            <dt>Memory</dt>
-            <dd>{{ "TODO ~ 32 GB 2400 MHz DDR4" }}</dd>
-          </div>
-          <div>
-            <dt>Operating System</dt>
-            <dd>{{ "TODO ~ macOS Big Sur 11.5.2" }}</dd>
-          </div>
-          <div>
-            <dt>Docker</dt>
-            <dd>{{ "TODO ~ Docker Desktop 4.0.0.12 / 8 cores / 4 GB" }}</dd>
-          </div>
-        </dl>
-      </div>
-      -->
-    </section>
-    {{ if .HasErrors }}
-    <section>
-      <div class="errorBox">
-        <h3><b>Errors</b></h3>
-        There were errors in the benchmark run, the results below may not be representative....
-        <details>
-        <summary>Details</summary>
-        {{ range .Data }}
-        <div style="display: flex;flex-direction: column;">
-        <p><b>{{ .Name }}</b></p>
-        {{ with .TestResult.Metrics -}}
-        <ul>
-          {{ range .Errors }}
-          <li>{{ . }}</li>
-          {{ else }}
-          <li>No Errors</li>
           {{ end }}
-        </ul>
-        {{ end }}
-        </div>
-        {{ end }}
-        </details>
-      </div>
-    </section>
-    {{- end }}
-    <section>
-      <h2 id="latency">Latency</h2>
-      <div id="percentileLatency"></div>
-      <table style="margin-top: 10px;">
-        <tr>
-          <th> </th>
-          <th>Min</th>
-          <th>Mean</th>
-          <th>50th</th>
-          <th>90th</th>
-          <th>95th</th>
-          <th>99th</th>
-          <th>Max</th>
-          <th>Total</th>
-        </tr>
+          {{ range .Data }}
+          {{ if .ThroughputDifferent }}
+          <div class="errorBox" style="padding-bottom: 0px;">
+            <p>Warning: throughput for <b>{{ .Name }}</b> does not match configured RPS</p>
+          </div>
+          {{ end }}
+          <details class="text-xs cursor-pointer my-2">
+            <summary class="text-gray-500">{{ .Name }} Run Details</summary>
+            {{ with .TestResult.Metrics -}}
+            <div class="runDetails">
+              <h4>Errors</h4>
+              <ul>
+                {{ range .Errors }}
+                <li>{{ . }}</li>
+                {{ else }}
+                <li>No Errors</li>
+                {{ end }}
+              </ul>
 
-        {{ range .Latency }}
-        <tr>
-          <th>{{ .Name }}</th>
-          {{ if .Diff }}
-            <td>{{ round .Metrics.Min }} ({{ .Diff.Min }}%)</td>
-            <td>{{ round .Metrics.Mean }} ({{ .Diff.Mean }}%)</td>
-            <td>{{ round .Metrics.P50 }} ({{ .Diff.P50 }}%)</td>
-            <td>{{ round .Metrics.P90 }} ({{ .Diff.P90 }}%)</td>
-            <td>{{ round .Metrics.P95 }} ({{ .Diff.P95 }}%)</td>
-            <td>{{ round .Metrics.P99 }} ({{ .Diff.P99 }}%)</td>
-            <td>{{ round .Metrics.Max }} ({{ .Diff.Max }}%)</td>
-            <td>{{ round .Metrics.Total }} ({{ .Diff.Total }}%)</td>
-          {{ else }}
-            {{ with .Metrics -}}
-            <td>{{ round .Min }}</td>
-            <td>{{ round .Mean }}</td>
-            <td>{{ round .P50 }}</td>
-            <td>{{ round .P90 }}</td>
-            <td>{{ round .P95 }}</td>
-            <td>{{ round .P99 }}</td>
-            <td>{{ round .Max }}</td>
-            <td>{{ round .Total }}</td>
+              <h4>Result</h4>
+              <dl>
+                <dt>Earliest</dt>
+                <dd>{{ .Earliest }}</dd>
+                <dt>Latest</dt>
+                <dd>{{ .Latest }}</dd>
+                <dt>End</dt>
+                <dd>{{ .End }}</dd>
+                <dt>Duration</dt>
+                <dd>{{ .Duration }}</dd>
+                <dt>Wait</dt>
+                <dd>{{ .Wait }}</dd>
+                <dt>Requests</dt>
+                <dd>{{ .Requests }}</dd>
+                <dt>Rate (as configured)</dt>
+                <dd>{{ .Rate }}</dd>
+                <dt>Throughput (as observed)</dt>
+                <dd>{{ .Throughput }}</dd>
+                <dt>Success</dt>
+                <dd>{{ .Success }}</dd>
+                {{ range $key, $value := .StatusCodes }}
+                <dt>Status Code {{ $key }}</dt>
+                <dd>{{ $value }}</dd>
+                {{ end }}
+              </dl>
+            </div>
             {{- end }}
+          </details>
           {{ end }}
-        </tr>
-        {{ end }}
-      </table>
-
-      <!-- Latency over time plot -->
-      {{ .LatencyPlot }}
-    </section>
-    <section>
-      <h2 id="memory-cpu">Memory & CPU Usage</h2>
-      <h3>Memory</h3>
-      <table>
-        <tr>
-          <th> </th>
-          <th colspan="3" style="text-align: center;">App</th>
-          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-          <th colspan="3" style="text-align: center;">Relay</th>
-        </tr>
-        <tr>
-          <th> </th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-        </tr>
-        {{ range .Data }}
-        <tr>
-          <th>{{ .Name }}</th>
-          {{ with .TestResult.Stats -}}
-          <td>{{ byteFormatUnsigned .app.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormatUnsigned .app.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormat .app.Difference.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormatUnsigned .postgres.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormatUnsigned .postgres.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormat .postgres.Difference.MemoryMaxUsageBytes }}</td>
-          {{ if .fakerelay }}
-          <td>{{ byteFormatUnsigned .fakerelay.Before.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormatUnsigned .fakerelay.After.MemoryMaxUsageBytes }}</td>
-          <td>{{ byteFormat .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
-          {{ else }}
-          <td></td>
-          <td></td>
-          <td></td>
-          {{ end }}
-          {{- end }}
-        </tr>
-        {{ end }}
-      </table>
-
-      <h3>CPU User</h3>
-      <table>
-        <tr>
-          <th> </th>
-          <th colspan="3" style="text-align: center;">App</th>
-          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-          <th colspan="3" style="text-align: center;">Relay</th>
-        </tr>
-        <tr>
-          <th> </th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-        </tr>
-
-        {{ range .Data }}
-        <tr>
-          <th>{{ .Name }}</th>
-          {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.CPUUsageUser }}</td>
-          <td>{{ .app.After.CPUUsageUser }}</td>
-          <td>{{ .app.Difference.CPUUsageUser }} ({{ percentDiffUInt .app.Before.CPUUsageUser .app.After.CPUUsageUser }}%)</td>
-          <td>{{ .postgres.Before.CPUUsageUser }}</td>
-          <td>{{ .postgres.After.CPUUsageUser }}</td>
-          <td>{{ .postgres.Difference.CPUUsageUser }}</td>
-          <td>{{ .fakerelay.Before.CPUUsageUser }}</td>
-          <td>{{ .fakerelay.After.CPUUsageUser }}</td>
-          <td>{{ .fakerelay.Difference.CPUUsageUser }}</td>
-          {{- end }}
-        </tr>
-        {{ end }}
-      </table>
-
-      <table>
-        <h3>CPU System</h3>
-        <tr>
-          <th> </th>
-          <th colspan="3" style="text-align: center;">App</th>
-          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-          <th colspan="3" style="text-align: center;">Relay</th>
-        </tr>
-        <tr>
-          <th> </th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-        </tr>
-        {{ range .Data }}
-        <tr>
-          <th>{{ .Name }}</th>
-          {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.CPUUsageSystem }}</td>
-          <td>{{ .app.After.CPUUsageSystem }}</td>
-          <td>{{ .app.Difference.CPUUsageSystem }} ({{ percentDiffUInt .app.Before.CPUUsageSystem .app.After.CPUUsageSystem }}%)</td>
-          <td>{{ .postgres.Before.CPUUsageSystem }}</td>
-          <td>{{ .postgres.After.CPUUsageSystem }}</td>
-          <td>{{ .postgres.Difference.CPUUsageSystem }}</td>
-          <td>{{ .fakerelay.Before.CPUUsageSystem }}</td>
-          <td>{{ .fakerelay.After.CPUUsageSystem }}</td>
-          <td>{{ .fakerelay.Difference.CPUUsageSystem }}</td>
-          {{- end }}
-        </tr>
-        {{ end }}
-      </table>
-
-      <h3>CPU Total</h3>
-      <table>
-        <tr>
-          <th> </th>
-          <th colspan="3" style="text-align: center;">App</th>
-          <th colspan="3" style="text-align: center;">DB (Postgres)</th>
-          <th colspan="3" style="text-align: center;">Relay</th>
-        </tr>
-        <tr>
-          <th> </th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-          <th>Before</th>
-          <th>After</th>
-          <th>Difference</th>
-        </tr>
-
-        {{ range .Data }}
-        <tr>
-          <th>{{ .Name }}</th>
-          {{ with .TestResult.Stats -}}
-          <td>{{ .app.Before.CPUUsageTotal }}</td>
-          <td>{{ .app.After.CPUUsageTotal }}</td>
-          <td>{{ .app.Difference.CPUUsageTotal }} ({{ percentDiffUInt .app.Before.CPUUsageTotal .app.After.CPUUsageTotal }}%)</td>
-          <td>{{ .postgres.Before.CPUUsageTotal }}</td>
-          <td>{{ .postgres.After.CPUUsageTotal }}</td>
-          <td>{{ .postgres.Difference.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Before.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.After.CPUUsageTotal }}</td>
-          <td>{{ .fakerelay.Difference.CPUUsageTotal }}</td>
-          {{- end }}
-        </tr>
-        {{ end }}
-      </table>
-    </section>
-    <section>
-      <h2 id="network">Network Traffic</h2>
-      <h3>Bytes In</h3>
-      <table>
-        <tr>
-          <th> </th>
-          <th>Total</th>
-          <th>Mean</th>
-        </tr>
-        {{ range .Data }}
-        <tr>
-          <th>{{ .Name }}</th>
+        </div>
+        <!--
+        <div>
+          <h3>Hardware Specification</h3>
+          <dl>
+            <div>
+              <dt>Computer</dt>
+              <dd>{{ "TODO ~ MacBook Pro (15-inch, 2019)" }}</dd>
+            </div>
+            <div>
+              <dt>Processor</dt>
+              <dd>{{ "TODO ~ 2.3 GHz 8-Core Intel Core i9" }}</dd>
+            </div>
+            <div>
+              <dt>Memory</dt>
+              <dd>{{ "TODO ~ 32 GB 2400 MHz DDR4" }}</dd>
+            </div>
+            <div>
+              <dt>Operating System</dt>
+              <dd>{{ "TODO ~ macOS Big Sur 11.5.2" }}</dd>
+            </div>
+            <div>
+              <dt>Docker</dt>
+              <dd>{{ "TODO ~ Docker Desktop 4.0.0.12 / 8 cores / 4 GB" }}</dd>
+            </div>
+          </dl>
+        </div>
+        -->
+      </section>
+      {{ if .HasErrors }}
+      <section>
+        <div class="errorBox">
+          <h3><b>Errors</b></h3>
+          There were errors in the benchmark run, the results below may not be representative....
+          <details>
+          <summary>Details</summary>
+          {{ range .Data }}
+          <div style="display: flex;flex-direction: column;">
+          <p><b>{{ .Name }}</b></p>
           {{ with .TestResult.Metrics -}}
-          <td>{{ .BytesIn.Total }}</td>
-          <td>{{ .BytesIn.Mean }}</td>
-          {{- end }}
-        </tr>
-        {{ end }}
-      </table>
-    </section>
-    <section>
-      <h2 id="debug">Debugging</h2>
-
-      <h3>First Response from App</h3>
-      {{ range .Data }}
-      <p>{{ .Name }}</p>
-      <pre>{{ .TestResult.FirstAppResponse }}</pre>
-      {{ end }}
-
-      <hr>
-      <h3>First Request to Relay</h3>
-      {{ range .Data }}
-      {{ if .TestResult.RelayMetrics.FirstRequest }}
-      <p>{{ .Name }}</p>
-      <pre>{{ .TestResult.RelayMetrics.FirstRequest }}</pre>
-      {{ end }}
-      {{ end }}
-
-      <hr>
-      <h3>LoadGen Command</h3>
-      {{ range .Data }}
-      <p>{{ .Name }}</p>
-      {{ with .TestResult.LoadGenCommand -}}
-      <pre>{{ . }}</pre>
-      {{- end }}
-      {{- end }}
-
-      <hr>
-      {{ range .Data }}
-      <details>
-        <summary>Percentile Table: <b>{{ .Name }}</b></summary>
-        <div style="display: flex; max-height: 30em; overflow-y: scroll;">
-          <pre class="hdr" data-name="{{ .Name }}">{{ .HDR }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy
-            {{ .Name }} HDR</button>
+          <ul>
+            {{ range .Errors }}
+            <li>{{ . }}</li>
+            {{ else }}
+            <li>No Errors</li>
+            {{ end }}
+          </ul>
+          {{ end }}
+          </div>
+          {{ end }}
+          </details>
         </div>
-      </details>
-      <details>
-        <summary>Raw JSON: <b>{{ .Name }}</b></summary>
-        <div style="display: flex; max-height: 30em; overflow-y: scroll;">
-          <pre style="width: 400px;" class="json jsonFormat" data-name="{{ .Name }}">{{ .TestResultJSON }}</pre>
-          <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy
-            {{ .Name }} JSON</button>
+      </section>
+      {{- end }}
+      <section class="px-12 mt-12">
+        <h2 id="latency" class="py-4 text-primary font-medium text-lg">Latency</h2>
+        <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg py-2">
+          <div style="width: 100%" id="percentileLatency"></div>
         </div>
-      </details>
-      {{ end }}
-    </section>
 
-    <div id="snackbar"></div>
-  </main>
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200 text-xs">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Min
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Mean
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        50th
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        90th
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        95th
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        99th
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Max
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  {{ range .Latency }}
+                  <tr>
+                    <td class="px-6 py-4">{{ .Name }}</td>
+                    {{ if .Diff }}
+                      <td class="px-6 py-2">{{ round .Metrics.Min }} <div class="text-gray-400">({{ .Diff.Min }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.Mean }} <div class="text-gray-400">({{ .Diff.Mean }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.P50 }} <div class="text-gray-400">({{ .Diff.P50 }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.P90 }} <div class="text-gray-400">({{ .Diff.P90 }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.P95 }} <div class="text-gray-400">({{ .Diff.P95 }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.P99 }} <div class="text-gray-400">({{ .Diff.P99 }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.Max }} <div class="text-gray-400">({{ .Diff.Max }}%)</div></td>
+                      <td class="px-6 py-2">{{ round .Metrics.Total }} <div class="text-gray-400">({{ .Diff.Total }}%)</div></td>
+                    {{ else }}
+                      {{ with .Metrics -}}
+                      <td class="px-6 py-2">{{ round .Min }}</td>
+                      <td class="px-6 py-2">{{ round .Mean }}</td>
+                      <td class="px-6 py-2">{{ round .P50 }}</td>
+                      <td class="px-6 py-2">{{ round .P90 }}</td>
+                      <td class="px-6 py-2">{{ round .P95 }}</td>
+                      <td class="px-6 py-2">{{ round .P99 }}</td>
+                      <td class="px-6 py-2">{{ round .Max }}</td>
+                      <td class="px-6 py-2">{{ round .Total }}</td>
+                      {{- end }}
+                    {{ end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Latency over time plot -->
+        <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg py-2 mt-4">
+          {{ .LatencyPlot }}
+        </div>
+      </section>
+      <section class="px-12 mt-12">
+        <h2 id="memory-cpu" class="py-4 text-primary font-medium text-lg">Memory & CPU Usage</h2>
 
-  <footer>
-    <p>Report generated with the <a
-        href="https://github.com/getsentry/sentry-sdk-benchmark"><code>sentry-sdk-benchmark</code></a> tool.</p>
-  </footer>
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow bg-gray-50 overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <h3 class="text-gray-500 text-sm p-2 font-medium uppercase tracking-wider">Memory</h3>
+                <table class="min-w-full divide-y divide-gray-200 text-xs bg-white">
+                  <thead class="bg-gray-50">
+                    <tr class="px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th></th>
+                      <th colspan="3" style="text-align: center;">App</th>
+                      <th colspan="3" class="border-l border-r" style="text-align: center;">DB (Postgres)</th>
+                      <th colspan="3" style="text-align: center;">Relay</th>
+                    </tr>
+                  </thead>
+                  <thead class="bg-gray-50">
+                    <tr class="bg-gray-50 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2">Difference</th>
+                    </tr>
+                  </thead>
+
+                  {{ range .Data }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Stats -}}
+                    <td class="p-2">{{ byteFormatUnsigned .app.Before.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormatUnsigned .app.After.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormat .app.Difference.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormatUnsigned .postgres.Before.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormatUnsigned .postgres.After.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormat .postgres.Difference.MemoryMaxUsageBytes }}</td>
+                    {{ if .fakerelay }}
+                    <td class="p-2">{{ byteFormatUnsigned .fakerelay.Before.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormatUnsigned .fakerelay.After.MemoryMaxUsageBytes }}</td>
+                    <td class="p-2">{{ byteFormat .fakerelay.Difference.MemoryMaxUsageBytes }}</td>
+                    {{ else }}
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {{ end }}
+                    {{- end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow bg-gray-50 overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <h3 class="text-gray-500 text-sm p-2 font-medium uppercase tracking-wider">CPU User</h3>
+                <table class="min-w-full divide-y divide-gray-200 text-xs bg-white">
+                  <thead class="bg-gray-50">
+                    <tr class="px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th colspan="3" style="text-align: center;">App</th>
+                      <th colspan="3" class="border-l border-r" style="text-align: center;">DB (Postgres)</th>
+                      <th colspan="3" style="text-align: center;">Relay</th>
+                    </tr>
+                  </thead>
+                  <thead class="bg-gray-50">
+                    <tr class="bg-gray-50 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2">Difference</th>
+                    </tr>
+                  </thead>
+                  {{ range .Data }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Stats -}}
+                    <td class="p-2">{{ .app.Before.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .app.After.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .app.Difference.CPUUsageUser }} ({{ percentDiffUInt .app.Before.CPUUsageUser .app.After.CPUUsageUser }}%)</td>
+                    <td class="p-2">{{ .postgres.Before.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .postgres.After.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .postgres.Difference.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .fakerelay.Before.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .fakerelay.After.CPUUsageUser }}</td>
+                    <td class="p-2">{{ .fakerelay.Difference.CPUUsageUser }}</td>
+                    {{- end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow bg-gray-50 overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <h3 class="text-gray-500 text-sm p-2 font-medium uppercase tracking-wider">CPU System</h3>
+                <table class="min-w-full divide-y divide-gray-200 text-xs bg-white">
+                  <thead class="bg-gray-50">
+                    <tr class="px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th colspan="3" style="text-align: center;">App</th>
+                      <th colspan="3" class="border-l border-r" style="text-align: center;">DB (Postgres)</th>
+                      <th colspan="3" style="text-align: center;">Relay</th>
+                    </tr>
+                  </thead>
+                  <thead class="bg-gray-50">
+                    <tr class="bg-gray-50 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2">Difference</th>
+                    </tr>
+                  </thead>
+                  {{ range .Data }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Stats -}}
+                    <td class="p-2">{{ .app.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .app.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .app.Difference.CPUUsageSystem }} ({{ percentDiffUInt .app.Before.CPUUsageSystem .app.After.CPUUsageSystem }}%)</td>
+                    <td class="p-2">{{ .postgres.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .postgres.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .postgres.Difference.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.Difference.CPUUsageSystem }}</td>
+                    {{- end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow bg-gray-50 overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <h3 class="text-gray-500 text-sm p-2 font-medium uppercase tracking-wider">CPU Total</h3>
+                <table class="min-w-full divide-y divide-gray-200 text-xs bg-white">
+                  <thead class="bg-gray-50">
+                    <tr class="px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th colspan="3" style="text-align: center;">App</th>
+                      <th colspan="3" class="border-l border-r" style="text-align: center;">DB (Postgres)</th>
+                      <th colspan="3" style="text-align: center;">Relay</th>
+                    </tr>
+                  </thead>
+                  <thead class="bg-gray-50">
+                    <tr class="bg-gray-50 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th> </th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2 border-r">Difference</th>
+                      <th class="p-2">Before</th>
+                      <th class="p-2">After</th>
+                      <th class="p-2">Difference</th>
+                    </tr>
+                  </thead>
+                  {{ range .Data }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Stats -}}
+                    <td class="p-2">{{ .app.Before.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .app.After.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .app.Difference.CPUUsageTotal }} ({{ percentDiffUInt .app.Before.CPUUsageTotal .app.After.CPUUsageTotal }}%)</td>
+                    <td class="p-2">{{ .postgres.Before.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .postgres.After.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .postgres.Difference.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .fakerelay.Before.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .fakerelay.After.CPUUsageTotal }}</td>
+                    <td class="p-2">{{ .fakerelay.Difference.CPUUsageTotal }}</td>
+                    {{- end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+      <section class="px-12 mt-12">
+        <h2 id="network" class="py-4 text-primary font-medium text-lg">Network Traffic</h2>
+
+        <div class="flex flex-col mt-4">
+          <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div class="shadow bg-gray-50 overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                <h3 class="text-gray-500 text-sm p-2 font-medium uppercase tracking-wider">Bytes In</h3>
+                <table class="min-w-full divide-y divide-gray-200 text-xs bg-white">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col"> </th>
+                      <th scope="col" class="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r">
+                        Total
+                      </th>
+                      <th scope="col" class="p-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Mean
+                      </th>
+                    </tr>
+                  </thead>
+                  {{ range .Data }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Metrics -}}
+                    <td class="p-2">{{ .BytesIn.Total }}</td>
+                    <td class="p-2">{{ .BytesIn.Mean }}</td>
+                    {{- end }}
+                  </tr>
+                  {{ end }}
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="px-12 mt-12">
+        <h2 id="debug" class="py-4 text-primary font-medium text-lg">Debugging</h2>
+
+        <details class="text-xs cursor-pointer my-2">
+          <summary>Debugging data</summary>
+          <div class="p-2 border rounded">
+            {{ range .Data }}
+            <p>{{ .Name }}</p>
+            <pre>{{ .TestResult.FirstAppResponse }}</pre>
+            {{ end }}
+            <hr>
+            {{ range .Data }}
+            {{ if .TestResult.RelayMetrics.FirstRequest }}
+            <p>{{ .Name }}</p>
+            <pre>{{ .TestResult.RelayMetrics.FirstRequest }}</pre>
+            {{ end }}
+            {{ end }}
+            <hr>
+             {{ range .Data }}
+            <p>{{ .Name }}</p>
+            {{ with .TestResult.LoadGenCommand -}}
+            <pre>{{ . }}</pre>
+            {{- end }}
+            {{- end }}
+            <hr>
+            {{ range .Data }}
+            <details class="text-xs cursor-pointer my-2">
+              <summary>Percentile Table: <b>{{ .Name }}</b></summary>
+              <div style="display: flex; max-height: 30em; overflow-y: scroll;">
+                <pre class="hdr" data-name="{{ .Name }}">{{ .HDR }}</pre>
+                <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('hdr', '{{ .Name }}')">Copy
+                  {{ .Name }} HDR</button>
+              </div>
+            </details>
+            <details class="text-xs cursor-pointer my-2">
+              <summary>Raw JSON: <b>{{ .Name }}</b></summary>
+              <div style="display: flex; max-height: 30em; overflow-y: scroll;">
+                <pre style="width: 400px;" class="json jsonFormat" data-name="{{ .Name }}">{{ .TestResultJSON }}</pre>
+                <button style="margin-top: 5px;height: 25px;margin-left: 10px;" onclick="copy('json', '{{ .Name }}')">Copy
+                  {{ .Name }} JSON</button>
+              </div>
+            </details>
+            {{ end }}
+          </div>
+        </details>
+      </section>
+
+      <div id="snackbar"></div>
+      <hr>
+      <footer class="p-4">
+        <p class="text-xs">Report generated with the <a class="text-blue-500" target="_blank"
+            href="https://github.com/getsentry/sentry-sdk-benchmark"><code>sentry-sdk-benchmark</code></a> tool.</p>
+      </footer>
+    </main>
+  </div>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
 /**
- * Default styles for the dygraphs charting library.
+ * Styles for the dygraphs charting library.
  */
 
 .dygraph-legend {
@@ -47,6 +47,9 @@
 .dygraph-roller {
   position: absolute;
   z-index: 10;
+  border: 1px solid rgb(61, 61, 61);
+  border-radius: 3px;
+  text-align: center;
 }
 
 /* This class is shared by all annotations, including those with icons */
@@ -86,6 +89,8 @@
   font-weight: bold;
   z-index: 10;
   text-align: center;
+  padding: 0 4em;
+  color: gray;
   /* font-size: based on titleHeight option */
 }
 
