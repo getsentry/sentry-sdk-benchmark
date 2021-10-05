@@ -26,7 +26,7 @@ var reportCSS []template.CSS
 var reportJS []template.HTML
 
 func init() {
-	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css"})
+	reportCSS = getCSSAssets([]string{"report.css", "dygraph.css", "tailwind.min.css"})
 	reportJS = getJSAssets([]string{"dygraph.min.js", "script.js"})
 }
 
