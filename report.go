@@ -154,6 +154,7 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 	// TODO(abhi): have a global list of ids we can refer to.
+	// TODO(vladan): make a chart width responsive 100%
 	reportFile.LatencyPlot, err = GenerateChart(
 		"latencyTimePlot",
 		plotData.Data,
