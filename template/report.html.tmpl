@@ -75,49 +75,47 @@
         <div>
           {{ with .LoadGenOptions }}
           <div class="flex flex-col">
-          <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="align-middle inline-block min-w-full sm:px-6 lg:px-8">
-              <div class="shadow overflow-hidden border-b border-gray-200 rounded-b-lg">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Target URL
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Duration
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Requests
-                      </th>
-                      <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <abbr title="Requests Per Second">RPS</abbr>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg- white divide-y divide-gray-200">
-                    <tr>
-                      <td class="px-6 py-2 whitespace-nowrap">
-                        {{ .TargetURL }}
-                      </td>
-                      <td class="px-6 py-2 whitespace-nowrap">
-                        {{ round .TestDuration }}
-                      </td>
-                      <td class="px-6 py-2 whitespace-nowrap">
-                        {{ numRequests .RPS .TestDuration }}
-                      </td>
-                      <td class="px-6 py-2 whitespace-nowrap">
-                        {{ .RPS }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div class="align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                <div class="shadow overflow-hidden border-b border-gray-200 rounded-b-lg">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Target URL
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Duration
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Requests
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <abbr title="Requests Per Second">RPS</abbr>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg- white divide-y divide-gray-200">
+                      <tr>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ .TargetURL }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ round .TestDuration }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ numRequests .RPS .TestDuration }}
+                        </td>
+                        <td class="px-6 py-2 whitespace-nowrap">
+                          {{ .RPS }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-          
-        
           {{ end }}
           {{ range .Data }}
           {{ if .ThroughputDifferent }}
@@ -330,7 +328,7 @@
                       <th class="p-2">Difference</th>
                     </tr>
                   </thead>
-                  
+
                   {{ range .Data }}
                   <tr>
                     <td class="text-left p-2">{{ .Name }}</td>
@@ -438,27 +436,26 @@
                     </tr>
                   </thead>
                   {{ range .Data }}
-                    <tr>
-                      <td class="text-left p-2">{{ .Name }}</td>
-                      {{ with .TestResult.Stats -}}
-                      <td class="p-2">{{ .app.Before.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .app.After.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .app.Difference.CPUUsageSystem }} ({{ percentDiffUInt .app.Before.CPUUsageSystem .app.After.CPUUsageSystem }}%)</td>
-                      <td class="p-2">{{ .postgres.Before.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .postgres.After.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .postgres.Difference.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .fakerelay.Before.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .fakerelay.After.CPUUsageSystem }}</td>
-                      <td class="p-2">{{ .fakerelay.Difference.CPUUsageSystem }}</td>
-                      {{- end }}
-                    </tr>
-                    {{ end }}
+                  <tr>
+                    <td class="text-left p-2">{{ .Name }}</td>
+                    {{ with .TestResult.Stats -}}
+                    <td class="p-2">{{ .app.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .app.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .app.Difference.CPUUsageSystem }} ({{ percentDiffUInt .app.Before.CPUUsageSystem .app.After.CPUUsageSystem }}%)</td>
+                    <td class="p-2">{{ .postgres.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .postgres.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .postgres.Difference.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.Before.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.After.CPUUsageSystem }}</td>
+                    <td class="p-2">{{ .fakerelay.Difference.CPUUsageSystem }}</td>
+                    {{- end }}
+                  </tr>
+                  {{ end }}
                 </table>
               </div>
             </div>
           </div>
         </div>
-
 
         <div class="flex flex-col mt-4">
           <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -509,7 +506,6 @@
             </div>
           </div>
         </div>
-
 
       </section>
       <section class="px-12 mt-12">
@@ -596,15 +592,12 @@
 
       <div id="snackbar"></div>
       <hr>
-        <footer class="p-4">
-          <p class="text-xs">Report generated with the <a class="text-blue-500" target="_blank"
-              href="https://github.com/getsentry/sentry-sdk-benchmark"><code>sentry-sdk-benchmark</code></a> tool.</p>
-        </footer>
+      <footer class="p-4">
+        <p class="text-xs">Report generated with the <a class="text-blue-500" target="_blank"
+            href="https://github.com/getsentry/sentry-sdk-benchmark"><code>sentry-sdk-benchmark</code></a> tool.</p>
+      </footer>
     </main>
-    
   </div>
-
-
 </body>
 
 </html>
