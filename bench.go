@@ -159,6 +159,8 @@ type DockerComposeData struct {
 	App            App
 	ResultPath     string
 	NeedsRelay     bool
+	Language       string
+	Framework      string
 }
 
 type App struct {
@@ -212,11 +214,10 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 	log.Print("START")
 	defer log.Print("END")
 
-	projectName := fmt.Sprintf("%s-%s-%s-%s",
-		filepath.Base(filepath.Dir(benchmarkCfg.Platform)),
-		filepath.Base(benchmarkCfg.Platform),
-		runCfg.Name,
-		benchmarkCfg.ID)
+	language := filepath.Base(filepath.Dir(benchmarkCfg.Platform))
+	framework := filepath.Base(benchmarkCfg.Platform)
+
+	projectName := fmt.Sprintf("%s-%s-%s-%s", language, framework, runCfg.Name, benchmarkCfg.ID)
 	contextPath := path.Join(benchmarkCfg.Platform, runCfg.Name)
 	resultPath := path.Join(append(
 		strings.Split(benchmarkCfg.Platform, string(os.PathSeparator))[1:],
@@ -236,6 +237,8 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 		},
 		ResultPath: resultPath,
 		NeedsRelay: runCfg.NeedsRelay,
+		Language:   language,
+		Framework:  framework,
 	})
 	if err != nil {
 		panic(err)
