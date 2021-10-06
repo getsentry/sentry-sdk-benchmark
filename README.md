@@ -61,7 +61,7 @@ The load generator is also responsible for orchestrating all test steps and coll
 
 ## Usage
 
-You will need `docker` and `go`.
+You will need a recent version of `docker` (with [Docker Compose V2](https://docs.docker.com/compose/cli-command/#installing-compose-v2)) and `go` (v1.17 or later).
 
 1. Compile the benchmark runner:
 
