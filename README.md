@@ -94,13 +94,13 @@ Use the commands below with care as some of them may affect resources that were 
 List and remove all Docker Compose projects, including containers, images, and networks:
 
 ```shell
-for name in $(docker compose ls -a -q); do docker compose -p $name down --remove-orphans --rmi local; done
+docker compose ls -a -q | xargs -tI '{}' docker compose -p '{}' down --remove-orphans --rmi local
 ```
 
 List and remove all Docker containers:
 
 ```shell
-docker rm -f $(docker ps -a -q)
+docker ps -a -q | xargs -tn10 docker rm -f
 ```
 
 Remove all unused Docker networks:
@@ -112,13 +112,13 @@ docker network prune
 Remove images with `sentry-sdk-benchmark` label:
 
 ```shell
-docker rmi $(docker images -f "label=io.sentry.sentry-sdk-benchmark" -q)
+docker images -f "label=io.sentry.sentry-sdk-benchmark" -q | sort -u | xargs -tn10 docker rmi -f
 ```
 
 Remove all dangling (untagged) images:
 
 ```shell
-docker rmi $(docker images -f "dangling=true" -q)
+docker images -f "dangling=true" -q | xargs -tn10 docker rmi -f
 ```
 
 </blockquote>
