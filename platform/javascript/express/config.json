@@ -2,6 +2,6 @@
   "target": {
     "path": "/updates?queries=10"
   },
-  "rps": 100,
+  "rps": 10,
   "duration": "30s"
 }
