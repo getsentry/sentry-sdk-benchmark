@@ -1,15 +1,3 @@
-const opentelemetry = require("@opentelemetry/sdk-node");
-const { getNodeAutoInstrumentations } = require("@opentelemetry/auto-instrumentations-node");
-const { ZipkinExporter } = require("@opentelemetry/exporter-zipkin");
-const { BatchSpanProcessor } = require("@opentelemetry/tracing");
-
-const sdk = new opentelemetry.NodeSDK({
-  traceExporter: new BatchSpanProcessor(new ZipkinExporter()),
-  instrumentations: [getNodeAutoInstrumentations()]
-});
-
-sdk.start()
-
 /**
  * Module dependencies.
  */
