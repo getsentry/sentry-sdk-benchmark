@@ -3,10 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@opentelemetry/api": "^1.0.3",
-    "@opentelemetry/auto-instrumentations-node": "^0.25.0",
-    "@opentelemetry/exporter-zipkin": "^1.0.0",
-    "@opentelemetry/sdk-node": "^0.26.0",
     "body-parser": "1.19.0",
     "dateformat": "3.0.3",
     "escape-html": "1.0.3",
