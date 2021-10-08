@@ -110,11 +110,15 @@ func report(results []*RunResult) {
 		if name == "baseline" {
 			reportFile.Latency[0].Metrics = tr.Latencies
 		} else {
-			reportFile.Latency = append(reportFile.Latency, Latency{
+			latency := Latency{
 				Name:    name,
-				Diff:    getLatencyDiff(baselineResult.Latencies, tr.Latencies),
 				Metrics: tr.Latencies,
-			})
+			}
+			if baselineResult.Metrics != nil {
+				latency.Diff = getLatencyDiff(baselineResult.Latencies, tr.Latencies)
+			}
+			reportFile.Latency = append(reportFile.Latency, latency)
+
 		}
 
 		if math.Round(tr.Throughput) != math.Round(tr.Rate) {
