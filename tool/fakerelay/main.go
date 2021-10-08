@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"expvar"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -45,8 +47,26 @@ func main() {
 		start := time.Now()
 		requestCount.Add(1)
 
+		chunked := len(r.TransferEncoding) > 0 && r.TransferEncoding[0] == "chunked"
+		if chunked {
+			// Remove "chunked" such that httputil.DumpRequest will
+			// dump a regular body, making it easier to read JSON
+			// values for debugging.
+			r.TransferEncoding = r.TransferEncoding[1:]
+			b, err := io.ReadAll(r.Body)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			r.Body = io.NopCloser(bytes.NewReader(b))
+			r.ContentLength = int64(len(b))
+		}
 		if r.ContentLength < 0 {
-			panic("unexpected Content-Length")
+			err := fmt.Errorf("unexpected Content-Length: %d", r.ContentLength)
+			fmt.Fprintln(os.Stderr, err)
+			http.Error(w, err.Error(), 500)
+			return
 		}
 		bytesReceived.Add(r.ContentLength)
 
