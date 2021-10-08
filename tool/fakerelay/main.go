@@ -45,9 +45,9 @@ func main() {
 		start := time.Now()
 		requestCount.Add(1)
 
-		// if r.ContentLength < 0 {
-		// 	panic("unexpected Content-Length")
-		// }
+		if r.ContentLength < 0 {
+			panic("unexpected Content-Length")
+		}
 		bytesReceived.Add(r.ContentLength)
 
 		firstRequestOnce.Do(func() {
