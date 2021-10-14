@@ -11,4 +11,4 @@ COPY otel.jar otel.jar
 
 EXPOSE 8080
 
-CMD ["java", "-javaagent:otel.jar", "-server", "-XX:+UseNUMA", "-XX:+UseParallelGC", "-Dotel.traces.exporter=zipkin", "-jar", "app.jar", "--spring.profiles.active=jpa"]
+CMD ["java", "-javaagent:otel.jar", "-server", "-XX:+UseNUMA", "-XX:+UseParallelGC", "-Dotel.traces.exporter=zipkin", "-Dlogging.level.root=OFF", "-jar", "app.jar", "--spring.profiles.active=jpa"]
