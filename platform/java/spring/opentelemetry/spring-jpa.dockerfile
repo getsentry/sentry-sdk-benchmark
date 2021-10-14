@@ -3,11 +3,13 @@ WORKDIR /spring
 COPY src src
 COPY pom.xml pom.xml
 RUN mvn package -q
+RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.6.2/opentelemetry-javaagent-all.jar --output otel.jar
+COPY otel.jar otel.jar
 
 FROM openjdk:11.0.3-jdk-slim
 WORKDIR /spring
 COPY --from=maven /spring/target/hello-spring-1.0-SNAPSHOT.jar app.jar
-COPY otel.jar otel.jar
+COPY --from=maven /spring/otel.jar otel.jar
 
 EXPOSE 8080
 
