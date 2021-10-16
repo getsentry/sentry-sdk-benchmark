@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class World extends Model {
 
-	protected $table = 'World';
+	protected $table = 'world';
 
 	public $timestamps = false;
 }
