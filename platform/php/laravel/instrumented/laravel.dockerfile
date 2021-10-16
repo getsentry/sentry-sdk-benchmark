@@ -22,7 +22,6 @@ RUN mkdir -p /laravel/bootstrap/cache /laravel/storage/logs /laravel/storage/fra
 RUN chmod -R 777 /laravel
 
 RUN composer install --optimize-autoloader --classmap-authoritative --no-dev --quiet
-RUN php artisan optimize
 
 EXPOSE 8080
 
@@ -30,5 +29,4 @@ EXPOSE 8080
 # RUN echo "catch_workers_output = yes" >> /etc/php/8.0/fpm/php-fpm.conf
 
 RUN mkdir -p /run/php
-CMD /usr/sbin/php-fpm8.0 --fpm-config /etc/php/8.0/fpm/php-fpm.conf && nginx -c /laravel/deploy/nginx.conf
-
+CMD php artisan optimize && /usr/sbin/php-fpm8.0 --fpm-config /etc/php/8.0/fpm/php-fpm.conf && nginx -c /laravel/deploy/nginx.conf
