@@ -12,6 +12,5 @@ source 'https://rubygems.org' do
 
   gem 'opentelemetry-sdk'
   gem 'opentelemetry-exporter-zipkin'
-  gem 'opentelemetry-instrumentation-pg'
   gem 'opentelemetry-instrumentation-rails'
 end

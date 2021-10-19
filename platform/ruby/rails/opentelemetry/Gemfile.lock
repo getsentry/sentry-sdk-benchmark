@@ -114,9 +114,6 @@ GEM
       opentelemetry-instrumentation-base (~> 0.18.3)
     opentelemetry-instrumentation-base (0.18.3)
       opentelemetry-api (~> 1.0)
-    opentelemetry-instrumentation-pg (0.19.1)
-      opentelemetry-api (~> 1.0)
-      opentelemetry-instrumentation-base (~> 0.18.3)
     opentelemetry-instrumentation-rack (0.20.0)
       opentelemetry-api (~> 1.0)
       opentelemetry-instrumentation-base (~> 0.18.3)
@@ -198,7 +195,6 @@ DEPENDENCIES
   mysql2 (= 0.5.3)!
   oj (~> 3.11.2)!
   opentelemetry-exporter-zipkin!
-  opentelemetry-instrumentation-pg!
   opentelemetry-instrumentation-rails!
   opentelemetry-sdk!
   pg (= 1.2.3)!

@@ -15,8 +15,5 @@ COPY . /rails/
 
 ENV RAILS_ENV=production_postgresql
 
-# need this for ::PG instrumentation to work
-ENV RAILS_GROUPS=postgresql
-
 ENV PORT=8080
 CMD ["rails", "server"]
