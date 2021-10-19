@@ -51,7 +51,6 @@ function drawChart() {
 
   new Dygraph(document.getElementById('percentileLatency'), data, {
     title: 'Latency by Percentile Distribution',
-    logscale: true,
     ylabel: 'Latency (ms)',
     xlabel: 'Percentile',
     legend: 'always',
