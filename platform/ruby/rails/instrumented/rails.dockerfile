@@ -13,6 +13,8 @@ RUN bundle install --jobs=8
 
 COPY . /rails/
 
+RUN bundle add sentry-rails --source 'https://rubygems.org' --version '4.7.3'
+
 ENV RAILS_ENV=production_postgresql
 ENV PORT=8080
 CMD ["rails", "server"]

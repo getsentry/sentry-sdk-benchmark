@@ -15,5 +15,9 @@ COPY . /rails/
 
 ENV RAILS_ENV=production_postgresql
 
+RUN bundle add opentelemetry-sdk --source 'https://rubygems.org' --version '1.0.0' && \
+    bundle add opentelemetry-instrumentation-rails --source 'https://rubygems.org' --version '0.19.4' && \
+    bundle add opentelemetry-exporter-zipkin --source 'https://rubygems.org' --version '0.19.2'
+
 ENV PORT=8080
 CMD ["rails", "server"]
