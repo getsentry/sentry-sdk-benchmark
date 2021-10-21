@@ -13,36 +13,49 @@ func sanityCheck(r []ResultData) {
 	if len(r) == 0 {
 		panic("no results")
 	}
+	var errors []error
 	for _, rr := range r {
-		sanityCheckOne(rr)
+		for _, e := range sanityCheckOne(rr) {
+			errors = append(errors, e)
+			log.Print(e)
+		}
+	}
+	if n := len(errors); n > 0 {
+		panic(fmt.Errorf("%d failures", n))
 	}
 }
 
-func sanityCheckOne(r ResultData) {
+func sanityCheckOne(r ResultData) []error {
 	log.Print("Sanity check: ", r.Name)
+	var errors []error
 
-	sanityCheckTargetApp(r)
+	errors = append(errors, sanityCheckTargetApp(r)...)
 
-	sanityCheckLoadGenerator(r)
+	errors = append(errors, sanityCheckLoadGenerator(r)...)
 
 	switch r.Name {
 	case "baseline":
-		sanityCheckFakeRelayBaseline(r)
+		errors = append(errors, sanityCheckFakeRelayBaseline(r)...)
 	case "instrumented":
-		sanityCheckFakeRelayInstrumented(r)
+		errors = append(errors, sanityCheckFakeRelayInstrumented(r)...)
 	case "opentelemetry":
-		sanityCheckFakeRelayOpenTelemetry(r)
+		errors = append(errors, sanityCheckFakeRelayOpenTelemetry(r)...)
 	default:
-		panic(fmt.Errorf("unexpected name: %q", r.Name))
+		errors = append(errors, fmt.Errorf("unexpected name: %q", r.Name))
 	}
 
-	log.Print("Sanity check: OK")
+	if len(errors) == 0 {
+		log.Print("Sanity check: OK")
+	} else {
+		log.Print("Sanity check: FAIL")
+	}
+	return errors
 }
 
-func sanityCheckTargetApp(r ResultData) {
+func sanityCheckTargetApp(r ResultData) []error {
 	i := strings.Index(r.TestResult.FirstAppResponse, "\r\n\r\n")
 	if i < 0 {
-		panic(fmt.Errorf("invalid HTTP response: %q", r.TestResult.FirstAppResponse))
+		return []error{fmt.Errorf("invalid HTTP response: %q", r.TestResult.FirstAppResponse)}
 	}
 	body := r.TestResult.FirstAppResponse[i:]
 	dec := json.NewDecoder(strings.NewReader(body))
@@ -51,51 +64,57 @@ func sanityCheckTargetApp(r ResultData) {
 		RandomNumber int
 	}
 	if err := dec.Decode(&payload); err != nil {
-		panic(err)
+		return []error{err}
 	}
 	if len(payload) != 10 {
-		panic(fmt.Errorf("first app response returned %d items, want 10", len(payload)))
+		return []error{fmt.Errorf("first app response returned %d items, want 10", len(payload))}
 	}
-	last := payload[0]
-	for i, item := range payload[1:] {
-		if item == last {
-			panic(fmt.Errorf("repeated payload item %d: %+v", i, item))
-		}
-	}
+	return nil
 }
 
-func sanityCheckLoadGenerator(r ResultData) {
+func sanityCheckLoadGenerator(r ResultData) []error {
+	var errors []error
 	if r.ThroughputDifferent {
-		panic("unexpected throughput")
+		errors = append(errors, fmt.Errorf("unexpected throughput"))
 	}
 	if n := len(r.TestResult.Metrics.Errors); n > 0 {
-		panic(fmt.Errorf("load generator observed %d errors", n))
+		errors = append(errors, fmt.Errorf("load generator observed %d errors", n))
 	}
+	return errors
 }
 
-func sanityCheckFakeRelayBaseline(r ResultData) {
+func sanityCheckFakeRelayBaseline(r ResultData) []error {
+	var errors []error
 	var empty RelayMetrics
 	if m := r.TestResult.RelayMetrics; m != empty {
-		panic(fmt.Errorf("unexpected relay metrics: %q", m))
+		errors = append(errors, fmt.Errorf("unexpected relay metrics: %q", m))
 	}
+	return errors
 }
 
-func sanityCheckFakeRelayInstrumented(r ResultData) {
+func sanityCheckFakeRelayInstrumented(r ResultData) []error {
+	var errors []error
 	m := r.TestResult.RelayMetrics
 	if got := m.BytesReceived; got <= 0 {
-		panic(fmt.Errorf("fakerelay got %d bytes, want >0", got))
+		errors = append(errors, fmt.Errorf("fakerelay got %d bytes, want >0", got))
 	}
 	// TODO: we cannot assert on the exact number of requests
 	// because r.TestResult.Requests is the number of requests sent
 	// during the test, while m.Requests is the number of requests
 	// received by fakerelay including the initial readiness check
 	// and warmup phases.
+	// In addition to that, there's a race between loadgen fetching data
+	// from fakerelay and the target app making requests to fakerelay. It
+	// means that m.Requests may not include all requests that the target
+	// app would eventually make after the fakerelay metrics have been
+	// fetched.
 	if got, want := m.Requests, int(r.TestResult.Requests); got < want {
-		panic(fmt.Errorf("fakerelay got %d requests, want >=%d", got, want))
+		log.Printf("warning: fakerelay got %d requests, want >=%d", got, want)
 	}
 	fr := m.FirstRequest
 	if !strings.HasPrefix(fr, "POST /api/1/envelope") {
-		panic(fmt.Errorf("fakerelay bad first request"))
+		errors = append(errors, fmt.Errorf("fakerelay bad first request"))
+		return errors
 	}
 	re := regexp.MustCompile(`  "transaction": "([^"]+)",`)
 	log.Printf("transaction: %s", re.FindStringSubmatch(fr)[1])
@@ -109,22 +128,26 @@ func sanityCheckFakeRelayInstrumented(r ResultData) {
 	}
 	log.Printf("spans (%d): %s", len(spans), strings.Join(ops, ", "))
 	if len(spans) < 20 {
-		panic(fmt.Errorf("too few spans (%d), missing database instrumentation?", len(spans)))
+		errors = append(errors, fmt.Errorf("too few spans (%d), missing database instrumentation?", len(spans)))
 	}
+	return errors
 }
 
-func sanityCheckFakeRelayOpenTelemetry(r ResultData) {
+func sanityCheckFakeRelayOpenTelemetry(r ResultData) []error {
+	var errors []error
 	m := r.TestResult.RelayMetrics
 	if got := m.BytesReceived; got <= 0 {
-		panic(fmt.Errorf("fakerelay got %d bytes, want >0", got))
+		errors = append(errors, fmt.Errorf("fakerelay got %d bytes, want >0", got))
 	}
 	fr := m.FirstRequest
 	if !strings.HasPrefix(fr, "POST /api/v2/spans") {
-		panic(fmt.Errorf("fakerelay bad first request"))
+		errors = append(errors, fmt.Errorf("fakerelay bad first request"))
+		return errors
 	}
 	i := strings.Index(fr, "\r\n\r\n")
 	if i < 0 {
-		panic(fmt.Errorf("invalid HTTP request: %q", fr))
+		errors = append(errors, fmt.Errorf("invalid HTTP request: %q", fr))
+		return errors
 	}
 	body := fr[i:]
 	dec := json.NewDecoder(strings.NewReader(body))
@@ -134,10 +157,12 @@ func sanityCheckFakeRelayOpenTelemetry(r ResultData) {
 	}
 	var payload []OpenTelemetrySpan
 	if err := dec.Decode(&payload); err != nil {
-		panic(err)
+		errors = append(errors, err)
+		return errors
 	}
 	if len(payload) == 0 {
-		panic("missing spans")
+		errors = append(errors, fmt.Errorf("missing spans"))
+		return errors
 	}
 	firstTraceID := payload[0].TraceID
 	var nclient, nserver, nother int
@@ -157,12 +182,13 @@ func sanityCheckFakeRelayOpenTelemetry(r ResultData) {
 	}
 	log.Printf("spans (%d): %s", len(kinds), strings.Join(kinds, ", "))
 	if nclient < 20 {
-		panic(fmt.Errorf("too few CLIENT spans (%d), missing database instrumentation?", nclient))
+		errors = append(errors, fmt.Errorf("too few CLIENT spans (%d), missing database instrumentation?", nclient))
 	}
 	if nserver < 1 {
-		panic(fmt.Errorf("too few SERVER spans (%d), missing request handler instrumentation?", nserver))
+		errors = append(errors, fmt.Errorf("too few SERVER spans (%d), missing request handler instrumentation?", nserver))
 	}
 	if nother > 0 {
 		log.Printf("warning: got %d spans that are neither SERVER (incoming request) nor CLIENT (outgoing database call)", nother)
 	}
+	return errors
 }
