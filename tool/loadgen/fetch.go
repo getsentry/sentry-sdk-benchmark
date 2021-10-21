@@ -106,6 +106,10 @@ func warmUp(url string, rps uint, d time.Duration) {
 
 // test sends test traffic to the target web app and returns metrics.
 func test(url string, rps uint, d time.Duration) FetchResult {
-	log.Printf("Testing target for %v", d)
+	if d <= 0 {
+		log.Print("Testing target forever")
+	} else {
+		log.Printf("Testing target for %v", d)
+	}
 	return fetch(url, rps, d)
 }
