@@ -35,6 +35,7 @@ type PlatformConfig struct {
 	}
 	RPS      uint16
 	Duration string
+	MaxWait  string // optional, use for platforms that are notably slow to boot
 }
 
 func (cfg PlatformConfig) Validate() error {
@@ -50,6 +51,11 @@ func (cfg PlatformConfig) Validate() error {
 	}
 	if d <= 0 {
 		return fmt.Errorf(`platform config nonpositive "duration": %q`, cfg.Duration)
+	}
+	if cfg.MaxWait != "" {
+		if _, err := time.ParseDuration(cfg.MaxWait); err != nil {
+			return fmt.Errorf(`platform config invalid "maxwait": %q: %s`, cfg.MaxWait, err)
+		}
 	}
 	return nil
 }
