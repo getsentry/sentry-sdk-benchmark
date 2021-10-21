@@ -67,6 +67,8 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	flag.BoolVar(&openBrowser, "browser", true, "open report in browser")
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		printUsage()
