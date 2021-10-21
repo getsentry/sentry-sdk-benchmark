@@ -44,8 +44,12 @@ func (cfg PlatformConfig) Validate() error {
 	if cfg.RPS == 0 {
 		return fmt.Errorf(`platform config missing "rps"`)
 	}
-	if cfg.Duration == "" {
-		return fmt.Errorf(`platform config missing "duration"`)
+	d, err := time.ParseDuration(cfg.Duration)
+	if err != nil {
+		return fmt.Errorf(`platform config invalid "duration": %q: %s`, cfg.Duration, err)
+	}
+	if d <= 0 {
+		return fmt.Errorf(`platform config nonpositive "duration": %q`, cfg.Duration)
 	}
 	return nil
 }
