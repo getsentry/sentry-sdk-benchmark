@@ -181,8 +181,8 @@ func sanityCheckFakeRelayOpenTelemetry(r ResultData) []error {
 		}
 	}
 	log.Printf("spans (%d): %s", len(kinds), strings.Join(kinds, ", "))
-	if nclient < 20 {
-		errors = append(errors, fmt.Errorf("too few CLIENT spans (%d), missing database instrumentation?", nclient))
+	if nclient < 20 && nother < 20 {
+		errors = append(errors, fmt.Errorf("too few non-SERVER spans (%d), missing database instrumentation?", nclient))
 	}
 	if nserver < 1 {
 		errors = append(errors, fmt.Errorf("too few SERVER spans (%d), missing request handler instrumentation?", nserver))
