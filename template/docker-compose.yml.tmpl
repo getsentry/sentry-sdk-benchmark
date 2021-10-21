@@ -27,6 +27,9 @@ services:
       {{ with .PlatformConfig.MaxWait -}}
       "-maxwait", "{{ . }}",
       {{- end }}
+      {{ if .SanityCheckMode -}}
+      "-warmup=0",
+      {{- end }}
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",

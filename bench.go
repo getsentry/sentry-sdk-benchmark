@@ -163,14 +163,15 @@ type RunConfig struct {
 }
 
 type DockerComposeData struct {
-	ID             BenchmarkID
-	RunName        string
-	PlatformConfig PlatformConfig
-	App            App
-	ResultPath     string
-	NeedsRelay     bool
-	Language       string
-	Framework      string
+	ID              BenchmarkID
+	RunName         string
+	PlatformConfig  PlatformConfig
+	App             App
+	ResultPath      string
+	NeedsRelay      bool
+	Language        string
+	Framework       string
+	SanityCheckMode bool
 }
 
 type App struct {
@@ -245,10 +246,11 @@ func run(ctx context.Context, benchmarkCfg BenchmarkConfig, runCfg RunConfig) *R
 			ContextPath: contextPath,
 			Dockerfile:  dockerfile,
 		},
-		ResultPath: resultPath,
-		NeedsRelay: runCfg.NeedsRelay,
-		Language:   language,
-		Framework:  framework,
+		ResultPath:      resultPath,
+		NeedsRelay:      runCfg.NeedsRelay,
+		Language:        language,
+		Framework:       framework,
+		SanityCheckMode: sanityCheckMode,
 	})
 	if err != nil {
 		panic(err)

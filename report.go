@@ -191,6 +191,10 @@ func report(results []*RunResult) {
 		panic(err)
 	}
 
+	if sanityCheckMode {
+		sanityCheck(reportFile.Data)
+	}
+
 	if openBrowser {
 		browser.Open(reportPath)
 	}
