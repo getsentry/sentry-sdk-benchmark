@@ -13,6 +13,8 @@ RUN bundle install --jobs=8
 
 COPY . /rails/
 
+# Extra dependencies installed separately to reuse build cache layers from the
+# baseline app.
 RUN bundle add sentry-rails --source 'https://rubygems.org' --version '4.7.3'
 
 ENV RAILS_ENV=production_postgresql

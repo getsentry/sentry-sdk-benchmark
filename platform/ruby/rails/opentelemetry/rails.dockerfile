@@ -15,6 +15,8 @@ COPY . /rails/
 
 ENV RAILS_ENV=production_postgresql
 
+# Extra dependencies installed separately to reuse build cache layers from the
+# baseline app.
 RUN bundle add opentelemetry-sdk --source 'https://rubygems.org' --version '1.0.0' && \
     bundle add opentelemetry-instrumentation-rails --source 'https://rubygems.org' --version '0.19.4' && \
     bundle add opentelemetry-exporter-zipkin --source 'https://rubygems.org' --version '0.19.2'
