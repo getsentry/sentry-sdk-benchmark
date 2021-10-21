@@ -97,6 +97,9 @@ func waitUntilReady(url string, maxWait time.Duration) {
 // with the database is established, caches are warm, any JIT has taken place,
 // etc.
 func warmUp(url string, rps uint, d time.Duration) {
+	if d <= 0 {
+		panic(fmt.Errorf("warmUp: nonpositive duration: %d", d))
+	}
 	log.Printf("Warming up target for %v", d)
 	fetch(url, rps, d)
 }

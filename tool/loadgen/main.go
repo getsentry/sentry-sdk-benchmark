@@ -50,7 +50,9 @@ func main() {
 	log.Printf("Target is %q", options.TargetURL)
 
 	waitUntilReady(options.TargetURL, options.MaxWait)
-	warmUp(options.TargetURL, options.RPS, options.WarmupDuration)
+	if options.WarmupDuration > 0 {
+		warmUp(options.TargetURL, options.RPS, options.WarmupDuration)
+	}
 
 	stats := make(map[string]Stats)
 	if options.CAdvisorURL != "" {
