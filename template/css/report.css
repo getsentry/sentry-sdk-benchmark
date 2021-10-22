@@ -1,0 +1,138 @@
+.hidden {
+  display: none;
+}
+
+dl {
+  margin-top: 0;
+}
+
+dt {
+  float: left;
+  clear: left;
+  width: 120px;
+  text-align: right;
+  font-weight: bold;
+}
+
+dt::after {
+  content: ":";
+}
+
+dd {
+  margin: 0 0 0 130px;
+  padding: 0 0 0.5em 0;
+}
+
+h4 {
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+ul {
+  margin-top: 0;
+}
+
+.runDetails {
+  border: 1px solid black;
+  padding: 10px;
+}
+
+/* The snackbar - position it at the bottom and in the middle of the screen */
+#snackbar {
+  visibility: hidden;
+  min-width: 200px;
+  margin-left: -125px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 100px;
+  padding: 8px;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  bottom: 30px;
+}
+
+/* Show the snackbar when clicking on a button (class added with JavaScript) */
+#snackbar.show {
+  visibility: visible;
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  from {
+    bottom: 0;
+    opacity: 0;
+  }
+
+  to {
+    bottom: 30px;
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeout {
+  from {
+    bottom: 30px;
+    opacity: 1;
+  }
+
+  to {
+    bottom: 0;
+    opacity: 0;
+  }
+}
+
+.errorBox {
+  border: solid #f55459;
+  padding: 0px 20px 15px 20px;
+  width: 600px;
+  background-color: rgba(250, 71, 71, 0.05);
+}
+
+.dygraphChart {
+  margin-top: 20px;
+}
+
+pre {
+  white-space: pre-wrap; /* wrap long lines */
+}
+
+.text-primary {
+  color: #9386a0;
+}
+
+.sentry-background {
+  background: linear-gradient(
+    294.17deg,
+    rgb(47, 25, 55) 35.57%,
+    rgb(69, 38, 80) 92.42%,
+    rgb(69, 38, 80) 92.42%
+  );
+}

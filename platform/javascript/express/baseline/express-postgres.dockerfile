@@ -1,8 +1,10 @@
 FROM node:14.17.3-slim
 
-COPY ./ ./
+WORKDIR /app
 
+COPY package.json ./
 RUN npm install
+COPY . ./
 
 ENV NODE_ENV production
 

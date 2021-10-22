@@ -61,7 +61,7 @@ The load generator is also responsible for orchestrating all test steps and coll
 
 ## Usage
 
-You will need `docker` and `go`.
+You will need a recent version of `docker` (with [Docker Compose V2](https://docs.docker.com/compose/cli-command/#installing-compose-v2)) and `go` (v1.17 or later).
 
 1. Compile the benchmark runner:
 
@@ -94,13 +94,13 @@ Use the commands below with care as some of them may affect resources that were 
 List and remove all Docker Compose projects, including containers, images, and networks:
 
 ```shell
-for name in $(docker compose ls -q); do docker compose -p $name down --remove-orphans --rmi local; done
+docker compose ls -a -q | xargs -tI '{}' docker compose -p '{}' down --remove-orphans --rmi local
 ```
 
 List and remove all Docker containers:
 
 ```shell
-docker rm -f $(docker ps -a -q)
+docker ps -a -q | xargs -tn10 docker rm -f
 ```
 
 Remove all unused Docker networks:
@@ -112,13 +112,13 @@ docker network prune
 Remove images with `sentry-sdk-benchmark` label:
 
 ```shell
-docker rmi $(docker images -f "label=io.sentry.sentry-sdk-benchmark" -q)
+docker images -f "label=io.sentry.sentry-sdk-benchmark" -q | sort -u | xargs -tn10 docker rmi -f
 ```
 
 Remove all dangling (untagged) images:
 
 ```shell
-docker rmi $(docker images -f "dangling=true" -q)
+docker images -f "dangling=true" -q | xargs -tn10 docker rmi -f
 ```
 
 </blockquote>

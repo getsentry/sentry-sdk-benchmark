@@ -4,8 +4,8 @@ networks:
     internal: true # no access to host network / Internet
 services:
   cadvisor:
-    image: "gcr.io/cadvisor/cadvisor:v0.37.5"
     container_name: "cadvisor-{{ .RunName }}-{{ .ID }}"
+    image: "gcr.io/cadvisor/cadvisor:v0.37.5"
     volumes:
     - "/:/rootfs:ro"
     - "/var/run/docker.sock:/var/run/docker.sock:rw"
@@ -13,6 +13,7 @@ services:
     - "/var/lib/docker/:/var/lib/docker:ro"
   loadgen:
     container_name: "loadgen-{{ .RunName }}-{{ .ID }}"
+    image: "sentry-sdk-benchmark/loadgen"
     build:
       context: "tool/loadgen"
       labels:
@@ -22,6 +23,10 @@ services:
     command: [
       "-target", "http://app:8080{{ .PlatformConfig.Target.Path }}",
       "-rps", "{{ .PlatformConfig.RPS }}",
+      "-test", "{{ .PlatformConfig.Duration }}",
+      {{ with .PlatformConfig.MaxWait -}}
+      "-maxwait", "{{ . }}",
+      {{- end }}
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",
@@ -33,6 +38,7 @@ services:
     - "app"
   tfb-database:
     container_name: "postgres-{{ .RunName }}-{{ .ID }}"
+    image: "sentry-sdk-benchmark/postgres"
     build:
       context: "tool/database/postgres"
       dockerfile: "postgres.dockerfile"
@@ -40,6 +46,7 @@ services:
       - "io.sentry.sentry-sdk-benchmark"
   app:
     container_name: "app-{{ .RunName }}-{{ .ID }}"
+    image: "sentry-sdk-benchmark/app-{{ .Language }}-{{ .Framework }}-{{ .RunName }}-{{ .ID }}"
     build:
       context: "{{ .App.ContextPath }}"
       dockerfile: "{{ .App.Dockerfile }}"
@@ -52,8 +59,10 @@ services:
     - "relay"
     environment:
       SENTRY_DSN: "http://sentry@relay:5000/1"
+      OTEL_EXPORTER_ZIPKIN_ENDPOINT: "http://relay:5000/api/v2/spans"
   relay:
     container_name: "fakerelay-{{ .RunName }}-{{ .ID }}"
+    image: "sentry-sdk-benchmark/relay"
     build:
       context: "tool/fakerelay"
       labels:

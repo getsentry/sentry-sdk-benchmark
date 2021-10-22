@@ -16,6 +16,7 @@ import (
 type FetchResult struct {
 	Metrics       *vegeta.Metrics
 	FirstResponse string
+	Res           []*vegeta.Result
 }
 
 // fetch makes rps requests per second to fetch the given URL for the given
@@ -33,6 +34,7 @@ func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.At
 	var responseOnce sync.Once
 
 	var m vegeta.Metrics
+	var r []*vegeta.Result
 	for res := range ch {
 		responseOnce.Do(func() {
 			b, _ := httputil.DumpResponse(&http.Response{
@@ -46,9 +48,11 @@ func fetch(url string, rps uint, duration time.Duration, opts ...func(*vegeta.At
 			result.FirstResponse = string(b)
 		})
 		m.Add(res)
+		r = append(r, res)
 	}
 	m.Close()
 	result.Metrics = &m
+	result.Res = r
 	return result
 }
 
@@ -93,12 +97,19 @@ func waitUntilReady(url string, maxWait time.Duration) {
 // with the database is established, caches are warm, any JIT has taken place,
 // etc.
 func warmUp(url string, rps uint, d time.Duration) {
+	if d <= 0 {
+		panic(fmt.Errorf("warmUp: nonpositive duration: %d", d))
+	}
 	log.Printf("Warming up target for %v", d)
 	fetch(url, rps, d)
 }
 
 // test sends test traffic to the target web app and returns metrics.
 func test(url string, rps uint, d time.Duration) FetchResult {
-	log.Printf("Testing target for %v", d)
+	if d <= 0 {
+		log.Print("Testing target forever")
+	} else {
+		log.Printf("Testing target for %v", d)
+	}
 	return fetch(url, rps, d)
 }

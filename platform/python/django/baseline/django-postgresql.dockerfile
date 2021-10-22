@@ -1,10 +1,10 @@
 FROM python:3.9.1-buster
 
-ADD ./ /django
-
 WORKDIR /django
 
-RUN pip install -r /django/requirements.txt
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+COPY . ./
 
 EXPOSE 8080
 

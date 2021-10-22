@@ -7,17 +7,32 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
+
+type Options struct {
+	TargetURL      string        `json:"target_url"`
+	CAdvisorURL    string        `json:"cadvisor_url"`
+	FakerelayURL   string        `json:"fakerelay_url"`
+	Containers     string        `json:"containers"`
+	MaxWait        time.Duration `json:"max_wait"`
+	WarmupDuration time.Duration `json:"warmup_duration"`
+	TestDuration   time.Duration `json:"test_duration"`
+	RPS            uint          `json:"rps"`
+	Out            string        `json:"out"`
+}
 
 // TestResult is the data collected for a test run.
 type TestResult struct {
 	FirstAppResponse string
 	*vegeta.Metrics
+	LoadGenResult  []*vegeta.Result       `json:"loadgen_result"`
 	Stats          map[string]Stats       `json:"container_stats"`
 	RelayMetrics   map[string]interface{} `json:"relay_metrics,omitempty"`
 	LoadGenCommand string                 `json:"loadgen_command"`
+	Options        Options                `json:"options"`
 }
 
 // save writes reports computed from metrics to the output path.

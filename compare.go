@@ -2,111 +2,73 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
-	"log"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
+	"sort"
 
 	"golang.org/x/perf/benchstat"
 )
 
-const BenchstatPrefix = "Benchmark"
-
 // Compare compares runs from the same platform
-func Compare(s []string) {
-	if len(s) < 2 {
-		log.Fatalf("compare requires more than one result")
-	}
+func Compare(resultPaths []string) {
+	// m maps names like "baseline" and "instrumented" to textual data in
+	// the Go Benchmark Data Format. See https://golang.org/issue/14313.
+	m := make(map[string][]byte)
 
-	builders := make(map[string]*strings.Builder)
-	for _, path := range s {
-		info, err := os.Stat(path)
-		if err != nil {
-			panic(err)
-		}
-
-		if !info.Mode().IsDir() {
-			continue
-		}
-
-		files, err := ioutil.ReadDir(path)
-		if err != nil {
-			panic(err)
-		}
-
-		for _, f := range files {
-			if f.IsDir() {
-				name := f.Name()
-				p := filepath.Join(path, name)
-				if b, ok := builders[name]; ok {
-					addResult(b, p)
-				} else {
-					var sb strings.Builder
-					builders[name] = &sb
-					addResult(&sb, p)
-				}
+	// Walk each directory from resultPaths and collect benchmark data from
+	// all result.json files.
+	for _, root := range resultPaths {
+		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				panic(err)
 			}
-		}
+			if !d.IsDir() {
+				return nil
+			}
+			defer func() {
+				// ignore panics from readTestResult
+				_ = recover()
+			}()
+			tr := readTestResult(filepath.Join(path, "result.json"))
+			m[d.Name()] = append(m[d.Name()], toGoBenchFormat(tr)...)
+			return nil
+		})
 	}
 
-	c := &benchstat.Collection{}
-
-	for key, b := range builders {
-		if err := c.AddFile(key, strings.NewReader(b.String())); err != nil {
-			panic(err)
-		}
+	// Sort names to make output deterministic.
+	var names []string
+	for name := range m {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var c benchstat.Collection
+	for _, name := range names {
+		c.AddConfig(name, m[name])
 	}
 
-	tables := c.Tables()
-	var buf bytes.Buffer
-	benchstat.FormatText(&buf, tables)
-	os.Stdout.Write(buf.Bytes())
+	// Print comparison.
+	benchstat.FormatText(os.Stdout, c.Tables())
 }
 
-func addResult(b *strings.Builder, folderPath string) {
-	tr := readTestResult(filepath.Join(folderPath, "result.json"))
-
-	// Latencies
-	const LatenciesPrefix = BenchstatPrefix + "Latencies"
-	writeStat(b, LatenciesPrefix, "Total", "1", floatToString(tr.Latencies.Total.Seconds()), "s")
-	writeStat(b, LatenciesPrefix, "Mean", "1", intToString(tr.Latencies.Mean.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "50th", "1", intToString(tr.Latencies.P50.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "90th", "1", intToString(tr.Latencies.P90.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "95th", "1", intToString(tr.Latencies.P95.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "99th", "1", intToString(tr.Latencies.P99.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "Max", "1", intToString(tr.Latencies.Max.Milliseconds()), "ms")
-	writeStat(b, LatenciesPrefix, "Min", "1", intToString(tr.Latencies.Min.Milliseconds()), "ms")
-
-	// Other Metrics
-	writeStat(b, BenchstatPrefix, "Duration", "1", intToString(tr.Duration.Milliseconds()), "ms")
-	writeStat(b, BenchstatPrefix, "Wait", "1", intToString(tr.Wait.Milliseconds()), "ms")
-	writeStat(b, BenchstatPrefix, "Requests", "1", uintToString(tr.Requests), "req")
-	writeStat(b, BenchstatPrefix, "Rate", "1", floatToString(tr.Rate), "req/s")
-	writeStat(b, BenchstatPrefix, "Throughput", "1", floatToString(tr.Throughput), "req/s")
-}
-
-func writeStat(b *strings.Builder, prefix, suffix, iterations, value, unit string) {
-	b.WriteString(prefix)
-	b.WriteString(suffix)
-	b.WriteRune(' ')
-	b.WriteString(iterations)
-	b.WriteRune(' ')
-	b.WriteString(value)
-	b.WriteRune(' ')
-	b.WriteString(unit)
-	b.WriteRune('\n')
-}
-
-func intToString(i int64) string {
-	return strconv.FormatInt(i, 10)
-}
-
-func uintToString(i uint64) string {
-	return strconv.FormatUint(i, 10)
-}
-
-func floatToString(f float64) string {
-	return strconv.FormatFloat(f, 'f', -1, 64)
+func toGoBenchFormat(tr TestResult) []byte {
+	var b bytes.Buffer
+	writeln := func(name string, value interface{}, unit string) {
+		fmt.Fprintf(&b, "Benchmark%s 1 %v %s\n", name, value, unit)
+	}
+	writeln("LatenciesTotal", tr.Latencies.Total.Seconds(), "s")
+	writeln("LatenciesMean", tr.Latencies.Mean.Milliseconds(), "ms")
+	writeln("Latencies50th", tr.Latencies.P50.Milliseconds(), "ms")
+	writeln("Latencies90th", tr.Latencies.P90.Milliseconds(), "ms")
+	writeln("Latencies95th", tr.Latencies.P95.Milliseconds(), "ms")
+	writeln("Latencies99th", tr.Latencies.P99.Milliseconds(), "ms")
+	writeln("LatenciesMax", tr.Latencies.Max.Milliseconds(), "ms")
+	writeln("LatenciesMin", tr.Latencies.Min.Milliseconds(), "ms")
+	writeln("Duration", tr.Duration.Milliseconds(), "ms")
+	writeln("Wait", tr.Wait.Milliseconds(), "ms")
+	writeln("Requests", tr.Requests, "req")
+	writeln("Rate", tr.Rate, "req/s")
+	writeln("Throughput", tr.Throughput, "req/s")
+	return b.Bytes()
 }

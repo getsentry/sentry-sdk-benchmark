@@ -67,6 +67,8 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
+	flag.BoolVar(&openBrowser, "browser", true, "open report in browser")
+
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		printUsage()
@@ -86,6 +88,10 @@ func main() {
 		Report(args)
 	case "compare":
 		args = args[1:]
+		if len(args) == 0 {
+			printUsage()
+			os.Exit(2)
+		}
 		Compare(args)
 	case "run":
 		args = args[1:]
@@ -98,8 +104,8 @@ func main() {
 		if len(args) > 1 {
 			openBrowser = false
 		}
-		for _, platform := range args {
-			Benchmark(ctx, BenchmarkConfigFromPlatform(platform))
+		for _, path := range args {
+			Benchmark(ctx, BenchmarkConfigFromPath(path))
 		}
 	}
 }
