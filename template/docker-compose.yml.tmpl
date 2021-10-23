@@ -24,6 +24,9 @@ services:
       "-target", "http://app:8080{{ .PlatformConfig.Target.Path }}",
       "-rps", "{{ .PlatformConfig.RPS }}",
       "-test", "{{ .PlatformConfig.Duration }}",
+      {{ with .PlatformConfig.MaxWait -}}
+      "-maxwait", "{{ . }}",
+      {{- end }}
       "-cadvisor", "http://cadvisor:8080",
       {{ if .NeedsRelay -}}
       "-fakerelay", "http://relay:5000",

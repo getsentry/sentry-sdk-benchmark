@@ -97,12 +97,19 @@ func waitUntilReady(url string, maxWait time.Duration) {
 // with the database is established, caches are warm, any JIT has taken place,
 // etc.
 func warmUp(url string, rps uint, d time.Duration) {
+	if d <= 0 {
+		panic(fmt.Errorf("warmUp: nonpositive duration: %d", d))
+	}
 	log.Printf("Warming up target for %v", d)
 	fetch(url, rps, d)
 }
 
 // test sends test traffic to the target web app and returns metrics.
 func test(url string, rps uint, d time.Duration) FetchResult {
-	log.Printf("Testing target for %v", d)
+	if d <= 0 {
+		log.Print("Testing target forever")
+	} else {
+		log.Printf("Testing target for %v", d)
+	}
 	return fetch(url, rps, d)
 }

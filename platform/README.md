@@ -181,3 +181,23 @@ The steps to add an OpenTelemetry-instrumented app are similar to steps 7 to 10 
     ```
 
 Review your changes one last time, commit and push. Done!
+
+## Optimizing For Build Cache
+
+Building Docker images takes a considerable amount of time.
+
+The baseline apps we take from TFB not always follow [the best practices for writing Dockerfiles][1], and that is okay. While we try to keep as close to upstream as possible, we also try to [minimize the time wasted downloading packages from the Internet][2].
+
+When adding a new platform, we prefer to install SDKs and dependencies required for Sentry and OpenTelemetry instrumentation in a way that allows Docker to share as many build layers as possible across baseline and instrumented apps, even if that means we have to do some unconventional steps.
+
+For example:
+
+- [Python](https://github.com/getsentry/sentry-sdk-benchmark/blob/6cefaf0b60989a909a647dc748008c7aa42d2016/platform/python/django/instrumented/django-postgresql.dockerfile#L7-L8)
+- [JavaScript](https://github.com/getsentry/sentry-sdk-benchmark/blob/6cefaf0b60989a909a647dc748008c7aa42d2016/platform/javascript/express/instrumented/express-postgres.dockerfile#L7-L10)
+- [Ruby](https://github.com/getsentry/sentry-sdk-benchmark/blob/6cefaf0b60989a909a647dc748008c7aa42d2016/platform/ruby/rails/instrumented/rails.dockerfile#L16-L18)
+
+Note, however, that [separating the install steps of the dependencies][3] in common with the baseline app is not always practical. So for some platforms we just accept that and move on (for example [Go](https://github.com/getsentry/sentry-sdk-benchmark/blob/6cefaf0b60989a909a647dc748008c7aa42d2016/platform/go/go-std/instrumented/go-pgx.dockerfile#L9-L10) and [Java](https://github.com/getsentry/sentry-sdk-benchmark/blob/6cefaf0b60989a909a647dc748008c7aa42d2016/platform/java/spring/instrumented/spring-jpa.dockerfile#L4-L5)).
+
+[1]: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+[2]: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#leverage-build-cache
+[3]: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#add-or-copy

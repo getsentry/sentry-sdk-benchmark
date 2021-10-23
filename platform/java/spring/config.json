@@ -3,5 +3,6 @@
     "path": "/updates?queries=10"
   },
   "rps": 10,
-  "duration": "30s"
+  "duration": "30s",
+  "maxwait": "120s"
 }
