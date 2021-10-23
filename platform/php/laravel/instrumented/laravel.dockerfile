@@ -11,17 +11,19 @@ RUN apt-get install -yqq php8.0-mbstring php8.0-xml  > /dev/null
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
+WORKDIR /laravel
+
+COPY composer.json /laravel
+RUN composer install --no-dev --no-scripts --quiet
+
 COPY deploy/conf/* /etc/php/8.0/fpm/
 
 ADD ./ /laravel
-WORKDIR /laravel
 
 RUN if [ $(nproc) = 2 ]; then sed -i "s|pm.max_children = 1024|pm.max_children = 512|g" /etc/php/8.0/fpm/php-fpm.conf ; fi;
 
 RUN mkdir -p /laravel/bootstrap/cache /laravel/storage/logs /laravel/storage/framework/sessions /laravel/storage/framework/views /laravel/storage/framework/cache
 RUN chmod -R 777 /laravel
-
-RUN composer install --optimize-autoloader --classmap-authoritative --no-dev --quiet
 
 EXPOSE 8080
 
@@ -29,4 +31,7 @@ EXPOSE 8080
 # RUN echo "catch_workers_output = yes" >> /etc/php/8.0/fpm/php-fpm.conf
 
 RUN mkdir -p /run/php
-CMD php artisan optimize && /usr/sbin/php-fpm8.0 --fpm-config /etc/php/8.0/fpm/php-fpm.conf && nginx -c /laravel/deploy/nginx.conf
+CMD composer dump-autoload --optimize --classmap-authoritative --no-dev && \
+    php artisan optimize && \
+    /usr/sbin/php-fpm8.0 --fpm-config /etc/php/8.0/fpm/php-fpm.conf && \
+    nginx -c /laravel/deploy/nginx.conf
