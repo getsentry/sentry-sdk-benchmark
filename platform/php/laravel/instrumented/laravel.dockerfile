@@ -14,11 +14,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 WORKDIR /laravel
 
 COPY composer.json /laravel
-RUN composer install --no-dev --no-scripts --quiet
+RUN composer install --no-dev --no-scripts
 
 COPY deploy/conf/* /etc/php/8.0/fpm/
 
 ADD ./ /laravel
+
+# This needs to come after copying Laravel sources in so we can modify the composer.json file in the container
+RUN composer require sentry/sentry-laravel:^2.9 --update-no-dev --no-scripts
 
 RUN if [ $(nproc) = 2 ]; then sed -i "s|pm.max_children = 1024|pm.max_children = 512|g" /etc/php/8.0/fpm/php-fpm.conf ; fi;
 

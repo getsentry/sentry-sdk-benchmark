@@ -8,8 +8,7 @@
     ],
     "license": "MIT",
     "require": {
-        "laravel/framework": "^8.16",
-        "sentry/sentry-laravel": "^2.9"
+        "laravel/framework": "^8.16"
     },
     "require-dev": {
         "facade/ignition": "^2.3.6",
