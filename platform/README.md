@@ -76,6 +76,12 @@ Follow the steps below to add new platforms or frameworks to use with the `sentr
     sentry-sdk-benchmark platform/${LANGUAGE:l}/${FRAMEWORK:l}/baseline
     ```
 
+    > _Tip: you may use the `-s` flag to enable the "Sanity Check Mode". In this mode, the tool will run the load generator for a shorter duration and will verify that certain expectations are met, producing extra output at the end of the run._
+    > 
+    > ```zsh
+    > sentry-sdk-benchmark -s platform/${LANGUAGE:l}/${FRAMEWORK:l}/baseline
+    > ```
+
     If everything goes well, you should see the load generator container (`loadgen-baseline-xxxxx`) exit with code `0`. If something goes wrong, look at container logs to debug (saved under `result/`, full path printed on-screen). Check that the values defined in the `config.json` file match the implementation of the app.
 
     Make adjustments as needed and repeat until success.
@@ -118,6 +124,12 @@ Follow the steps below to add new platforms or frameworks to use with the `sentr
     ```zsh
     sentry-sdk-benchmark platform/${LANGUAGE:l}/${FRAMEWORK:l}/instrumented
     ```
+
+    > _Tip: you may use the `-s` flag to enable the "Sanity Check Mode". In this mode, the tool will run the load generator for a shorter duration and will verify that certain expectations are met, producing extra output at the end of the run._
+    > 
+    > ```zsh
+    > sentry-sdk-benchmark -s platform/${LANGUAGE:l}/${FRAMEWORK:l}/instrumented
+    > ```
 
     As with the baseline app, make adjustments as needed and repeat until success.
 
@@ -173,6 +185,12 @@ The steps to add an OpenTelemetry-instrumented app are similar to steps 7 to 10 
     ```zsh
     sentry-sdk-benchmark platform/${LANGUAGE:l}/${FRAMEWORK:l}/opentelemetry
     ```
+
+    > _Tip: you may use the `-s` flag to enable the "Sanity Check Mode". In this mode, the tool will run the load generator for a shorter duration and will verify that certain expectations are met, producing extra output at the end of the run._
+    > 
+    > ```zsh
+    > sentry-sdk-benchmark -s platform/${LANGUAGE:l}/${FRAMEWORK:l}/opentelemetry
+    > ```
 
 4. Do a full run with baseline, Sentry-instrumented and OpenTelemetry-instrumented apps.
 
