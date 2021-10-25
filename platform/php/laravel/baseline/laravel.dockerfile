@@ -14,7 +14,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 WORKDIR /laravel
 
 COPY composer.json /laravel
-RUN composer install --no-dev --no-scripts --quiet
+RUN composer install --no-dev --no-scripts
 
 COPY deploy/conf/* /etc/php/8.0/fpm/
 
