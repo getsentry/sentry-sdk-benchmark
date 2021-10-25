@@ -20,12 +20,13 @@ COPY deploy/conf/* /etc/php/8.0/fpm/
 
 ADD ./ /laravel
 
-# This needs to come after copying Laravel sources in so we can modify the composer.json file in the container
-RUN composer require sentry/sentry-laravel:^2.9 --update-no-dev --no-scripts
-
 RUN if [ $(nproc) = 2 ]; then sed -i "s|pm.max_children = 1024|pm.max_children = 512|g" /etc/php/8.0/fpm/php-fpm.conf ; fi;
 
 RUN mkdir -p /laravel/bootstrap/cache /laravel/storage/logs /laravel/storage/framework/sessions /laravel/storage/framework/views /laravel/storage/framework/cache
+
+# This needs to come after copying Laravel sources in so we can modify the composer.json file in the container
+RUN composer require sentry/sentry-laravel:^2.9 --update-no-dev --no-scripts
+
 RUN chmod -R 777 /laravel
 
 EXPOSE 8080
