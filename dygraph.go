@@ -51,7 +51,6 @@ type DygraphsOpts struct {
 	Colors      []string `json:"colors,omitempty"`
 	Legend      string   `json:"legend"`
 	ShowRoller  bool     `json:"showRoller"`
-	LogScale    bool     `json:"logScale"`
 	StrokeWidth float64  `json:"strokeWidth"`
 	Width       int      `json:"width,omitempty"`
 	RollPeriod  int      `json:"rollPeriod,omitempty"`

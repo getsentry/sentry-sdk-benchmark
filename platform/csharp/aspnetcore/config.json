@@ -1,0 +1,7 @@
+{
+  "target": {
+    "path": "/mvc/queries/ef?queries=10"
+  },
+  "rps": 100,
+  "duration": "30s"
+}

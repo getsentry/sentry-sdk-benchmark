@@ -169,7 +169,6 @@ func report(results []*RunResult) {
 			XLabel:      "Seconds elapsed",
 			Legend:      "always",
 			ShowRoller:  true,
-			LogScale:    true,
 			StrokeWidth: 1.3,
 			Width:       1500,
 			RollPeriod:  5,
