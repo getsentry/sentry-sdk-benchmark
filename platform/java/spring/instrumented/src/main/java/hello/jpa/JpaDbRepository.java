@@ -3,7 +3,6 @@ package hello.jpa;
 import hello.model.Fortune;
 import hello.model.World;
 import hello.repository.DbRepository;
-import io.sentry.spring.tracing.SentrySpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -24,13 +23,11 @@ public class JpaDbRepository implements DbRepository {
     }
 
     @Override
-    @SentrySpan
     public World getWorld(int id) {
         return worldRepository.findById(id).orElse(null);
     }
 
     @Override
-    @SentrySpan
     public World updateWorld(World world, int randomNumber) {
         world.randomnumber = randomNumber;
         return worldRepository.save(world);
