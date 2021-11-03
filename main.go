@@ -50,6 +50,12 @@ func printUsage() {
 // from a single command line execution.
 var openBrowser = true
 
+// sanityCheckMode affects benchmark configuration to perform sanity checks
+// instead of a regular run. In sanity check mode, benchmarks are run for a
+// short duration for the sole purpose of validating that the target app works
+// as expected and that instrumented apps do what they need to do.
+var sanityCheckMode bool
+
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmsgprefix)
 	log.SetPrefix("[sentry-sdk-benchmark] ")
@@ -68,6 +74,7 @@ func main() {
 	defer stop()
 
 	flag.BoolVar(&openBrowser, "browser", true, "open report in browser")
+	flag.BoolVar(&sanityCheckMode, "s", false, "sanity check mode (for project maintainers)")
 
 	flag.Parse()
 	if len(flag.Args()) < 1 {
@@ -105,7 +112,12 @@ func main() {
 			openBrowser = false
 		}
 		for _, path := range args {
-			Benchmark(ctx, BenchmarkConfigFromPath(path))
+			bc := BenchmarkConfigFromPath(path)
+			if sanityCheckMode {
+				bc.PlatformConfig.RPS = 3
+				bc.PlatformConfig.Duration = "5s"
+			}
+			Benchmark(ctx, bc)
 		}
 	}
 }
