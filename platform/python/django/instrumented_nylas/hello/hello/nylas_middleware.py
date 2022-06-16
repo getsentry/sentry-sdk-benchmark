@@ -1,4 +1,4 @@
-import nylas_profiler
+import hello.nylas_profiler
 
 class NylasMiddleware:
     def __init__(self, get_response):

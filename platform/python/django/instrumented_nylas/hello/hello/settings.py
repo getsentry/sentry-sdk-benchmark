@@ -40,7 +40,7 @@ STATIC_ROOT = ''
 STATIC_URL = '/static/'
 STATICFILES_DIRS = ()
 STATICFILES_FINDERS = ()
-MIDDLEWARE = ['django.instrumented_nylas.hello.hello.nylas_middleware']
+MIDDLEWARE = ['hello.nylas_middleware.NylasMiddleware']
 
 ROOT_URLCONF = 'hello.urls'
 WSGI_APPLICATION = 'hello.wsgi.application'
