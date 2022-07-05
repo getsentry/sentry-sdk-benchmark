@@ -5,7 +5,7 @@ class NylasMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
-        profiler = nylas_profiler.Sampler()
+        profiler = nylas_profiler.Sampler('test')
         profiler.start()
         response = self.get_response(request)
         profiler.stop()
