@@ -1,3 +1,7 @@
+# Note
+
+This repo is now archived. Please use https://github.com/getsentry/sdk-measurements/ for all SDK measurements going forward.
+
 # Sentry SDK Benchmark
 
 This repository contains reproducible benchmarks to evaluate the instrumentation overhead of Sentry SDKs.
