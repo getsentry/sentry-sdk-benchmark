@@ -61,7 +61,7 @@ services:
 {{- if .NeedsRelay }}
     - "relay"
     environment:
-      SENTRY_DSN: "http://sentry@relay:5000/1"
+      SENTRY_DSN: "https://ce64aa6603f24add8e0b281678ff2d36@o1261078.ingest.sentry.io/6510008"
       OTEL_EXPORTER_ZIPKIN_ENDPOINT: "http://relay:5000/api/v2/spans"
   relay:
     container_name: "fakerelay-{{ .RunName }}-{{ .ID }}"

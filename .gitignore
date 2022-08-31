@@ -9,3 +9,5 @@
 /sentry-sdk-benchmark
 
 /FrameworkBenchmarks/
+
+__pycache__
